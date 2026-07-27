@@ -1,0 +1,87 @@
+server:
+  port: 8082
+  shutdown: graceful
+
+spring:
+  application:
+    name: order-service
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/engine}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:postgres}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+    table: flyway_schema_history_order
+
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+      enabled: false # Don't run jobs automatically on startup
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
+  cache:
+    type: redis
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        spring.json.add.type.headers: false
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      cors:
+        allowed-origins: "*"
+        allowed-methods: "*"
+
+# ── JWT ────────────────────────────────────────────────────
+jwt:
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+
+logging:
+  level:
+    com.demo.order: DEBUG
+    org.springframework.context.support.PostProcessorRegistrationDelegate: ERROR
+
+---
+spring:
+  config:
+    activate:
+      on-profile: chaos
+chaos:
+  monkey:
+    enabled: true
+    assaults:
+      level: 5
+      latencyActive: true
+      latencyRangeStart: 200
+      latencyRangeEnd: 500
+      exceptionsActive: false

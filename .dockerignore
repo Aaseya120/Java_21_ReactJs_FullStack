@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+.github
+
+# Maven build output — each service builds inside the container
+**/target/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+.project
+.settings/
+.classpath
+
+# Docs & extras
+docs/
+aws/
+k8s/
+*.md
+postman_collection.json
+
+# Docker files (not needed inside image)
+**/Dockerfile
+docker-compose*.yml
+.dockerignore

@@ -1,0 +1,1024 @@
+{
+	"info": {
+		"_postman_id": "java21-microservices-fullstack",
+		"name": "Java 21 Microservices — Full Stack Guide",
+		"description": "Complete Postman collection for all microservices.\n\n**Service Ports:**\n- API Gateway: 8080\n- User Service: 8081\n- Order Service: 8082\n- Product Service: 8083\n- Notification Service: 8084\n\n**Sequence:** Register → Login → Products → Orders → Notifications\n\nAll requests through the API Gateway (port 8080) will pass through JWT authentication. Use the 'Direct Service' folders to bypass the gateway.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "gateway_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "user_service_url",
+			"value": "http://localhost:8081",
+			"type": "string"
+		},
+		{
+			"key": "order_service_url",
+			"value": "http://localhost:8082",
+			"type": "string"
+		},
+		{
+			"key": "product_service_url",
+			"value": "http://localhost:8083",
+			"type": "string"
+		},
+		{
+			"key": "notification_service_url",
+			"value": "http://localhost:8084",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "product_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🏥 Health Checks",
+			"description": "Verify all services are running before making API calls.",
+			"item": [
+				{
+					"name": "API Gateway Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{gateway_url}}/actuator/health",
+							"host": ["{{gateway_url}}"],
+							"path": ["actuator", "health"]
+						}
+					}
+				},
+				{
+					"name": "User Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{user_service_url}}/actuator/health",
+							"host": ["{{user_service_url}}"],
+							"path": ["actuator", "health"]
+						}
+					}
+				},
+				{
+					"name": "Product Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{product_service_url}}/actuator/health",
+							"host": ["{{product_service_url}}"],
+							"path": ["actuator", "health"]
+						}
+					}
+				},
+				{
+					"name": "Order Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{order_service_url}}/actuator/health",
+							"host": ["{{order_service_url}}"],
+							"path": ["actuator", "health"]
+						}
+					}
+				},
+				{
+					"name": "Notification Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{notification_service_url}}/actuator/health",
+							"host": ["{{notification_service_url}}"],
+							"path": ["actuator", "health"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "1️⃣ Auth — Register & Login",
+			"description": "**Run these FIRST.** Register creates a user, Login returns JWT tokens.\n\nThe Login request has a post-response script that auto-saves `access_token`, `refresh_token`, and `user_id` as collection variables.",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 201 Created', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data) {",
+									"    if (jsonData.data.accessToken) {",
+									"        pm.collectionVariables.set('access_token', jsonData.data.accessToken);",
+									"    }",
+									"    if (jsonData.data.refreshToken) {",
+									"        pm.collectionVariables.set('refresh_token', jsonData.data.refreshToken);",
+									"    }",
+									"    if (jsonData.data.user && jsonData.data.user.id) {",
+									"        pm.collectionVariables.set('user_id', jsonData.data.user.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fullName\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"P@ssword123\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/auth/register",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Register a new user account. Returns JWT tokens on success.\n\n**Open endpoint** — no Authorization header needed."
+					}
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data) {",
+									"    if (jsonData.data.accessToken) {",
+									"        pm.collectionVariables.set('access_token', jsonData.data.accessToken);",
+									"        console.log('✅ access_token saved');",
+									"    }",
+									"    if (jsonData.data.refreshToken) {",
+									"        pm.collectionVariables.set('refresh_token', jsonData.data.refreshToken);",
+									"        console.log('✅ refresh_token saved');",
+									"    }",
+									"    if (jsonData.data.user && jsonData.data.user.id) {",
+									"        pm.collectionVariables.set('user_id', jsonData.data.user.id);",
+									"        console.log('✅ user_id saved: ' + jsonData.data.user.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"P@ssword123\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/auth/login",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Authenticate and receive JWT tokens.\n\n**Open endpoint** — no Authorization header needed.\n\n**Auto-saves:** `access_token`, `refresh_token`, `user_id` as collection variables."
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data) {",
+									"    if (jsonData.data.accessToken) {",
+									"        pm.collectionVariables.set('access_token', jsonData.data.accessToken);",
+									"    }",
+									"    if (jsonData.data.refreshToken) {",
+									"        pm.collectionVariables.set('refresh_token', jsonData.data.refreshToken);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/auth/refresh",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "auth", "refresh"]
+						},
+						"description": "Refresh an expired access token using a refresh token.\n\nRequires a valid `refresh_token` (auto-populated from Login)."
+					}
+				}
+			]
+		},
+		{
+			"name": "2️⃣ Users",
+			"description": "User profile endpoints. **Requires JWT** — run Login first.",
+			"item": [
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/users/{{user_id}}",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "users", "{{user_id}}"]
+						},
+						"description": "Retrieve a user profile by UUID. Result is cached in Redis."
+					}
+				},
+				{
+					"name": "Update User Name",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/users/{{user_id}}/name?fullName=Jane Doe Updated",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "users", "{{user_id}}", "name"],
+							"query": [
+								{
+									"key": "fullName",
+									"value": "Jane Doe Updated"
+								}
+							]
+						},
+						"description": "Update user's full name. Only the user themselves or an ADMIN can update."
+					}
+				}
+			]
+		},
+		{
+			"name": "3️⃣ Products",
+			"description": "Product catalog CRUD. **Requires JWT** — run Login first.\n\nCreate a product before placing an order.",
+			"item": [
+				{
+					"name": "Create Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 201 Created', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.id) {",
+									"    pm.collectionVariables.set('product_id', jsonData.data.id);",
+									"    console.log('✅ product_id saved: ' + jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"MacBook Pro 16\",\n    \"description\": \"Apple MacBook Pro 16-inch with M3 Max chip\",\n    \"price\": 2499.99,\n    \"stockQty\": 50,\n    \"category\": \"Electronics\",\n    \"sku\": \"MBP-16-M3MAX\",\n    \"imageUrl\": \"https://example.com/macbook-pro-16.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/products",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "products"]
+						},
+						"description": "Create a new product in the catalog.\n\n**Auto-saves:** `product_id` for use in subsequent requests."
+					}
+				},
+				{
+					"name": "Get Product by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/products/{{product_id}}",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "products", "{{product_id}}"]
+						},
+						"description": "Get a single product by UUID."
+					}
+				},
+				{
+					"name": "Get All Products (Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/products?page=0&size=20&sort=name",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "products"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								},
+								{
+									"key": "sort",
+									"value": "name"
+								}
+							]
+						},
+						"description": "List all products with pagination. Default: page=0, size=20, sort=name."
+					}
+				},
+				{
+					"name": "Get Products by Category",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/products/category/Electronics",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "products", "category", "Electronics"]
+						},
+						"description": "Filter products by category name."
+					}
+				},
+				{
+					"name": "Update Product",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"MacBook Pro 16 (Updated)\",\n    \"description\": \"Apple MacBook Pro 16-inch with M3 Max chip — 2024 Edition\",\n    \"price\": 2599.99,\n    \"stockQty\": 45,\n    \"category\": \"Electronics\",\n    \"sku\": \"MBP-16-M3MAX-2024\",\n    \"imageUrl\": \"https://example.com/macbook-pro-16-2024.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/products/{{product_id}}",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "products", "{{product_id}}"]
+						},
+						"description": "Update an existing product."
+					}
+				},
+				{
+					"name": "Add Stock",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/products/{{product_id}}/stock/add?quantity=100",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "products", "{{product_id}}", "stock", "add"],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Add stock quantity to a product."
+					}
+				},
+				{
+					"name": "Deduct Stock",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/products/{{product_id}}/stock/deduct?quantity=5",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "products", "{{product_id}}", "stock", "deduct"],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "5"
+								}
+							]
+						},
+						"description": "Deduct stock quantity from a product."
+					}
+				},
+				{
+					"name": "Delete Product",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/products/{{product_id}}",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "products", "{{product_id}}"]
+						},
+						"description": "Delete a product from the catalog."
+					}
+				}
+			]
+		},
+		{
+			"name": "4️⃣ Orders",
+			"description": "Order management. **Requires JWT** — run Login first.\n\nRequires a valid `user_id` and `product_id` — create a product first.",
+			"item": [
+				{
+					"name": "Create Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 201 Created', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.id) {",
+									"    pm.collectionVariables.set('order_id', jsonData.data.id);",
+									"    console.log('✅ order_id saved: ' + jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "{{$guid}}",
+								"description": "Optional. Prevents duplicate order creation."
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"{{user_id}}\",\n    \"productId\": \"{{product_id}}\",\n    \"quantity\": 2,\n    \"totalPrice\": 4999.98,\n    \"notes\": \"Please deliver before Friday\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/orders",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "orders"]
+						},
+						"description": "Create a new order. Uses the `Idempotency-Key` header (auto-generated GUID) to prevent duplicate submissions.\n\n**Auto-saves:** `order_id` for use in subsequent requests."
+					}
+				},
+				{
+					"name": "Get Order by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/orders/{{order_id}}",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "orders", "{{order_id}}"]
+						},
+						"description": "Get an order by UUID. Result is cached in Redis."
+					}
+				},
+				{
+					"name": "Get All Orders (Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/orders?page=0&size=20&sort=createdAt",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "orders"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								},
+								{
+									"key": "sort",
+									"value": "createdAt"
+								}
+							]
+						},
+						"description": "List all orders with pagination. Admin endpoint."
+					}
+				},
+				{
+					"name": "Get Orders by User ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/orders/user/{{user_id}}",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "orders", "user", "{{user_id}}"]
+						},
+						"description": "Get all orders for a specific user."
+					}
+				},
+				{
+					"name": "Update Order Status → CONFIRMED",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/orders/{{order_id}}/status?status=CONFIRMED",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "orders", "{{order_id}}", "status"],
+							"query": [
+								{
+									"key": "status",
+									"value": "CONFIRMED"
+								}
+							]
+						},
+						"description": "Update order status using the state machine.\n\n**Valid statuses:** PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED, REFUNDED"
+					}
+				},
+				{
+					"name": "Update Order Status → PROCESSING",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/orders/{{order_id}}/status?status=PROCESSING",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "orders", "{{order_id}}", "status"],
+							"query": [
+								{
+									"key": "status",
+									"value": "PROCESSING"
+								}
+							]
+						},
+						"description": "Transition order to PROCESSING state."
+					}
+				},
+				{
+					"name": "Update Order Status → SHIPPED",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/orders/{{order_id}}/status?status=SHIPPED",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "orders", "{{order_id}}", "status"],
+							"query": [
+								{
+									"key": "status",
+									"value": "SHIPPED"
+								}
+							]
+						},
+						"description": "Transition order to SHIPPED state."
+					}
+				},
+				{
+					"name": "Update Order Status → DELIVERED",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/orders/{{order_id}}/status?status=DELIVERED",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "orders", "{{order_id}}", "status"],
+							"query": [
+								{
+									"key": "status",
+									"value": "DELIVERED"
+								}
+							]
+						},
+						"description": "Transition order to DELIVERED state."
+					}
+				},
+				{
+					"name": "Cancel Order",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/orders/{{order_id}}",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "orders", "{{order_id}}"]
+						},
+						"description": "Cancel an existing order."
+					}
+				}
+			]
+		},
+		{
+			"name": "5️⃣ Aggregator",
+			"description": "Aggregator pattern — combines data from Order + Product services concurrently.",
+			"item": [
+				{
+					"name": "Get Order Details (Aggregated)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/aggregator/order-details/{{order_id}}",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "aggregator", "order-details", "{{order_id}}"]
+						},
+						"description": "Aggregated view combining order data with product data. Uses CompletableFuture for concurrent calls."
+					}
+				}
+			]
+		},
+		{
+			"name": "6️⃣ Notifications",
+			"description": "Notification service status and SSE stream.",
+			"item": [
+				{
+					"name": "Notification Service Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/v1/notifications/stream/{{user_id}}",
+							"host": ["{{gateway_url}}"],
+							"path": ["api", "v1", "notifications", "stream", "{{user_id}}"]
+						},
+						"description": "SSE stream endpoint for real-time notifications. Note: Postman has limited SSE support — use a browser or curl for full streaming."
+					}
+				},
+				{
+					"name": "Notification Status (Direct)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{notification_service_url}}/api/notifications/status",
+							"host": ["{{notification_service_url}}"],
+							"path": ["api", "notifications", "status"]
+						},
+						"description": "Direct health/status check for the notification service (bypasses gateway)."
+					}
+				}
+			]
+		},
+		{
+			"name": "7️⃣ Gateway Fallbacks",
+			"description": "Circuit breaker fallback responses when downstream services are unavailable.",
+			"item": [
+				{
+					"name": "User Fallback",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{gateway_url}}/fallback/user",
+							"host": ["{{gateway_url}}"],
+							"path": ["fallback", "user"]
+						}
+					}
+				},
+				{
+					"name": "Order Fallback",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{gateway_url}}/fallback/order",
+							"host": ["{{gateway_url}}"],
+							"path": ["fallback", "order"]
+						}
+					}
+				},
+				{
+					"name": "Product Fallback",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{gateway_url}}/fallback/product",
+							"host": ["{{gateway_url}}"],
+							"path": ["fallback", "product"]
+						}
+					}
+				},
+				{
+					"name": "Notification Fallback",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{gateway_url}}/fallback/notification",
+							"host": ["{{gateway_url}}"],
+							"path": ["fallback", "notification"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🔧 Direct Service Access (Bypass Gateway)",
+			"description": "Hit services directly on their own ports, bypassing the API Gateway's JWT filter. Useful for debugging.",
+			"item": [
+				{
+					"name": "User — Register (Direct :8081)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fullName\": \"Direct User\",\n    \"email\": \"direct@example.com\",\n    \"password\": \"P@ssword123\"\n}"
+						},
+						"url": {
+							"raw": "{{user_service_url}}/api/v1/auth/register",
+							"host": ["{{user_service_url}}"],
+							"path": ["api", "v1", "auth", "register"]
+						}
+					}
+				},
+				{
+					"name": "User — Login (Direct :8081)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.accessToken) {",
+									"    pm.collectionVariables.set('access_token', jsonData.data.accessToken);",
+									"    pm.collectionVariables.set('refresh_token', jsonData.data.refreshToken);",
+									"    pm.collectionVariables.set('user_id', jsonData.data.user.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"direct@example.com\",\n    \"password\": \"P@ssword123\"\n}"
+						},
+						"url": {
+							"raw": "{{user_service_url}}/api/v1/auth/login",
+							"host": ["{{user_service_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Product — Create (Direct :8083)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.id) {",
+									"    pm.collectionVariables.set('product_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Direct Test Product\",\n    \"description\": \"Created directly on product-service\",\n    \"price\": 99.99,\n    \"stockQty\": 200,\n    \"category\": \"Testing\",\n    \"sku\": \"TEST-DIRECT-001\",\n    \"imageUrl\": null\n}"
+						},
+						"url": {
+							"raw": "{{product_service_url}}/api/v1/products",
+							"host": ["{{product_service_url}}"],
+							"path": ["api", "v1", "products"]
+						}
+					}
+				},
+				{
+					"name": "Order — Create (Direct :8082)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.id) {",
+									"    pm.collectionVariables.set('order_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"{{user_id}}\",\n    \"productId\": \"{{product_id}}\",\n    \"quantity\": 1,\n    \"totalPrice\": 99.99,\n    \"notes\": \"Direct order test\"\n}"
+						},
+						"url": {
+							"raw": "{{order_service_url}}/api/v1/orders",
+							"host": ["{{order_service_url}}"],
+							"path": ["api", "v1", "orders"]
+						}
+					}
+				}
+			]
+		}
+	]
+}
