@@ -506,11 +506,23 @@ public void deductStock(Long id, int quantity) {
 
 ---
 
-## 📊 Observability (Phase 7)
-The entire ecosystem is heavily instrumented for enterprise-grade observability:
-1. **Jaeger (Distributed Tracing):** Correlates requests across the API Gateway, User Service, Order Service, and Product Service using OpenTelemetry (OTLP). View traces at `http://localhost:16686`.
-2. **Prometheus (Metrics Scraper):** Automatically scrapes JVM, memory, GC, and HTTP latency metrics from all Spring Boot Actuator endpoints.
-3. **Grafana (Dashboards):** Visualizes the Prometheus metrics in real-time. Accessible at `http://localhost:3001` (login: `admin` / `admin`).
+## 🔗 Quick Access URLs
+
+### 📊 Observability & Infrastructure Dashboards
+- **Grafana (Metrics Dashboard)**: [http://localhost:3001](http://localhost:3001) *(Default Login: `admin` / `admin`)*
+- **Prometheus (Metrics Scraper)**: [http://localhost:9090](http://localhost:9090)
+- **Jaeger UI (Distributed Tracing)**: [http://localhost:16686](http://localhost:16686)
+- **Kafka UI (Topic & Message Browser)**: [http://localhost:9093](http://localhost:9093)
+
+### 🌐 Application & Gateway
+- **React Frontend App**: [http://localhost:3000](http://localhost:3000)
+- **API Gateway (Main Entrypoint)**: [http://localhost:8080](http://localhost:8080)
+
+### ⚙️ Direct Microservice Ports (Bypassing Gateway)
+- **User Service**: `http://localhost:8081`
+- **Order Service**: `http://localhost:8082`
+- **Product Service**: `http://localhost:8083`
+- **Notification Service**: `http://localhost:8084`
 
 ---
 
