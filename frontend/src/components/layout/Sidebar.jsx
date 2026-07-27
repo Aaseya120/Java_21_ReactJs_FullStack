@@ -87,7 +87,7 @@ export default function Sidebar() {
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); logout(); navigate('/login'); }}
+              onClick={(e) => { e.stopPropagation(); logout(); }}
               style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem' }}
               title="Logout"
             >⏻</button>

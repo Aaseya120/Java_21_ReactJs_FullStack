@@ -66,15 +66,16 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
+    const rt = getRefreshToken();
+    
+    clearTokens();
+    setUser(null);
+    setIsAuthenticated(false);
+
     try {
-      const rt = getRefreshToken();
       if (rt) await authApi.logout(rt);
     } catch (err) {
       console.warn('Logout API failed:', err);
-    } finally {
-      clearTokens();
-      setUser(null);
-      setIsAuthenticated(false);
     }
   }, []);
 
