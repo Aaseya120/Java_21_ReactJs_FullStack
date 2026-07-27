@@ -33,7 +33,10 @@ export default function AggregatorPage() {
   const startRef = useRef(null);
 
   const handleFetch = async () => {
-    if (!orderId.trim()) return;
+    if (!orderId.trim()) {
+      toast.error('Please enter an Order ID');
+      return;
+    }
     setLoading(true);
     setResult(null);
     setError(null);
@@ -112,7 +115,7 @@ export default function AggregatorPage() {
             onChange={e => setOrderId(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleFetch()}
           />
-          <button className="btn btn--primary" onClick={handleFetch} disabled={loading || !orderId.trim()}>
+          <button className="btn btn--primary" onClick={handleFetch} disabled={loading}>
             {loading ? <><span className="spinner"/> Fetching...</> : '🔗 Fetch'}
           </button>
         </div>

@@ -30,6 +30,12 @@ function createInstance(baseURLFn) {
   instance.interceptors.response.use(
     response => response,
     async error => {
+      if (error.code === 'ERR_NETWORK' || [502, 503, 504].includes(error.response?.status)) {
+        clearTokens();
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+
       const originalRequest = error.config;
       if (error.response?.status === 401 && !originalRequest._retry) {
         if (isRefreshing) {

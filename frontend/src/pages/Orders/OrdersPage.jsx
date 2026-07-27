@@ -11,7 +11,7 @@ import { useToast } from '../../context/ToastContext';
 import { TableSkeleton } from '../../components/common/Skeleton';
 
 const createOrderSchema = z.object({
-  userId: z.string().trim().min(1, 'User ID is required'),
+  userId: z.coerce.string().trim().min(1, 'User ID is required'),
   productId: z.string().trim().min(1, 'Please select a product'),
   quantity: z.coerce.number().min(1, 'Quantity must be at least 1').max(9999, 'Quantity too large'),
   notes: z.string().optional(),

@@ -1,5 +1,5 @@
 // src/pages/Users/UsersPage.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi } from '../../api/users.api';
 import { useAuth } from '../../context/AuthContext';
@@ -15,11 +15,18 @@ export default function UsersPage() {
   const [editName, setEditName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
 
-  const { data: profileData, isLoading: profileLoading } = useQuery({
+  const { data: profileData, isLoading: profileLoading, isError: isProfileError } = useQuery({
     queryKey: ['user', user?.id],
     queryFn: () => usersApi.getById(user.id),
     enabled: !!user?.id,
   });
+
+  useEffect(() => {
+    if (isProfileError) {
+      toast.error('Your profile could not be found. You will be signed out.');
+      logout();
+    }
+  }, [isProfileError, logout, toast]);
 
   const { data: lookupData, isLoading: lookupLoading, error: lookupError, isError: isLookupError, refetch: doLookup } = useQuery({
     queryKey: ['user-lookup', lookupId],
@@ -167,8 +174,14 @@ export default function UsersPage() {
               value={lookupId} onChange={e => setLookupId(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && lookupId.trim() && doLookup()}
               style={{ flex: 1 }}/>
-            <button className="btn btn--primary" disabled={!lookupId.trim() || lookupLoading}
-              onClick={() => doLookup()}>
+            <button className="btn btn--primary" disabled={lookupLoading}
+              onClick={() => {
+                if (!lookupId.trim()) {
+                  toast.error('Please enter a User ID');
+                  return;
+                }
+                doLookup();
+              }}>
               {lookupLoading ? <span className="spinner"/> : 'Look Up'}
             </button>
           </div>

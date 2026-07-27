@@ -1,5 +1,7 @@
 package com.demo.product.exception;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * for domain-specific exceptions, returning the correct HTTP status codes instead
  * of the generic 500.
  */
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice
 @Slf4j
 public class ProductExceptionHandler {

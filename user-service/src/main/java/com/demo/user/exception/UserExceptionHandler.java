@@ -1,5 +1,7 @@
 package com.demo.user.exception;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -20,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * for domain-specific exceptions, returning the correct HTTP status codes instead
  * of the generic 500.
  */
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice
 @Slf4j
 public class UserExceptionHandler {
@@ -35,10 +38,20 @@ public class UserExceptionHandler {
 	}
 
 	/**
-	 * 404 Not Found — user lookup by id or email failed.
+	 * 404 Not Found — user lookup by id failed.
 	 */
-	@ExceptionHandler({UserNotFoundException.class, org.springframework.security.core.userdetails.UsernameNotFoundException.class})
-	public ResponseEntity<ApiResponse<Void>> handleUserNotFound(RuntimeException ex) {
+	@ExceptionHandler(UserNotFoundException.class)
+	public ResponseEntity<ApiResponse<Void>> handleUserNotFound(UserNotFoundException ex) {
+		log.warn("User not found: {}", ex.getMessage());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND)
+				.body(ApiResponse.error("USER_NOT_FOUND", ex.getMessage()));
+	}
+
+	/**
+	 * 404 Not Found — username lookup failed.
+	 */
+	@ExceptionHandler(org.springframework.security.core.userdetails.UsernameNotFoundException.class)
+	public ResponseEntity<ApiResponse<Void>> handleUsernameNotFound(org.springframework.security.core.userdetails.UsernameNotFoundException ex) {
 		log.warn("User not found: {}", ex.getMessage());
 		return ResponseEntity.status(HttpStatus.NOT_FOUND)
 				.body(ApiResponse.error("USER_NOT_FOUND", ex.getMessage()));

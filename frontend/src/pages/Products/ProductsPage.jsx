@@ -158,13 +158,25 @@ export default function ProductsPage() {
 
   const createMutation = useMutation({
     mutationFn: productsApi.create,
-    onSuccess: () => { toast.success('Product created!'); qc.invalidateQueries(['products']); setModal(null); },
+    onSuccess: (_, variables) => { 
+      toast.success('Product created!'); 
+      setCategoryFilter(variables.category);
+      setPage(0);
+      qc.invalidateQueries(['products']); 
+      setModal(null); 
+    },
     onError: (err) => toast.error(err.response?.data?.message || 'Create failed'),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => productsApi.update(id, data),
-    onSuccess: () => { toast.success('Product updated!'); qc.invalidateQueries(['products']); setModal(null); },
+    onSuccess: (_, variables) => { 
+      toast.success('Product updated!'); 
+      setCategoryFilter(variables.data.category);
+      setPage(0);
+      qc.invalidateQueries(['products']); 
+      setModal(null); 
+    },
     onError: (err) => toast.error(err.response?.data?.message || 'Update failed'),
   });
 

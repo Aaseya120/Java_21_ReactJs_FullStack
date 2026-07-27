@@ -96,8 +96,9 @@ export default function NotificationsPage() {
         }, ...prev]);
       };
 
-      es.onmessage = (e) => {
+      const handleMessage = (e) => {
         try {
+          if (e.data === 'heartbeat') return;
           const parsed = JSON.parse(e.data);
           setEvents(prev => [{ ...parsed, timestamp: Date.now() }, ...prev.slice(0, 99)]);
           eventsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -105,6 +106,10 @@ export default function NotificationsPage() {
           setEvents(prev => [{ type: 'RAW', data: e.data, timestamp: Date.now() }, ...prev.slice(0, 99)]);
         }
       };
+
+      es.onmessage = handleMessage;
+      es.addEventListener('notification', handleMessage);
+      es.addEventListener('ping', (e) => { /* ignore heartbeat */ });
 
       es.onerror = () => {
         setConnected(false);

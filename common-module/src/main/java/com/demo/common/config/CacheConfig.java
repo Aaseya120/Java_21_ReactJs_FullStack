@@ -24,7 +24,7 @@ public class CacheConfig {
 
 		com.fasterxml.jackson.databind.ObjectMapper objectMapper = com.fasterxml.jackson.databind.json.JsonMapper.builder()
 				.addModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
-				.activateDefaultTyping(ptv, com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping.EVERYTHING, com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY)
+				.activateDefaultTyping(ptv, com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping.NON_FINAL, com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY)
 				.build();
 
 		GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
