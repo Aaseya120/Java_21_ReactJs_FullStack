@@ -99,6 +99,24 @@ To keep this project at the pinnacle of industry standards, follow these guideli
 
 ---
 
+## 🧩 Architectural Patterns & Solutions
+
+| Challenge / Concept | How it was achieved in this project |
+|---------------------|-------------------------------------|
+| **Kafka Lag** | Increased consumer concurrency, idempotency, monitoring. |
+| **Transaction** | Used `@Transactional` for local ACID transactions. |
+| **Distributed Transaction** | Used Saga + Outbox for eventual consistency. |
+| **Fault Tolerance** | Used Circuit Breaker, Retry, Fallback, TimeLimiter. |
+| **Exception Handling** | Used global `@RestControllerAdvice`. |
+| **Timeout** | Configured HTTP timeouts and TimeLimiter. |
+| **Scalability** | Used Virtual Threads, Redis, Kubernetes HPA. |
+| **Reliability** | Used Idempotency, DLQ, Health Checks. |
+| **Bulkhead** | Limited concurrent requests to isolate failures. |
+| **Outbox** | Solved database-Kafka dual-write problem. |
+| **Saga** | Hybrid Saga using Kafka events and compensating actions. |
+
+---
+
 ## 📦 Project Structure
 
 ```
@@ -181,7 +199,7 @@ cd ../frontend
 npm install
 npm run dev
 ```
-Access the application in your browser at `http://localhost:5173`.
+Access the application in your browser at `http://localhost:3000`.
 
 ### Option 2: Full Docker Compose
 
@@ -212,11 +230,30 @@ All services connect to a single PostgreSQL instance:
 
 ---
 
-## 🔐 Security
+## 🔐 Security Architecture & Implementation
 
-- **API Gateway**: Validates JWT Bearer tokens on all non-public routes
-- **User Service**: Issues JWTs via BCrypt-authenticated login (strength 12)
-- **JWT Secret**: Configured via `JWT_SECRET` environment variable
+We achieve robust, scalable security by following a "defense-in-depth" philosophy coupled with centralized authentication:
+
+1. **Centralized Authentication (API Gateway)**
+   - The `api-gateway` acts as a single point of entry for all incoming traffic.
+   - It utilizes a Global Authentication Filter that intercepts every request (except public routes) to validate the presence and integrity of a JWT Bearer token.
+   - Unauthenticated or malformed requests are instantly rejected with a `401 Unauthorized`, ensuring malicious traffic never reaches the backend microservices.
+
+2. **Stateless JWT Authorization**
+   - The `user-service` is responsible for issuing cryptographically signed JSON Web Tokens (JWTs) using a secure `JWT_SECRET`.
+   - Because tokens are stateless, we achieve infinite horizontal scalability without needing sticky sessions or distributed session replication.
+   - The Gateway parses the JWT, extracts claims (like `userId`), and securely propagates them via HTTP headers to downstream services.
+
+3. **Data Protection & Hashing**
+   - Passwords are never stored in plaintext. They are salted and hashed using the strong **BCrypt** algorithm (strength/work factor of 12) during registration.
+   - This prevents brute-force and rainbow table attacks even in the event of a database compromise.
+
+4. **Network Isolation (Docker/Kubernetes)**
+   - Only the API Gateway is exposed to the public web (Port 8080 / 443).
+   - Downstream microservices, PostgreSQL databases, Redis caches, and Kafka brokers are bound to private internal networks. They cannot be accessed directly from the internet.
+
+5. **Cross-Origin Resource Sharing (CORS)**
+   - Configured globally at the API Gateway level to only allow requests from trusted origins (like our React frontend on `localhost:3000`), mitigating cross-site request forgery (CSRF) attacks.
 
 ### Public Endpoints (no JWT required)
 ```
@@ -334,38 +371,12 @@ helm install kafka bitnami/kafka -n microservices \
   --set zookeeper.enabled=false
 
 # Deploy services
-kubectl apply -f k8s/service-registry.yml
 kubectl apply -f k8s/api-gateway.yml
 kubectl apply -f k8s/microservices.yml
 
 # Check status
 kubectl get pods -n microservices
 kubectl get services -n microservices
-```
-
----
-
-## ☁️ AWS EKS Deployment
-
-```bash
-# Create EKS cluster
-eksctl create cluster \
-  --name microservices-cluster \
-  --region us-east-1 \
-  --nodegroup-name workers \
-  --node-type m5.large \
-  --nodes 3
-
-# Build and push to ECR
-aws ecr create-repository --repository-name user-service
-docker build -t user-service ./user-service
-docker tag user-service:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/user-service:latest
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-east-1.amazonaws.com
-docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/user-service:latest
-
-# Use AWS RDS for PostgreSQL, ElastiCache for Redis, MSK for Kafka
-# Update k8s/configmap.yml with RDS/ElastiCache/MSK endpoints
-kubectl apply -k k8s/
 ```
 
 ---
@@ -385,12 +396,34 @@ cd user-service && mvn test
 
 ---
 
-## 📊 Monitoring
+## 📊 Observability & Monitoring
 
-- **Eureka Dashboard**: http://localhost:8761
-- **Kafka UI**: http://localhost:9093
-- **Actuator Health**: http://localhost:8080/actuator/health
-- **Metrics**: http://localhost:808x/actuator/metrics (each service)
+This project embraces a comprehensive observability strategy, ensuring every aspect of the system's behavior is traceable, measurable, and resilient.
+
+### 1. Distributed Tracing (Micrometer & OpenTelemetry)
+- **Dependencies**: `micrometer-tracing-bridge-otel` and `opentelemetry-exporter-otlp` (configured in `common-module`).
+- **Purpose**: Tracks a single user request as it traverses through the API Gateway, into various microservices, and across Kafka events. A unique `traceId` is attached to every log statement, making cross-service debugging seamless.
+
+### 2. Application Metrics & Health Checks
+- **Spring Boot Actuator**: Included globally via `spring-boot-starter-actuator`.
+- **Health Checks**: Available at `http://localhost:8080/actuator/health` (Gateway) and port-specific endpoints for individual services. Kubernetes uses these endpoints for liveness and readiness probes.
+- **Metrics**: Exposed at `/actuator/metrics` for deep JVM and application-level insights.
+
+### 3. API Documentation & Observability
+- **OpenAPI / Swagger UI**: Integrated using `springdoc-openapi-starter-webmvc-ui`.
+- **Purpose**: Provides a live, interactive UI to observe API contracts, schemas, and test endpoints directly without external tools.
+
+### 4. Chaos Engineering
+- **Spring Boot Chaos Monkey**: Included via `chaos-monkey-spring-boot`.
+- **Purpose**: Proactively injects latency, exceptions, and unexpected behaviors into the application during testing to validate the resilience of Circuit Breakers and fallback mechanisms.
+
+### 5. Audit Logging (Spring AOP)
+- **Aspect-Oriented Programming**: Uses `spring-boot-starter-aop`.
+- **Purpose**: Centralized Audit Aspects intercept specific method executions to automatically log critical business operations (like Order creation or User login) without cluttering the core business logic.
+
+### 6. Infrastructure Dashboards
+- **Eureka Dashboard**: Accessible at `http://localhost:8761` (if enabled in non-K8s environments) to monitor service registry health.
+- **Kafka UI**: Accessible at `http://localhost:9093` to observe topics, consumer groups, and message flows in real-time.
 
 ---
 
