@@ -23,6 +23,8 @@ import com.demo.product.dto.ProductRequest;
 import com.demo.product.dto.ProductResponse;
 import com.demo.product.service.ProductCommandService;
 import com.demo.product.service.ProductQueryService;
+import com.demo.product.service.ImageStoragePort;
+import com.demo.product.dto.PresignedUrlResponse;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,14 @@ public class ProductController {
 
 	private final ProductCommandService commandService;
 	private final ProductQueryService queryService;
+	private final ImageStoragePort imageStoragePort;
+
+	// ── Storage Operations ───────────────────────────────────
+
+	@GetMapping("/upload-url")
+	public ResponseEntity<ApiResponse<PresignedUrlResponse>> getUploadUrl(@RequestParam(defaultValue = ".jpg") String extension) {
+		return ResponseEntity.ok(ApiResponse.success(imageStoragePort.generatePresignedUploadUrl(extension)));
+	}
 
 	// ── Command Operations (Writes) ──────────────────────────
 

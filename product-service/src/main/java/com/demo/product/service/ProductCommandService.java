@@ -13,6 +13,8 @@ public interface ProductCommandService {
 
 	void deductStock(Long id, int quantity);
 
+	void deductStockForSaga(Long id, int quantity, Long orderId);
+
 	void addStock(Long id, int quantity);
 }
 

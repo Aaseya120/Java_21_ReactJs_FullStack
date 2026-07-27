@@ -12,4 +12,6 @@ export const productsApi = {
     gatewayClient.post(`/api/v1/products/${id}/stock/add`, null, { params: { quantity } }),
   deductStock: (id, quantity) =>
     gatewayClient.post(`/api/v1/products/${id}/stock/deduct`, null, { params: { quantity } }),
+  getUploadUrl: (extension) => 
+    gatewayClient.get('/api/v1/products/upload-url', { params: { extension } }),
 };

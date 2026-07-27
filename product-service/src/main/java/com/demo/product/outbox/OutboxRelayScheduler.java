@@ -34,11 +34,12 @@ public class OutboxRelayScheduler {
 
 		for (OutboxEvent event : events) {
 			try {
+				String topic = "OrderSaga".equals(event.getAggregateType()) ? "inventory-events" : PRODUCT_EVENTS_TOPIC;
 				// Synchronous send — blocks until Kafka confirms receipt
-				kafkaTemplate.send(PRODUCT_EVENTS_TOPIC, event.getAggregateId(), event.getPayload()).get();
+				kafkaTemplate.send(topic, event.getAggregateId(), event.getPayload()).get();
 				event.setProcessed(true);
 				outboxEventRepository.save(event);
-				log.debug("Successfully published outbox event {}", event.getId());
+				log.debug("Successfully published outbox event {} to topic {}", event.getId(), topic);
 			} catch (Exception e) {
 				log.error("Failed to publish outbox event {}. Stopping relay to maintain ordering.", event.getId(), e);
 				break; // Stop processing to maintain event ordering

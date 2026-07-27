@@ -27,6 +27,27 @@ To ensure a seamless user experience and robust security, we implemented several
 | **Global Error Handling** | Interceptors catch `401 Unauthorized` responses to instantly log the user out, and catch `500`/`503`/`504` errors to redirect to graceful failure/fallback UI pages. |
 | **Smart Caching** | **TanStack Query** caches API responses (like the Product Catalog). If a user navigates away and back, the data loads instantly from cache while re-fetching silently in the background. |
 | **Protected Routes** | Custom `ProtectedRoute` wrapper components evaluate the user's authentication state and roles before rendering the requested page, redirecting to `/login` if unauthorized. |
+| **Direct-to-Cloud Uploads** | Bypasses the backend for large file uploads by requesting an AWS S3 Presigned URL, then streaming the binary file directly to S3 via a pure `axios.put`. |
+
+### S3 Direct Upload Architecture
+To maintain maximum performance and follow enterprise best practices, the React frontend handles file uploads directly to AWS S3 (via a Presigned URL) rather than sending heavy image binaries through the Spring Boot API Gateway.
+
+```mermaid
+sequenceDiagram
+    participant React as React (ProductsPage)
+    participant Gateway as API Gateway (Port 8080)
+    participant S3 as Amazon S3 (or Local Mock)
+
+    React->>Gateway: GET /api/products/upload-url?extension=.jpg
+    Gateway-->>React: { uploadUrl, finalUrl }
+    
+    Note over React,S3: Direct Browser-to-S3 Upload
+    React->>S3: PUT image.jpg to uploadUrl (raw binary)
+    S3-->>React: 200 OK
+    
+    React->>Gateway: POST /api/products { name, imageUrl: finalUrl }
+    Gateway-->>React: 201 Created
+```
 
 ---
 

@@ -10,19 +10,21 @@ import com.demo.product.dto.ProductResponse;
 import com.demo.product.entity.Product;
 import com.demo.product.exception.InsufficientStockException;
 import com.demo.product.exception.ProductNotFoundException;
-/**
- * Command Service for Product Catalog (CQRS Pattern).
- * Handles all write operations (Create, Update, Delete) and publishes events to Kafka.
- */
+
 import com.demo.product.mapper.ProductMapper;
 import com.demo.product.outbox.OutboxEvent;
 import com.demo.product.outbox.OutboxEventRepository;
 import com.demo.product.repository.ProductRepository;
+import com.demo.common.annotation.DistributedLock;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Command Service for Product Catalog (CQRS Pattern).
+ * Handles all write operations (Create, Update, Delete) and publishes events to Kafka.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -34,6 +36,17 @@ public class ProductCommandServiceImpl implements ProductCommandService {
 	private final ProductMapper productMapper;
 
 	private static final String PRODUCT_CACHE = "products";
+	private static final String LOCK_PREFIX = "lock:inventory:";
+
+	public static final class EventConstants {
+		public static final String EVENT_CREATED = "CREATED";
+		public static final String EVENT_UPDATED = "UPDATED";
+		public static final String EVENT_DELETED = "DELETED";
+		public static final String EVENT_STOCK_DEDUCTED = "STOCK_DEDUCTED";
+		public static final String EVENT_STOCK_ADDED = "STOCK_ADDED";
+		public static final String EVENT_INVENTORY_RESERVED = "INVENTORY_RESERVED";
+		private EventConstants() {}
+	}
 
 	@Transactional
 	public ProductResponse createProduct(ProductRequest request) {
@@ -42,7 +55,7 @@ public class ProductCommandServiceImpl implements ProductCommandService {
 				.imageUrl(request.imageUrl()).build();
 		product = productRepository.save(product);
 
-		publishProductEvent(product, "CREATED");
+		publishProductEvent(product, EventConstants.EVENT_CREATED);
 		return productMapper.toResponse(product);
 	}
 
@@ -60,7 +73,7 @@ public class ProductCommandServiceImpl implements ProductCommandService {
 		product.setImageUrl(request.imageUrl());
 
 		product = productRepository.save(product);
-		publishProductEvent(product, "UPDATED");
+		publishProductEvent(product, EventConstants.EVENT_UPDATED);
 		return productMapper.toResponse(product);
 	}
 
@@ -75,7 +88,7 @@ public class ProductCommandServiceImpl implements ProductCommandService {
 		// Publish deletion event via outbox
 		try {
 			OutboxEvent outboxEvent = OutboxEvent.builder().aggregateId(id.toString()).aggregateType("Product")
-					.eventType("DELETED").payload("{\"id\":\"" + id + "\", \"status\":\"DELETED\"}").build();
+					.eventType(EventConstants.EVENT_DELETED).payload("{\"id\":\"" + id + "\", \"status\":\"DELETED\"}").build();
 			outboxEventRepository.save(outboxEvent);
 		} catch (Exception e) {
 			log.error("Failed to serialize OutboxEvent", e);
@@ -84,6 +97,7 @@ public class ProductCommandServiceImpl implements ProductCommandService {
 	}
 
 	@Transactional
+	@DistributedLock(keyPrefix = LOCK_PREFIX)
 	public void deductStock(Long id, int quantity) {
 		Product product = productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id.toString()));
 
@@ -93,17 +107,43 @@ public class ProductCommandServiceImpl implements ProductCommandService {
 
 		product.setStockQty(product.getStockQty() - quantity);
 		productRepository.save(product);
-		publishProductEvent(product, "STOCK_DEDUCTED");
+		publishProductEvent(product, EventConstants.EVENT_STOCK_DEDUCTED);
+	}
+
+	@Transactional
+	@DistributedLock(keyPrefix = LOCK_PREFIX)
+	public void deductStockForSaga(Long id, int quantity, Long orderId) {
+		Product product = productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id.toString()));
+
+		if (product.getStockQty() < quantity) {
+			throw new InsufficientStockException(id.toString(), quantity, product.getStockQty());
+		}
+
+		product.setStockQty(product.getStockQty() - quantity);
+		productRepository.save(product);
+		
+		// Use outbox pattern for the Saga reply to prevent dual-write problem
+		try {
+			String payload = String.format("{\"orderId\":\"%s\", \"status\":\"RESERVED\"}", orderId);
+			OutboxEvent outboxEvent = OutboxEvent.builder().aggregateId(orderId.toString())
+					.aggregateType("OrderSaga").eventType(EventConstants.EVENT_INVENTORY_RESERVED)
+					.payload(payload).build();
+			outboxEventRepository.save(outboxEvent);
+		} catch (Exception e) {
+			log.error("Failed to serialize OutboxEvent for Saga", e);
+			throw new RuntimeException("Failed to serialize OutboxEvent for Saga", e);
+		}
 	}
 
 	@Transactional
 	@CacheEvict(value = PRODUCT_CACHE, key = "#id")
+	@DistributedLock(keyPrefix = LOCK_PREFIX)
 	public void addStock(Long id, int quantity) {
 		Product product = productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id.toString()));
 
 		product.setStockQty(product.getStockQty() + quantity);
 		productRepository.save(product);
-		publishProductEvent(product, "STOCK_ADDED");
+		publishProductEvent(product, EventConstants.EVENT_STOCK_ADDED);
 	}
 
 	private void publishProductEvent(Product product, String eventType) {

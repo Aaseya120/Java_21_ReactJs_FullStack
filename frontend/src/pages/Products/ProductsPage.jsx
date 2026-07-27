@@ -4,14 +4,45 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { productsApi } from '../../api/products.api';
 import { useToast } from '../../context/ToastContext';
+import axios from 'axios';
 
 const CATEGORIES = ['Electronics', 'Clothing', 'Books', 'Home', 'Sports', 'Food', 'Accessories', 'Other', 'Testing'];
 
 function ProductModal({ product, onClose, onSave }) {
+  const [imageFile, setImageFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const toast = useToast();
+
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     defaultValues: product || { stockQty: 1, price: 0 },
   });
   const isEdit = !!product?.id;
+
+  const handleFormSubmit = async (data) => {
+    let finalImageUrl = data.imageUrl;
+    
+    if (imageFile) {
+      setUploading(true);
+      try {
+        const ext = '.' + imageFile.name.split('.').pop();
+        const res = await productsApi.getUploadUrl(ext);
+        const { uploadUrl, finalUrl } = res.data.data;
+
+        await axios.put(uploadUrl, imageFile, {
+          headers: { 'Content-Type': imageFile.type },
+        });
+        
+        finalImageUrl = finalUrl;
+      } catch (err) {
+        toast.error('Failed to upload image. Please try again.');
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
+    }
+
+    onSave({ ...data, imageUrl: finalImageUrl });
+  };
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -20,7 +51,7 @@ function ProductModal({ product, onClose, onSave }) {
           <h2>{isEdit ? '✏️ Edit Product' : '📦 New Product'}</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
-        <form onSubmit={handleSubmit(onSave)} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={handleSubmit(handleFormSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <div className="input-group" style={{ gridColumn: '1/-1' }}>
               <label>Product Name *</label>
@@ -58,15 +89,21 @@ function ProductModal({ product, onClose, onSave }) {
                 {...register('description')}/>
             </div>
             <div className="input-group" style={{ gridColumn: '1/-1' }}>
-              <label>Image URL</label>
-              <input className="input" type="url" placeholder="https://..."
-                {...register('imageUrl')}/>
+              <label>Product Image</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {product?.imageUrl && !imageFile && (
+                  <img src={product.imageUrl} alt="preview" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} />
+                )}
+                <input className="input" type="file" accept="image/*"
+                  onChange={e => setImageFile(e.target.files[0])}
+                  style={{ flex: 1 }}/>
+              </div>
             </div>
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn--ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn--primary" disabled={isSubmitting}>
-              {isSubmitting ? <span className="spinner"/> : isEdit ? 'Save Changes' : 'Create Product'}
+            <button type="submit" className="btn btn--primary" disabled={isSubmitting || uploading}>
+              {(isSubmitting || uploading) ? <span className="spinner"/> : isEdit ? 'Save Changes' : 'Create Product'}
             </button>
           </div>
         </form>
@@ -279,7 +316,7 @@ export default function ProductsPage() {
                 <tr key={p.id}>
                   <td>
                     <div style={{ fontWeight: 600 }}>{p.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }} className="truncate" style={{ maxWidth: 200 }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2, maxWidth: 200 }} className="truncate">
                       {p.description || '—'}
                     </div>
                   </td>

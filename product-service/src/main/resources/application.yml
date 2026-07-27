@@ -13,6 +13,10 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/engine}
     username: ${DB_USER:postgres}
     password: ${DB_PASS:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
 
   jpa:
     hibernate:
@@ -65,6 +69,15 @@ management:
 # ── JWT ────────────────────────────────────────────────────
 jwt:
   secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+
+# ── Storage (Hexagonal Architecture) ───────────────────────
+storage:
+  type: ${STORAGE_TYPE:local} # Options: local, s3
+
+aws:
+  s3:
+    bucket: ${AWS_S3_BUCKET:demo-products-bucket}
+    region: ${AWS_REGION:us-east-1}
 
 logging:
   level:

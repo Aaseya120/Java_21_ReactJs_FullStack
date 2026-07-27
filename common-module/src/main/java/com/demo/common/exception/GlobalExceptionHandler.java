@@ -1,14 +1,22 @@
 package com.demo.common.exception;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
+import java.util.NoSuchElementException;
 
 import com.demo.common.dto.ApiResponse;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -16,53 +24,64 @@ import lombok.extern.slf4j.Slf4j;
  * ApiResponse.
  */
 @RestControllerAdvice
+@RequiredArgsConstructor
 @Slf4j
 public class GlobalExceptionHandler {
+
+	private final MessageSource messageSource;
+
+	private String getMessage(String code, Object... args) {
+		try {
+			return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
+		} catch (Exception e) {
+			return code;
+		}
+	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
 	public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex, WebRequest request) {
 		log.warn("Illegal argument: {}", ex.getMessage());
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("BAD_REQUEST", ex.getMessage()));
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("BAD_REQUEST", getMessage("error.bad_request")));
 	}
 
-	@ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
-	public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
 		log.warn("Type mismatch: {}", ex.getMessage());
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("BAD_REQUEST", "Invalid parameter format: " + ex.getValue()));
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("BAD_REQUEST", getMessage("error.bad_request")));
 	}
 
-	@ExceptionHandler({java.util.NoSuchElementException.class, org.springframework.web.servlet.resource.NoResourceFoundException.class})
+	@ExceptionHandler({NoSuchElementException.class, NoResourceFoundException.class})
 	public ResponseEntity<ApiResponse<Void>> handleNotFound(Exception ex) {
 		log.warn("Resource not found: {}", ex.getMessage());
 		return ResponseEntity.status(HttpStatus.NOT_FOUND)
-				.body(ApiResponse.error("NOT_FOUND", ex.getMessage()));
+				.body(ApiResponse.error("NOT_FOUND", getMessage("error.not_found")));
 	}
 
 	@ExceptionHandler(RuntimeException.class)
 	public ResponseEntity<ApiResponse<Void>> handleRuntime(RuntimeException ex, WebRequest request) {
 		log.error("Internal server error: ", ex);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.body(ApiResponse.error("INTERNAL_SERVER_ERROR", "An unexpected error occurred"));
+				.body(ApiResponse.error("INTERNAL_SERVER_ERROR", getMessage("error.internal_server_error")));
 	}
 
-	@ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
-	public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
 		log.warn("Data integrity violation: {}", ex.getMessage());
 		return ResponseEntity.status(HttpStatus.CONFLICT)
-				.body(ApiResponse.error("CONFLICT", "Duplicate entry or data integrity violation"));
+				.body(ApiResponse.error("CONFLICT", getMessage("error.conflict")));
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
-		String message = ex.getBindingResult().getFieldErrors().stream()
+		String validationMessage = ex.getBindingResult().getFieldErrors().stream()
 				.map(error -> error.getField() + ": " + error.getDefaultMessage()).reduce((a, b) -> a + ", " + b)
 				.orElse("Validation error");
-		log.warn("Validation failed: {}", message);
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("VALIDATION_ERROR", message));
+		log.warn("Validation failed: {}", validationMessage);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("VALIDATION_ERROR", getMessage("error.validation", validationMessage)));
 	}
 
-	@ExceptionHandler(org.springframework.web.context.request.async.AsyncRequestNotUsableException.class)
-	public void handleAsyncRequestNotUsable(org.springframework.web.context.request.async.AsyncRequestNotUsableException ex) {
+	@ExceptionHandler(AsyncRequestNotUsableException.class)
+	public void handleAsyncRequestNotUsable(AsyncRequestNotUsableException ex) {
 		log.info("Client disconnected from async stream: {}", ex.getMessage());
 	}
 

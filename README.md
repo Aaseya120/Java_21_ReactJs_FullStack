@@ -113,13 +113,13 @@ To keep this project at the pinnacle of industry standards, follow these guideli
 | Challenge / Concept | How it was achieved in this project |
 |---------------------|-------------------------------------|
 | **API Gateway Pattern** | `api-gateway` acts as a single entry point, encapsulating routing, JWT validation, and CORS. |
-| **Distributed Transaction** | Used **Saga Pattern** + **Outbox Pattern** for cross-service eventual consistency without 2PC locking. |
+| **Distributed Transaction** | Used **Saga Pattern** + **Outbox Pattern**. Both the `order-service` and `product-service` write Saga events to local Outbox tables inside a single `@Transactional` block to prevent the Dual-Write problem. |
 | **Fault Tolerance** | Used **Circuit Breaker**, **Retry**, and **Fallback** (Resilience4j) to fail fast on remote service outages. |
 | **Bulkhead Pattern** | Limited concurrent requests/threads to isolate failures and prevent cascading thread exhaustion. |
 | **Publish-Subscribe** | Used **Apache Kafka** for asynchronous, event-driven choreographies (e.g., Notifications). |
 | **Distributed Locking**| Used **Redisson (`RLock`)** in the `product-service` to safely handle concurrent inventory decrements across multiple pods. |
 | **Scalability** | Used **Java 21 Virtual Threads**, Redis caching, and Kubernetes HPA for massive horizontal scale. |
-| **Reliability** | Implemented **Idempotency** in consumers, Dead Letter Queues (DLQ), and Kubernetes Health Checks. |
+| **Reliability (Zero Data Loss)** | Implemented **Redis Idempotency** in consumers to guarantee exactly-once processing, and **Dead Letter Queues (DLQ)** by throwing `RuntimeExceptions` back to Kafka for automated retries. |
 | **Availability** | Achieved via Kubernetes ReplicaSets, API Gateway fallbacks, and stateless design. |
 | **Readability** | Ensured via Java Records (no boilerplate), MapStruct, and clean separation of concerns. |
 | **Maintainability** | Enforced strictly decoupled bounded contexts, Flyway migrations, and centralized logging. |
@@ -130,9 +130,12 @@ To keep this project at the pinnacle of industry standards, follow these guideli
 | **Isolation** | Database isolation managed via `@Transactional`; Network isolation via Kubernetes internal network. |
 | **Caching** | Used **Redis** to offload heavy read queries and manage distributed rate-limiting. |
 | **ACID & Transactions**| Enforced locally within bounded contexts via PostgreSQL and Spring's declarative `@Transactional`. |
-| **Connection Pooling** | Handled natively via **HikariCP**, ensuring high throughput and efficient DB connection reuse. |
+| **Connection Pooling** | Tuned **HikariCP** (`maximum-pool-size=50`) explicitly to prevent connection starvation when using Virtual Threads for high-throughput blocking I/O. |
 | **Spring Data JPA** | Used for ORM; leveraging entity relationships, automatic query generation, and lazy loading. |
 | **Spring Security** | Implemented Zero-Trust via **API Gateway**, utilizing JWTs/OAuth2 and downstream role propagation. |
+| **Internationalization (i18n)** | Global Exception Handlers utilize `MessageSource` and Resource Bundles to dynamically localize error messages based on the `Accept-Language` HTTP header. |
+| **Generics & DRY** | Standardized `ApiResponse<T>` wrapper eliminates duplicate response mapping across all 5 microservices. |
+| **Reactive Programming** | **Spring Cloud Gateway (WebFlux)** leverages `Mono` and `Flux` to handle tens of thousands of concurrent connections without thread blocking, while backend services stick to Virtual Threads. |
 
 ### 2. Code-Level (GoF) Design Patterns
 - **Dependency Injection (IoC):** The core of Spring Boot. Services, Controllers, and Repositories are decoupled and injected at runtime.
@@ -156,8 +159,10 @@ To navigate this codebase effectively, you should understand the primary Spring 
 - **`@Retry`**: Automatically retries failed synchronous API calls a specified number of times before giving up.
 - **`@TimeLimiter`**: Enforces strict timeout limits on asynchronous/future calls to ensure threads are not blocked indefinitely.
 
-### Asynchronous Messaging
+### Asynchronous Messaging & Zero Data Loss
 - **`@KafkaListener`**: Placed on methods in our consumer services to asynchronously ingest messages from Kafka topics (e.g., `order-events`).
+- **Distributed Idempotency Guard**: Consumers utilize `RedissonClient` to set atomic lock keys (`idempotency:saga:order:{id}`) ensuring that if a pod crashes mid-execution, a message is never processed twice.
+- **Dead Letter Queues (DLQ)**: By strictly throwing `RuntimeException` for unexpected errors, we trigger Spring Kafka's retry mechanics and automatic `.DLT` routing for poison pills, guaranteeing zero data loss.
 
 ### Data & Transactions
 - **`@Transactional`**: Applied at the service layer to ensure local database operations (like saving an Order and inserting into an Outbox table) either fully succeed or completely rollback.
@@ -409,6 +414,7 @@ Each service has a multi-stage Dockerfile:
 kubectl apply -f k8s/namespace.yml
 
 # Create ConfigMap and Secrets
+# Note: Ensure you edit k8s/secrets.yml to provide your base64 encoded MAIL_PASS before applying
 kubectl apply -f k8s/configmap.yml
 kubectl apply -f k8s/secrets.yml
 
@@ -434,6 +440,74 @@ kubectl apply -f k8s/microservices.yml
 kubectl get pods -n microservices
 kubectl get services -n microservices
 ```
+
+---
+
+## ☁️ AWS Production Architecture Mapping
+
+While the Kubernetes manifests above run the entire stack (including databases and message brokers) inside the cluster for development/testing, a true enterprise **AWS Production Environment** should offload stateful services to managed AWS offerings.
+
+To deploy this project to AWS securely and reliably, map the components as follows:
+
+| Local / K8s Helm Chart | Managed AWS Service | Benefits |
+|------------------------|---------------------|----------|
+| **Kubernetes (Compute)** | **Amazon EKS** (Elastic Kubernetes Service) | Manages the control plane. Use Fargate or managed EC2 node groups for the Spring Boot microservices. |
+| **PostgreSQL** | **Amazon RDS for PostgreSQL** | Automated backups, Multi-AZ high availability, and simplified scaling outside the K8s cluster. |
+| **Redis** | **Amazon ElastiCache for Redis** | Fully managed, sub-millisecond latency for the API Gateway rate limiter and product cache. |
+| **Apache Kafka** | **Amazon MSK** (Managed Streaming for Apache Kafka) | Serverless or provisioned Kafka clusters without the operational overhead of managing KRaft/Zookeeper nodes. |
+| **K8s Secrets** | **AWS Secrets Manager** | Instead of static `secrets.yml`, use the AWS Secrets and Configuration Provider (ASCP) to mount secrets dynamically into EKS pods. |
+| **Docker Registry** | **Amazon ECR** (Elastic Container Registry) | Store the multi-stage Docker images (`your-ecr-repo/user-service:latest`). |
+| **API Gateway LoadBalancer**| **AWS ALB** (Application Load Balancer) | Map the K8s `LoadBalancer` service to an AWS ALB using the AWS Load Balancer Controller for WAF integration and SSL termination. |
+
+**AWS Deployment Strategy:**
+1. Provision VPC, RDS, ElastiCache, and MSK using Terraform or AWS CDK.
+2. Update the `k8s/configmap.yml` to point `DB_URL`, `REDIS_HOST`, and `KAFKA_BROKERS` to the respective AWS internal endpoints.
+3. Apply the stateless microservices (`k8s/api-gateway.yml` and `k8s/microservices.yml`) to EKS.
+
+### S3 Direct Upload Architecture (Hexagonal)
+The `product-service` utilizes the **Ports & Adapters (Hexagonal)** architecture to seamlessly integrate AWS S3 Presigned URLs for file uploads without forcing local developers to have AWS credentials.
+
+```mermaid
+sequenceDiagram
+    participant C as React Client
+    participant P as Product Service (Java 21)
+    participant A as AwsS3StorageAdapter
+    participant S as Amazon S3
+
+    C->>P: GET /api/products/upload-url
+    P->>A: generatePresignedUploadUrl()
+    A->>S: SDK: Generate signature
+    S-->>A: return signature
+    A-->>P: uploadUrl (PUT), finalUrl (GET)
+    P-->>C: JSON { uploadUrl, finalUrl }
+    
+    Note over C,S: Direct Browser-to-S3 Upload (Bypasses Backend CPU/Bandwidth)
+    C->>S: PUT image.jpg to uploadUrl
+    S-->>C: 200 OK
+    
+    C->>P: POST /api/products { name, imageUrl: finalUrl }
+    P-->>C: 201 Created
+```
+
+### Distributed Locking Architecture (Redisson + AOP)
+To prevent race conditions in highly concurrent scenarios (e.g., two users purchasing the last item simultaneously), the `product-service` utilizes Redis Distributed Locks via Redisson. We abstracted this into a custom `@DistributedLock` annotation and a Spring AOP Aspect, resulting in flawlessly synchronized, boilerplate-free business logic.
+
+```java
+@Transactional
+@DistributedLock(keyPrefix = "lock:inventory:")
+public void deductStock(Long id, int quantity) {
+    // Perfectly synchronized across all service instances!
+    // ...
+}
+```
+
+---
+
+## 📊 Observability (Phase 7)
+The entire ecosystem is heavily instrumented for enterprise-grade observability:
+1. **Jaeger (Distributed Tracing):** Correlates requests across the API Gateway, User Service, Order Service, and Product Service using OpenTelemetry (OTLP). View traces at `http://localhost:16686`.
+2. **Prometheus (Metrics Scraper):** Automatically scrapes JVM, memory, GC, and HTTP latency metrics from all Spring Boot Actuator endpoints.
+3. **Grafana (Dashboards):** Visualizes the Prometheus metrics in real-time. Accessible at `http://localhost:3001` (login: `admin` / `admin`).
 
 ---
 
@@ -493,6 +567,7 @@ This project embraces a comprehensive observability strategy, ensuring every asp
 | `REDIS_HOST` | `localhost` | Redis hostname |
 | `KAFKA_BROKERS` | `localhost:9092` | Kafka bootstrap servers |
 | `JWT_SECRET` | dev default | 64-byte hex JWT signing key |
+| `MAIL_PASS` | (empty) | SMTP Password for Notification Service (Injected via K8s Secrets) |
 
 ---
 

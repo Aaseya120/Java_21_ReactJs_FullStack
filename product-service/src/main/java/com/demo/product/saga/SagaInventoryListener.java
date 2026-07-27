@@ -26,6 +26,9 @@ public class SagaInventoryListener {
 	private final KafkaTemplate<String, Object> kafkaTemplate;
 	private final ObjectMapper objectMapper;
 
+	private final org.redisson.api.RedissonClient redissonClient;
+	private static final String IDEMPOTENCY_PREFIX = "idempotency:saga:order:";
+
 	@KafkaListener(topics = KafkaConstants.TOPIC_ORDER_EVENTS, groupId = "product-saga-group")
 	public void onOrderEvent(String payload) {
 		try {
@@ -37,29 +40,32 @@ public class SagaInventoryListener {
 				Long productId = Long.parseLong(event.get("productId").asText());
 				int quantity = event.get("quantity").asInt();
 
+				// 1. Idempotency Check using Redis
+				String idempotencyKey = IDEMPOTENCY_PREFIX + orderId;
+				if (!redissonClient.getBucket(idempotencyKey).setIfAbsent("PROCESSED", java.time.Duration.ofDays(1))) {
+					log.info("SAGA: Order {} was already processed. Skipping.", orderId);
+					return; // Already processed
+				}
+
 				log.info("SAGA: Processing order {} for inventory reservation", orderId);
 
 				try {
-					productCommandService.deductStock(productId, quantity);
+					// 2. Safe Dual-Write: Deduct stock and save Outbox reply in ONE transaction
+					productCommandService.deductStockForSaga(productId, quantity, orderId);
 
-					// Success -> Emit RESERVED
-					emitInventoryEvent(orderId, "RESERVED");
-
-				} catch (Exception ex) {
+				} catch (com.demo.product.exception.InsufficientStockException | com.demo.product.exception.ProductNotFoundException ex) {
 					log.error("SAGA: Inventory reservation failed for order {}: {}", orderId, ex.getMessage());
 
-					// Failure -> Emit FAILED
-					emitInventoryEvent(orderId, "FAILED");
+					// 3. Fallback: If it fails business logic, emit FAILED outbox event
+					String eventJson = String.format("{\"orderId\":\"%s\", \"status\":\"FAILED\"}", orderId);
+					kafkaTemplate.send(KafkaConstants.TOPIC_INVENTORY_EVENTS, orderId.toString(), eventJson);
 				}
 			}
 		} catch (Exception e) {
 			log.error("Error processing order event in saga: {}", e.getMessage());
+			// 4. Proper Error Handling: Throw exception to trigger Kafka Retry and DLQ mechanisms
+			throw new RuntimeException("Unexpected error processing order event", e);
 		}
-	}
-
-	private void emitInventoryEvent(Long orderId, String status) {
-		String eventJson = String.format("{\"orderId\":\"%s\", \"status\":\"%s\"}", orderId, status);
-		kafkaTemplate.send(KafkaConstants.TOPIC_INVENTORY_EVENTS, orderId.toString(), eventJson);
 	}
 }
 

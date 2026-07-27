@@ -69,7 +69,8 @@ public class UserEventConsumer {
 			ack.acknowledge();
 		} catch (Exception ex) {
 			log.error("Failed to process user event: {}", ex.getMessage(), ex);
-			ack.acknowledge();
+			// Throw exception to trigger Kafka Retry and DLQ mechanisms
+			throw new RuntimeException("Unexpected error processing user event", ex);
 		}
 	}
 

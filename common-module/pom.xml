@@ -61,6 +61,10 @@
             <artifactId>opentelemetry-exporter-otlp</artifactId>
             <version>1.40.0</version>
         </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
 
         <!-- Chaos Engineering (Spring Boot Chaos Monkey) -->
         <dependency>

@@ -165,6 +165,11 @@ spec:
                 secretKeyRef:
                   name: microservices-secrets
                   key: DB_PASS
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: microservices-secrets
+                  key: JWT_SECRET
           resources:
             requests:
               memory: "512Mi"
@@ -222,6 +227,17 @@ spec:
           envFrom:
             - configMapRef:
                 name: microservices-config
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: microservices-secrets
+                  key: JWT_SECRET
+            - name: MAIL_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: microservices-secrets
+                  key: MAIL_PASS
           resources:
             requests:
               memory: "256Mi"

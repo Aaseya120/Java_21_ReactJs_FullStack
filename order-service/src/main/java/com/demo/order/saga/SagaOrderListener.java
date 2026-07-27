@@ -44,6 +44,8 @@ public class SagaOrderListener {
 
 		} catch (Exception e) {
 			log.error("Error processing inventory event in saga: {}", e.getMessage());
+			// Throw exception to trigger Kafka Retry and DLQ mechanisms
+			throw new RuntimeException("Unexpected error processing inventory event", e);
 		}
 	}
 }

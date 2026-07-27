@@ -81,6 +81,11 @@ spring:
               args:
                 name: productServiceBreaker
                 fallbackUri: forward:/fallback/product
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@ipKeyResolver}"
         - id: notification-service
           uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8084}
           predicates:
@@ -90,6 +95,11 @@ spring:
           predicates:
             - Path=/api/v1/aggregator/**
           filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@ipKeyResolver}"
             - name: CircuitBreaker
               args:
                 name: orderServiceBreaker

@@ -65,8 +65,8 @@ public class OrderEventConsumer {
 			ack.acknowledge();
 		} catch (Exception ex) {
 			log.error("Failed to process order event for orderId={}: {}", orderId, ex.getMessage(), ex);
-			// In production: send to DLQ (Dead Letter Queue)
-			ack.acknowledge(); // Acknowledge to avoid infinite retry; rely on DLQ
+			// Throw exception to trigger Kafka Retry and DLQ mechanisms
+			throw new RuntimeException("Unexpected error processing order event", ex);
 		}
 	}
 
