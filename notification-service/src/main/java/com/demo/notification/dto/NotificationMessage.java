@@ -1,6 +1,7 @@
 package com.demo.notification.dto;
 
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Notification payload — Java 21 record.
@@ -12,7 +13,7 @@ public record NotificationMessage(String notificationId, String recipientId, Str
 		String body, NotificationType type, Instant createdAt) {
 	public static NotificationMessage of(String recipientId, String recipientEmail, String subject, String body,
 			NotificationType type) {
-		return new NotificationMessage(java.util.UUID.randomUUID().toString(), recipientId, recipientEmail, subject,
+		return new NotificationMessage(UUID.randomUUID().toString(), recipientId, recipientEmail, subject,
 				body, type, Instant.now());
 	}
 }

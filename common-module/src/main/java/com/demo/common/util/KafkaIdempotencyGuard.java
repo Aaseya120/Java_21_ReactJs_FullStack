@@ -5,6 +5,8 @@ import java.time.Duration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import com.demo.common.constant.IdempotencyStatus;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,7 +37,7 @@ public class KafkaIdempotencyGuard {
 
         String key = KEY_PREFIX + eventId.trim();
         try {
-            Boolean acquired = redisTemplate.opsForValue().setIfAbsent(key, "PROCESSED", DEFAULT_TTL);
+            Boolean acquired = redisTemplate.opsForValue().setIfAbsent(key, IdempotencyStatus.PROCESSED.name(), DEFAULT_TTL);
             if (Boolean.FALSE.equals(acquired)) {
                 log.warn("Duplicate Kafka event detected and blocked by idempotency guard: {}", eventId);
                 return true;

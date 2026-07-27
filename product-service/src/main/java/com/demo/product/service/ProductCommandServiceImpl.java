@@ -5,6 +5,8 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.demo.common.constant.SagaInventoryStatus;
+
 import com.demo.product.dto.ProductRequest;
 import com.demo.product.dto.ProductResponse;
 import com.demo.product.entity.Product;
@@ -124,7 +126,7 @@ public class ProductCommandServiceImpl implements ProductCommandService {
 		
 		// Use outbox pattern for the Saga reply to prevent dual-write problem
 		try {
-			String payload = String.format("{\"orderId\":\"%s\", \"status\":\"RESERVED\"}", orderId);
+			String payload = String.format("{\"orderId\":\"%s\", \"status\":\"%s\"}", orderId, SagaInventoryStatus.RESERVED.name());
 			OutboxEvent outboxEvent = OutboxEvent.builder().aggregateId(orderId.toString())
 					.aggregateType("OrderSaga").eventType(EventConstants.EVENT_INVENTORY_RESERVED)
 					.payload(payload).build();

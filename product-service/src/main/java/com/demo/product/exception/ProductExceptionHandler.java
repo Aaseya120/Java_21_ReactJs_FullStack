@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.demo.common.dto.ApiResponse;
+import com.demo.common.exception.GlobalExceptionHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * Product-service specific exception handler.
  *
  * <p>
- * Takes precedence over {@link com.demo.common.exception.GlobalExceptionHandler}
+ * Takes precedence over {@link GlobalExceptionHandler}
  * for domain-specific exceptions, returning the correct HTTP status codes instead
  * of the generic 500.
  */

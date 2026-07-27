@@ -1,6 +1,9 @@
 package com.demo.order.controller;
 
+import java.time.Duration;
 import java.util.List;
+
+import com.demo.common.constant.IdempotencyStatus;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -50,8 +53,8 @@ public class OrderController {
 
 		if (idempotencyKey != null) {
 			String redisKey = "idempotency:order:" + idempotencyKey;
-			Boolean isNew = redisTemplate.opsForValue().setIfAbsent(redisKey, "PROCESSING",
-					java.time.Duration.ofHours(24));
+			Boolean isNew = redisTemplate.opsForValue().setIfAbsent(redisKey, IdempotencyStatus.PROCESSING.name(),
+					Duration.ofHours(24));
 			if (Boolean.FALSE.equals(isNew)) {
 				return ResponseEntity.status(HttpStatus.CONFLICT)
 						.body(ApiResponse.error("CONFLICT", MessageConstants.MSG_ERR_DUPLICATE_REQ));

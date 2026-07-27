@@ -4,6 +4,8 @@ package com.demo.order.saga;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import com.demo.common.constant.SagaInventoryStatus;
+
 import com.demo.common.constant.KafkaConstants;
 import com.demo.order.entity.OrderStatus;
 import com.demo.order.service.OrderService;
@@ -34,10 +36,10 @@ public class SagaOrderListener {
 
 			log.info("SAGA: Received inventory response for order {}: {}", orderId, status);
 
-			if ("RESERVED".equals(status)) {
+			if (SagaInventoryStatus.RESERVED.name().equals(status)) {
 				orderService.updateOrderStatus(orderId, OrderStatus.CONFIRMED);
 				log.info("SAGA: Order {} confirmed.", orderId);
-			} else if ("FAILED".equals(status)) {
+			} else if (SagaInventoryStatus.FAILED.name().equals(status)) {
 				orderService.updateOrderStatus(orderId, OrderStatus.CANCELLED);
 				log.warn("SAGA: Order {} cancelled due to inventory failure (Compensation).", orderId);
 			}

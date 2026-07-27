@@ -3,6 +3,7 @@ package com.demo.user.service;
 import com.demo.user.dto.JwtResponse;
 import com.demo.user.dto.LoginRequest;
 import com.demo.user.dto.RegisterRequest;
+import com.demo.user.dto.UserResponse;
 
 public interface AuthService {
 	JwtResponse register(RegisterRequest request);
@@ -13,5 +14,5 @@ public interface AuthService {
 
 	void logout(String refreshToken);
 
-	com.demo.user.dto.UserResponse recoverUserId(String contact);
+	UserResponse recoverUserId(String contact);
 }

@@ -13,6 +13,8 @@ import com.demo.user.dto.JwtResponse;
 import com.demo.user.dto.LoginRequest;
 import com.demo.user.dto.RegisterRequest;
 import com.demo.user.dto.TokenRefreshRequest;
+import com.demo.user.dto.LogoutRequest;
+import com.demo.user.dto.UserResponse;
 import com.demo.user.service.AuthService;
 
 import jakarta.validation.Valid;
@@ -60,7 +62,7 @@ public class AuthController {
 	 * POST /api/v1/auth/logout — Logout by invalidating the refresh token.
 	 */
 	@PostMapping("/logout")
-	public ResponseEntity<ApiResponse<String>> logout(@Valid @RequestBody com.demo.user.dto.LogoutRequest request) {
+	public ResponseEntity<ApiResponse<String>> logout(@Valid @RequestBody LogoutRequest request) {
 		authService.logout(request.refreshToken());
 		return ResponseEntity.ok(ApiResponse.success("Logged out successfully"));
 	}
@@ -69,7 +71,7 @@ public class AuthController {
 	 * GET /api/v1/auth/recover-id — Recover User ID by email or mobile number.
 	 */
 	@org.springframework.web.bind.annotation.GetMapping("/recover-id")
-	public ResponseEntity<ApiResponse<com.demo.user.dto.UserResponse>> recoverUserId(
+	public ResponseEntity<ApiResponse<UserResponse>> recoverUserId(
 			@org.springframework.web.bind.annotation.RequestParam("contact") String contact) {
 		return ResponseEntity.ok(ApiResponse.success(authService.recoverUserId(contact)));
 	}

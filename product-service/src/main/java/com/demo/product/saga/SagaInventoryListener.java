@@ -1,11 +1,18 @@
 package com.demo.product.saga;
 
 
+import java.time.Duration;
+
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import com.demo.common.constant.IdempotencyStatus;
+import com.demo.common.constant.SagaInventoryStatus;
+
 import com.demo.common.constant.KafkaConstants;
+import com.demo.product.exception.InsufficientStockException;
+import com.demo.product.exception.ProductNotFoundException;
 import com.demo.product.service.ProductCommandService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,7 +49,7 @@ public class SagaInventoryListener {
 
 				// 1. Idempotency Check using Redis
 				String idempotencyKey = IDEMPOTENCY_PREFIX + orderId;
-				if (!redissonClient.getBucket(idempotencyKey).setIfAbsent("PROCESSED", java.time.Duration.ofDays(1))) {
+				if (!redissonClient.getBucket(idempotencyKey).setIfAbsent(IdempotencyStatus.PROCESSED.name(), Duration.ofDays(1))) {
 					log.info("SAGA: Order {} was already processed. Skipping.", orderId);
 					return; // Already processed
 				}
@@ -53,11 +60,11 @@ public class SagaInventoryListener {
 					// 2. Safe Dual-Write: Deduct stock and save Outbox reply in ONE transaction
 					productCommandService.deductStockForSaga(productId, quantity, orderId);
 
-				} catch (com.demo.product.exception.InsufficientStockException | com.demo.product.exception.ProductNotFoundException ex) {
+				} catch (InsufficientStockException | ProductNotFoundException ex) {
 					log.error("SAGA: Inventory reservation failed for order {}: {}", orderId, ex.getMessage());
 
 					// 3. Fallback: If it fails business logic, emit FAILED outbox event
-					String eventJson = String.format("{\"orderId\":\"%s\", \"status\":\"FAILED\"}", orderId);
+					String eventJson = String.format("{\"orderId\":\"%s\", \"status\":\"%s\"}", orderId, SagaInventoryStatus.FAILED.name());
 					kafkaTemplate.send(KafkaConstants.TOPIC_INVENTORY_EVENTS, orderId.toString(), eventJson);
 				}
 			}

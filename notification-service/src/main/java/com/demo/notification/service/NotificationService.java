@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import com.demo.notification.dto.NotificationMessage;
 import com.demo.notification.dto.NotificationType;
+import com.demo.notification.controller.ReactiveNotificationController;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +68,7 @@ public class NotificationService {
 
 	}
 
-	private final com.demo.notification.controller.ReactiveNotificationController reactiveNotificationController;
+	private final ReactiveNotificationController reactiveNotificationController;
 
 	private void storeInAppNotification(NotificationMessage message) {
 		// In production: persist to notifications table and expose via WebSocket

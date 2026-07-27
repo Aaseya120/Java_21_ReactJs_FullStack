@@ -20,6 +20,7 @@ import com.demo.order.exception.OrderNotFoundException;
 import com.demo.order.outbox.OutboxEvent;
 import com.demo.order.outbox.OutboxEventRepository;
 import com.demo.order.repository.OrderRepository;
+import com.demo.order.mapper.OrderMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +44,7 @@ public class OrderService {
 	private final OrderRepository orderRepository;
 	private final OutboxEventRepository outboxEventRepository;
 	private final ObjectMapper objectMapper;
-	private final com.demo.order.mapper.OrderMapper orderMapper;
+	private final OrderMapper orderMapper;
 
 	/**
 	 * Java 21 Virtual Thread executor — lightweight threads for I/O-bound parallel
@@ -52,7 +53,7 @@ public class OrderService {
 	private final ExecutorService virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
 	public OrderService(OrderRepository orderRepository, OutboxEventRepository outboxEventRepository,
-			ObjectMapper objectMapper, com.demo.order.mapper.OrderMapper orderMapper) {
+			ObjectMapper objectMapper, OrderMapper orderMapper) {
 		this.orderRepository = orderRepository;
 		this.outboxEventRepository = outboxEventRepository;
 		this.objectMapper = objectMapper;

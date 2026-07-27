@@ -1,6 +1,6 @@
 package com.demo.product.exception;
 
-public class ProductNotFoundException extends java.util.NoSuchElementException {
+public class ProductNotFoundException extends RuntimeException {
 	public ProductNotFoundException(String id) {
 		super("Product not found: " + id);
 	}

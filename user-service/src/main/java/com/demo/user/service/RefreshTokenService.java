@@ -1,6 +1,7 @@
 package com.demo.user.service;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +28,7 @@ public class RefreshTokenService {
 	private final UserRepository userRepository;
 	private final EntityManager entityManager;
 
-	public java.util.Optional<RefreshToken> findByToken(String token) {
+	public Optional<RefreshToken> findByToken(String token) {
 		return refreshTokenRepository.findByToken(token);
 	}
 

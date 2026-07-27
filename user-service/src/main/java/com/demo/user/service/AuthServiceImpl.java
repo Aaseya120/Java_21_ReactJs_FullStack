@@ -15,6 +15,7 @@ import com.demo.common.security.JwtUtil;
 import com.demo.user.dto.JwtResponse;
 import com.demo.user.dto.LoginRequest;
 import com.demo.user.dto.RegisterRequest;
+import com.demo.user.dto.UserResponse;
 import com.demo.user.entity.RefreshToken;
 import com.demo.user.entity.Role;
 import com.demo.user.entity.User;
@@ -69,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public com.demo.user.dto.UserResponse recoverUserId(String contact) {
+	public UserResponse recoverUserId(String contact) {
 		if (contact == null || contact.isBlank()) {
 			throw new UserNotFoundException("Contact information cannot be empty");
 		}

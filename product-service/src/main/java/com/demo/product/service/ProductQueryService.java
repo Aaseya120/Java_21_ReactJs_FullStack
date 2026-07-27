@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.demo.product.dto.ProductResponse;
 import com.demo.product.exception.ProductNotFoundException;
 import com.demo.product.repository.ProductRepository;
+import com.demo.product.mapper.ProductMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ public class ProductQueryService {
 
 	private static final String PRODUCT_CACHE = "products";
 	private final ProductRepository productRepository;
-	private final com.demo.product.mapper.ProductMapper productMapper;
+	private final ProductMapper productMapper;
 
 	/**
 	 * Cache-aside pattern: Reads from Redis first. If miss, reads from DB and
