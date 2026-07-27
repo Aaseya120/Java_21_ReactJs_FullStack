@@ -376,6 +376,12 @@ const { register, handleSubmit, formState: { errors } } = useForm({
   - Listens to browser `window.addEventListener('offline')` / `'online'` events.
   - Renders a sticky warning banner when network connection drops.
 
+### 4.4 Advanced Responsive Design & Micro-Interactions
+* **Dynamic Architecture Diagram:** The Login Dashboard renders a fully responsive, native CSS/HTML animated diagram of the microservices topology, showcasing real-time data flow packets without any heavy charting libraries.
+* **Strict Geometric Symmetry:** Layouts utilize enforced flexbox height/width matching (`max-width: 440px`, `height: 480px`) across split-screen layouts to guarantee perfect visual balance.
+* **Scroll-Free Layout via CSS Zoom:** On severely constrained laptop displays (under 550px height), the application triggers Chrome-specific `@media (max-height: 550px)` queries with `zoom: 0.90` to natively scale down the layout footprint without generating bounding box errors or scrollbars.
+* **Auto-Fill Micro-Interactions:** Demo credentials at the bottom of the login form are fully interactive. Clicking them immediately utilizes `react-hook-form`'s `setValue` and `setFocus` to auto-populate the form and direct the user to the password field instantly.
+
 ---
 
 ## 5. Data, Messaging & Security Infrastructure
@@ -465,8 +471,8 @@ const { register, handleSubmit, formState: { errors } } = useForm({
 #### Q8: How do you trace a single user request across multiple microservices?
 **Answer:** Using a **Correlation ID (`X-Correlation-ID`)** and SLF4J **Mapped Diagnostic Context (MDC)**. A filter at the API Gateway generates a UUID header if absent and injects it into MDC. Every microservice copies this header into its local MDC, causing all log lines across all containers to share the same correlation ID for centralized querying in Elasticsearch / Grafana Loki.
 
-#### Q9: How did you optimize frontend performance and prevent Cumulative Layout Shift (CLS)?
-**Answer:** We implemented **Route-Level Code Splitting** (`React.lazy` + `Suspense`), reducing the initial JavaScript bundle by **84%** (to 15.61 kB). To prevent layout shifts during async data fetching, we replaced plain spinners with **Shimmer Skeleton Loaders** (`TableSkeleton`, `CardSkeleton`) that mirror the exact DOM dimensions of incoming data.
+#### Q9: How did you optimize frontend performance and handle complex responsive UI constraints?
+**Answer:** We implemented **Route-Level Code Splitting** (`React.lazy` + `Suspense`), reducing the initial JavaScript bundle by **84%**. We use **Shimmer Skeleton Loaders** to prevent Cumulative Layout Shift (CLS) during async fetches. For responsive constraints, our dashboard guarantees a scroll-free experience even on 498px-height monitors by combining strict geometric flexbox boundaries with Chrome-specific `zoom` media queries, allowing the UI to compress its native bounding box flawlessly without clipping.
 
 #### Q10: How do you achieve zero-downtime deployments in Kubernetes?
 **Answer:** We combine **Kubernetes Readiness Probes** (`/actuator/health/readiness`) with **Graceful Shutdown** (`server.shutdown: graceful`). During a rolling update, Kubernetes stops routing traffic to terminating pods while allowing in-flight requests 30 seconds to finish. For databases, we use the **Expand & Contract** migration pattern so schema changes never break older running pod versions.

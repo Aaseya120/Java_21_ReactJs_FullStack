@@ -50,8 +50,11 @@ Client (Browser/Mobile)
               ▼            ▼            ▼
            PostgreSQL    Redis       Apache Kafka 3.8
             :5432        :6379       :9092 (KRaft)
-            :5432        :6379       :9092 (KRaft)
+                          (Keycloak)
 ```
+
+### Dynamic Dashboard Visualization
+The frontend React application features a natively coded (CSS/HTML) **Dynamic Architecture Dashboard** on its Login screen, visually representing this entire microservice structure with animated real-time data flows to demonstrate system topology to users immediately upon entry.
 
 ---
 

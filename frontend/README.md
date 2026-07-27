@@ -51,6 +51,16 @@ sequenceDiagram
 
 ---
 
+## 🎨 UI/UX & Responsive Design
+
+This frontend places a high emphasis on a premium, polished user experience:
+1. **Dynamic Architecture Diagram**: The Login Dashboard features a fully native, CSS-animated architecture diagram that maps out the microservices, gateway, and infrastructure layer (Postgres, Redis, Kafka, Keycloak). Data flows are visualized using keyframe animations on HTML nodes.
+2. **Perfect Symmetry & Constraints**: The Login Dashboard guarantees perfect 50/50 horizontal symmetry. The branding panel and the login card are forced into identical geometric constraints (`480px` height, `440px` width) resulting in a perfectly balanced visual weight.
+3. **Scroll-Free Compactness**: The UI is designed to naturally fit inside small viewport heights (like laptop screens) without generating messy scrollbars.
+4. **Browser Zoom Scaling**: For extreme height constraints (under 550px), the application leverages CSS `@media` queries with the `zoom` property to natively recalculate and shrink the layout dimensions for Chrome, ensuring content never clips at the top or bottom boundaries.
+
+---
+
 ## 📦 Project Structure
 
 ```

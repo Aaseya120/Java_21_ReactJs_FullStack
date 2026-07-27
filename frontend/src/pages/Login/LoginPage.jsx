@@ -114,7 +114,7 @@ export default function LoginPage() {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100vh',
       display: 'flex',
       background: 'var(--bg-base)',
       position: 'relative',
@@ -136,51 +136,207 @@ export default function LoginPage() {
 
       {/* Left Panel — Branding */}
       <div style={{
-        flex: 1, flexDirection: 'column', justifyContent: 'center',
-        padding: '60px', background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(16,185,129,0.05) 100%)',
+        flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+        padding: '24px', background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(16,185,129,0.05) 100%)',
         borderRight: '1px solid var(--border)',
-        display: 'flex',
       }} className="animate-fade login-brand-panel" id="login-brand">
-        <div style={{ fontSize: '3rem', marginBottom: '24px' }}>☕</div>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1.2, marginBottom: '16px' }}>
-          Java 21<br/>Microservices<br/>
-          <span style={{ color: 'var(--primary)' }}>Dashboard</span>
-        </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', maxWidth: 360, lineHeight: 1.7 }}>
-          Production-ready monitoring and management for all your microservices.
-          Register, authenticate, manage products, orders, and real-time notifications.
-        </p>
-        <div style={{ display: 'flex', gap: 12, marginTop: 40, flexWrap: 'wrap' }}>
-          {['User Service', 'Product Service', 'Order Service', 'Notifications', 'API Gateway'].map(s => (
-            <span key={s} className="badge badge--primary" style={{ fontSize: '0.75rem' }}>{s}</span>
-          ))}
+        <div style={{ width: '100%', maxWidth: 440, height: 480, padding: '24px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ fontSize: '1.75rem', marginBottom: '4px' }}>☕</div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1.1, marginBottom: '8px' }}>
+            Java 21<br/>Microservices<br/>
+            <span style={{ color: 'var(--primary)' }}>Dashboard</span>
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: 1.4, marginBottom: 0 }}>
+            Production-ready monitoring and management for all your microservices.
+            Register, authenticate, manage products, orders, and real-time notifications.
+          </p>
+          {/* Dynamic Architecture Diagram */}
+          <div className="login-diagram-container" style={{ marginTop: 12, position: 'relative', width: '100%' }}>
+          <style>{`
+            .arch-node {
+              background: var(--bg-elevated);
+              border: 1px solid var(--border);
+              border-radius: var(--radius-md);
+              padding: 6px 10px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              z-index: 2;
+              box-shadow: var(--shadow-sm);
+              transition: all 0.3s ease;
+            }
+            .arch-node:hover {
+              border-color: var(--primary);
+              box-shadow: 0 0 15px rgba(99,102,241,0.3);
+              transform: translateY(-2px);
+            }
+            .arch-title { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); text-align: center; }
+            .arch-sub { font-size: 0.65rem; color: var(--primary); font-family: monospace; margin-top: 2px; }
+            
+            .arch-line-v {
+              width: 2px;
+              background: var(--border);
+              margin: 0 auto;
+              position: relative;
+            }
+            .arch-line-h {
+              height: 2px;
+              background: var(--border);
+              width: 80%;
+              margin: 0 auto;
+              position: relative;
+            }
+
+            @keyframes data-flow-down {
+              0% { top: 0; opacity: 0; }
+              10% { opacity: 1; }
+              90% { opacity: 1; }
+              100% { top: 100%; opacity: 0; }
+            }
+            
+            @keyframes data-flow-up {
+              0% { bottom: 0; opacity: 0; }
+              10% { opacity: 1; }
+              90% { opacity: 1; }
+              100% { bottom: 100%; opacity: 0; }
+            }
+
+            @keyframes data-flow-right {
+              0% { left: 0; opacity: 0; }
+              10% { opacity: 1; }
+              90% { opacity: 1; }
+              100% { left: 100%; opacity: 0; }
+            }
+
+            .packet-down {
+              position: absolute; width: 6px; height: 6px; border-radius: 50%;
+              background: var(--primary); box-shadow: 0 0 8px var(--primary);
+              left: -2px; animation: data-flow-down 1.5s linear infinite;
+            }
+            .packet-up {
+              position: absolute; width: 6px; height: 6px; border-radius: 50%;
+              background: var(--success); box-shadow: 0 0 8px var(--success);
+              left: -2px; animation: data-flow-up 1.5s linear infinite 0.75s;
+            }
+            .packet-right {
+              position: absolute; width: 6px; height: 6px; border-radius: 50%;
+              background: var(--primary); box-shadow: 0 0 8px var(--primary);
+              top: -2px; animation: data-flow-right 2s linear infinite;
+            }
+          `}</style>
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {/* Client */}
+            <div className="arch-node" style={{ width: 140 }}>
+              <div className="arch-title">⚛️ React Frontend</div>
+              <div className="arch-sub">Port 3000</div>
+            </div>
+
+            {/* Connection to Gateway */}
+            <div className="arch-line-v" style={{ height: 16 }}>
+              <div className="packet-down" />
+              <div className="packet-up" />
+            </div>
+
+            {/* API Gateway */}
+            <div className="arch-node" style={{ width: 180, borderColor: 'var(--primary)' }}>
+              <div className="arch-title">🚪 API Gateway</div>
+              <div className="arch-sub">Spring Cloud • Port 8080</div>
+            </div>
+
+            {/* Connection to Microservices */}
+            <div className="arch-line-v" style={{ height: 12 }}>
+              <div className="packet-down" style={{ animationDuration: '2s' }}/>
+            </div>
+            
+            {/* Horizontal Bus */}
+            <div className="arch-line-h">
+              <div className="packet-right" />
+              <div className="packet-right" style={{ animationDelay: '1s', background: 'var(--success)', boxShadow: '0 0 8px var(--success)' }} />
+            </div>
+            
+            {/* Vertical drops to services */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '85%', margin: '0 auto' }}>
+              <div className="arch-line-v" style={{ height: 12 }}><div className="packet-down" style={{ animationDelay: '0.2s' }}/></div>
+              <div className="arch-line-v" style={{ height: 12 }}><div className="packet-down" style={{ animationDelay: '0.4s' }}/></div>
+              <div className="arch-line-v" style={{ height: 12 }}><div className="packet-down" style={{ animationDelay: '0.6s' }}/></div>
+              <div className="arch-line-v" style={{ height: 12 }}><div className="packet-down" style={{ animationDelay: '0.8s' }}/></div>
+            </div>
+
+            {/* Microservices */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 6 }}>
+              <div className="arch-node" style={{ flex: 1, padding: '10px 2px' }}>
+                <div className="arch-title" style={{ fontSize: '0.65rem' }}>👤 User SVC</div>
+                <div className="arch-sub" style={{ fontSize: '0.55rem' }}>8081 • JWT</div>
+              </div>
+              <div className="arch-node" style={{ flex: 1, padding: '10px 2px' }}>
+                <div className="arch-title" style={{ fontSize: '0.65rem' }}>📦 Prod SVC</div>
+                <div className="arch-sub" style={{ fontSize: '0.55rem' }}>8082 • SQL</div>
+              </div>
+              <div className="arch-node" style={{ flex: 1, padding: '10px 2px' }}>
+                <div className="arch-title" style={{ fontSize: '0.65rem' }}>🛒 Order SVC</div>
+                <div className="arch-sub" style={{ fontSize: '0.55rem' }}>8083 • SQL</div>
+              </div>
+              <div className="arch-node" style={{ flex: 1, padding: '10px 2px' }}>
+                <div className="arch-title" style={{ fontSize: '0.65rem' }}>🔔 Notif SVC</div>
+                <div className="arch-sub" style={{ fontSize: '0.55rem' }}>8084 • Kafka</div>
+              </div>
+            </div>
+
+            {/* Connection to Infra */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '85%', margin: '0 auto' }}>
+              <div className="arch-line-v" style={{ height: 6 }} />
+              <div className="arch-line-v" style={{ height: 6 }} />
+              <div className="arch-line-v" style={{ height: 6 }} />
+              <div className="arch-line-v" style={{ height: 6 }} />
+            </div>
+
+            {/* Infrastructure Base Layer */}
+            <div style={{
+              width: '100%',
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px dashed var(--border)',
+              borderRadius: 'var(--radius-md)',
+              padding: '8px 4px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 6
+            }}>
+              <div style={{ flex: 1, textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>🐘 Postgres</div>
+              <div style={{ flex: 1, textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>🔴 Redis</div>
+              <div style={{ flex: 1, textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>⚡ Kafka</div>
+              <div style={{ flex: 1, textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>🔐 Keycloak</div>
+            </div>
+          </div>
         </div>
-        <div style={{ marginTop: 'auto', paddingTop: 32, fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+
+        <div style={{ marginTop: 16, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
           🔒 Secured with 256-bit JWT & Spring Security 6 Stateless Authentication
+        </div>
         </div>
       </div>
 
       {/* Right Panel — Form */}
-      <div style={{
-        width: '100%', maxWidth: 500,
-        display: 'flex', flexDirection: 'column',
+      <div className="login-form-wrapper" style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        padding: '40px 32px',
-        margin: '0 auto',
+        padding: '12px',
       }}>
-        <div className="card animate-up" style={{ width: '100%', padding: 36, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+        <div className="card animate-up login-form-card" style={{ width: '100%', maxWidth: 440, height: 480, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '24px 32px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
           {/* Logo small */}
-          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <div style={{ textAlign: 'center', marginBottom: 12 }}>
             <div style={{
-              width: 52, height: 52, borderRadius: 14,
+              width: 36, height: 36, borderRadius: 10,
               background: 'linear-gradient(135deg, #6366f1, #818cf8)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.5rem', margin: '0 auto 12px',
+              fontSize: '1rem', margin: '0 auto 6px',
             }}>☕</div>
-            <h2 style={{ fontSize: '1.375rem', fontWeight: 800 }}>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800 }}>
               {registeredUser ? '🎉 Registration Successful!' : tab === 'login' ? 'Welcome Back' : 'Create Your Account'}
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: 4 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginTop: 2 }}>
               {registeredUser
                 ? 'Your account has been created securely. Please note down your User ID below.'
                 : tab === 'login'
@@ -193,7 +349,7 @@ export default function LoginPage() {
             /* Tabs */
             <div style={{
               display: 'flex', background: 'var(--bg-elevated)',
-              borderRadius: 10, padding: 4, marginBottom: 24,
+              borderRadius: 8, padding: 4, marginBottom: 12,
             }}>
               {['login', 'register'].map(t => (
                 <button key={t} type="button" onClick={() => { setTab(t); setRegisteredUser(null); }} style={{
@@ -475,7 +631,15 @@ export default function LoginPage() {
               </>
             ) : tab === 'login' ? (
               <>
-                Default demo login: <code style={{ color: 'var(--primary)', fontWeight: 600 }}>john.doe@example.com</code> or ID <code style={{ color: 'var(--primary)', fontWeight: 600 }}>1</code>
+                Default demo login: <code 
+                  onClick={() => { loginForm.setValue('email', 'john.doe@example.com'); loginForm.setFocus('password'); }}
+                  style={{ color: 'var(--primary)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                  title="Click to auto-fill"
+                >john.doe@example.com</code> or ID <code 
+                  onClick={() => { loginForm.setValue('email', '1'); loginForm.setFocus('password'); }}
+                  style={{ color: 'var(--primary)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                  title="Click to auto-fill"
+                >1</code>
               </>
             ) : (
               <>

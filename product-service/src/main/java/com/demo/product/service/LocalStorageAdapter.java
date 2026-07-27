@@ -23,8 +23,10 @@ public class LocalStorageAdapter implements ImageStoragePort {
         
         // In local dev, we just mock the URL. 
         // The client won't actually upload to S3, but they can simulate the flow.
-        String uploadUrl = "http://localhost:8083/api/products/mock-upload/" + filename;
-        String finalUrl = "http://localhost:8083/images/" + filename;
+        // Route through gateway on port 8080 to handle CORS
+        String uploadUrl = "http://localhost:8080/api/v1/products/mock-upload/" + filename;
+        // Use a placeholder image service for the final URL so image is not broken
+        String finalUrl = "https://placehold.co/600x400?text=Mock+" + filename;
         
         return new PresignedUrlResponse(uploadUrl, finalUrl);
     }

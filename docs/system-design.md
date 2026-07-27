@@ -23,7 +23,12 @@ graph TD
     Order -- Events --> Kafka[Kafka Broker :9092]
     Product -- Events --> Kafka
     Kafka -- Consume --> Notif
+
+    Auth -- OAuth2/JWT --> Keycloak[Keycloak]
 ```
+
+## UI Architecture Visualization
+The React frontend includes a **Dynamic Architecture Diagram** built directly into the Login Dashboard using native HTML/CSS (no external charting libraries). It dynamically visualizes the connection between the React Client, API Gateway, Microservices, and the Infrastructure layer (Postgres, Redis, Kafka, Keycloak), complete with animated data packet flows.
 
 ## Key Architectural Decisions
 
@@ -41,3 +46,11 @@ graph TD
 ## Distributed Tracing & Resilience
 
 - **Resilience4j** is configured on the API Gateway to provide Circuit Breaking and Rate Limiting (via Redis) to protect downstream services.
+
+## Final Development Milestones & Polish
+During the final phases of project development, several critical enterprise features and stability improvements were added:
+1. **Frontend Global Error Handling**: Axios interceptors were implemented to detect service unavailability (503/504) and automatically log users out safely, preventing the app from hanging.
+2. **Aggregator Pattern Stabilization**: The `order-service` implements an API Aggregator that merges Order and Product data. This was fortified to gracefully handle errors from the `product-service` without crashing the page, correctly falling back to generic data when necessary.
+3. **CORS & Preflight Integrity**: Gateway CORS configurations were strict-tuned to properly forward preflight `OPTIONS` requests and required headers (`Authorization`, `Content-Type`) preventing modern browsers from blocking legitimate cross-origin XHR requests.
+4. **Cache Type Serialization**: Redis caching (`@Cacheable`) was upgraded to properly serialize/deserialize Java Object types by writing `@class` property metadata. This ensures complex polymorphic types like `OrderResponse` or `ProductResponse` can be safely fetched from the cache without `InvalidTypeIdException`.
+5. **Local Developer Experience (DX)**: A suite of PowerShell orchestration scripts (`start-all.ps1`, `start-down.ps1`, `stop-all.ps1`) was introduced to dramatically speed up the local Windows development lifecycle.

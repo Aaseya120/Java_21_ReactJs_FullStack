@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -29,14 +33,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Log in to Docker Hub
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Build and Push Images
+        env:
+          IMAGE_PREFIX: ghcr.io/aaseya120/java_21_reactjs_fullstack
         run: |
           docker compose -f docker-compose.yml build
-          # Push commands would go here
-          # docker compose -f docker-compose.yml push
+          docker compose -f docker-compose.yml push

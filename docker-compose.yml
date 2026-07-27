@@ -89,6 +89,7 @@ services:
 
   # ── API Gateway (:8080) ────────────────────────────────────
   api-gateway:
+    image: ${IMAGE_PREFIX:-local}/api-gateway:latest
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
@@ -111,6 +112,7 @@ services:
 
   # ── User Service (:8081) ───────────────────────────────────
   user-service:
+    image: ${IMAGE_PREFIX:-local}/user-service:latest
     build:
       context: .
       dockerfile: user-service/Dockerfile
@@ -137,6 +139,7 @@ services:
 
   # ── Order Service (:8082) ──────────────────────────────────
   order-service:
+    image: ${IMAGE_PREFIX:-local}/order-service:latest
     build:
       context: .
       dockerfile: order-service/Dockerfile
@@ -162,6 +165,7 @@ services:
 
   # ── Product Service (:8083) ────────────────────────────────
   product-service:
+    image: ${IMAGE_PREFIX:-local}/product-service:latest
     build:
       context: .
       dockerfile: product-service/Dockerfile
@@ -187,6 +191,7 @@ services:
 
   # ── Notification Service (:8084) ───────────────────────────
   notification-service:
+    image: ${IMAGE_PREFIX:-local}/notification-service:latest
     build:
       context: .
       dockerfile: notification-service/Dockerfile
