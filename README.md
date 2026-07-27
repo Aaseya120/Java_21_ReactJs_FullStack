@@ -23,6 +23,9 @@ A production-ready, full-stack microservices project demonstrating a modern Reac
 | **Messaging** | Apache Kafka |
 | **Database** | PostgreSQL 16 |
 | **Cache** | Redis 7 |
+| **Containers** | Docker (Multi-stage builds) |
+| **Orchestration**| Kubernetes |
+| **K8s Packaging**| Helm (Bitnami Charts) |
 
 ---
 
@@ -70,10 +73,15 @@ Client (Browser/Mobile)
 - **Event-Driven Architecture**: Heavy or non-blocking operations (like sending notifications) are offloaded to Kafka, ensuring the main thread returns quickly to the user.
 - **Virtual Threads**: Enabled in Spring Boot 3, allowing each service to handle tens of thousands of concurrent requests without thread-pool exhaustion.
 
-### Security
-- **API Gateway as a Shield**: Centralized JWT validation at the Gateway prevents unauthenticated requests from ever reaching backend services.
-- **BCrypt Hashing**: Passwords are never stored in plaintext (strength 12 hashing).
-- **Network Isolation**: In Docker/Kubernetes, databases and message brokers are kept in internal networks, exposing only the Gateway to the outside world.
+## 🔒 Security Implementation
+
+Security in this architecture follows a **Zero-Trust** model at the network boundary.
+
+### 1. API Gateway as a Shield
+- **Centralized Authentication**: The `api-gateway` uses a Global Filter to intercept every incoming request. It extracts the JWT, verifies the signature, and rejects invalid tokens before they ever reach a backend service.
+- **Distributed Rate Limiting**: Uses **Redis** (`RequestRateLimiter`) to enforce strict rate limits per IP address, preventing DDoS attacks and API abuse.
+- **OAuth2 & Keycloak**: Includes an optional profile to run as an OAuth2 Resource Server, integrating seamlessly with external Identity Providers like Keycloak.
+- **Header Propagation**: Once a token is validated, the Gateway extracts the `userId` and `roles` and appends them as trusted HTTP headers (`X-User-Id`) to the downstream request. Backend services implicitly trust these headers since they are hidden behind the Gateway.
 
 ### Reliability
 - **Circuit Breakers & Retries**: Implemented across inter-service communication to prevent cascading failures.
@@ -99,21 +107,69 @@ To keep this project at the pinnacle of industry standards, follow these guideli
 
 ---
 
-## 🧩 Architectural Patterns & Solutions
+## 🧩 High-Level Design (HLD) & Design Patterns
 
+### 1. Enterprise Architecture Patterns
 | Challenge / Concept | How it was achieved in this project |
 |---------------------|-------------------------------------|
-| **Kafka Lag** | Increased consumer concurrency, idempotency, monitoring. |
-| **Transaction** | Used `@Transactional` for local ACID transactions. |
-| **Distributed Transaction** | Used Saga + Outbox for eventual consistency. |
-| **Fault Tolerance** | Used Circuit Breaker, Retry, Fallback, TimeLimiter. |
-| **Exception Handling** | Used global `@RestControllerAdvice`. |
-| **Timeout** | Configured HTTP timeouts and TimeLimiter. |
-| **Scalability** | Used Virtual Threads, Redis, Kubernetes HPA. |
-| **Reliability** | Used Idempotency, DLQ, Health Checks. |
-| **Bulkhead** | Limited concurrent requests to isolate failures. |
-| **Outbox** | Solved database-Kafka dual-write problem. |
-| **Saga** | Hybrid Saga using Kafka events and compensating actions. |
+| **API Gateway Pattern** | `api-gateway` acts as a single entry point, encapsulating routing, JWT validation, and CORS. |
+| **Distributed Transaction** | Used **Saga Pattern** + **Outbox Pattern** for cross-service eventual consistency without 2PC locking. |
+| **Fault Tolerance** | Used **Circuit Breaker**, **Retry**, and **Fallback** (Resilience4j) to fail fast on remote service outages. |
+| **Bulkhead Pattern** | Limited concurrent requests/threads to isolate failures and prevent cascading thread exhaustion. |
+| **Publish-Subscribe** | Used **Apache Kafka** for asynchronous, event-driven choreographies (e.g., Notifications). |
+| **Distributed Locking**| Used **Redisson (`RLock`)** in the `product-service` to safely handle concurrent inventory decrements across multiple pods. |
+| **Scalability** | Used **Java 21 Virtual Threads**, Redis caching, and Kubernetes HPA for massive horizontal scale. |
+| **Reliability** | Implemented **Idempotency** in consumers, Dead Letter Queues (DLQ), and Kubernetes Health Checks. |
+| **Availability** | Achieved via Kubernetes ReplicaSets, API Gateway fallbacks, and stateless design. |
+| **Readability** | Ensured via Java Records (no boilerplate), MapStruct, and clean separation of concerns. |
+| **Maintainability** | Enforced strictly decoupled bounded contexts, Flyway migrations, and centralized logging. |
+| **Load Balancing** | Handled seamlessly by Kubernetes Services distributing traffic across multiple pod instances. |
+| **Routing** | Managed dynamically by **Spring Cloud Gateway** using URL path predicates. |
+| **Service Discovery** | Server-side discovery utilizing native Kubernetes DNS. |
+| **SOLID Principles** | Applied strictly (e.g., Single Responsibility in `@Service` classes, Dependency Inversion via Spring IoC). |
+| **Isolation** | Database isolation managed via `@Transactional`; Network isolation via Kubernetes internal network. |
+| **Caching** | Used **Redis** to offload heavy read queries and manage distributed rate-limiting. |
+| **ACID & Transactions**| Enforced locally within bounded contexts via PostgreSQL and Spring's declarative `@Transactional`. |
+| **Connection Pooling** | Handled natively via **HikariCP**, ensuring high throughput and efficient DB connection reuse. |
+| **Spring Data JPA** | Used for ORM; leveraging entity relationships, automatic query generation, and lazy loading. |
+| **Spring Security** | Implemented Zero-Trust via **API Gateway**, utilizing JWTs/OAuth2 and downstream role propagation. |
+
+### 2. Code-Level (GoF) Design Patterns
+- **Dependency Injection (IoC):** The core of Spring Boot. Services, Controllers, and Repositories are decoupled and injected at runtime.
+- **Proxy Pattern:** Heavily utilized by Spring AOP for our **Audit Logging** and by `@Transactional` to manage DB commits/rollbacks transparently.
+- **Data Transfer Object (DTO):** Strictly enforced using **Java 21 Records** to transfer immutable data between layers without exposing DB Entities.
+- **Factory / Mapper Pattern:** Utilized via **MapStruct**, which generates factory-like mapper classes to convert Entities to DTOs efficiently.
+- **Facade Pattern:** Our `@Service` classes act as facades, hiding complex interactions with Repositories, Kafka Templates, and remote clients from the Controllers.
+- **Singleton Pattern:** By default, all Spring Beans (Controllers, Services) are instantiated as thread-safe Singletons per JVM context.
+
+---
+
+## 🏷️ Key Annotations & Core Components
+
+To navigate this codebase effectively, you should understand the primary Spring Boot 3 annotations and components we utilized:
+
+### Inter-Service Communication
+- **`RestClient`**: The modern, fluent Spring Boot 3 alternative to `RestTemplate`. We use this specifically (e.g., in `AggregatorController`) to make asynchronous, non-blocking HTTP calls to downstream services to aggregate data efficiently.
+
+### Resiliency & Fault Tolerance (Resilience4j)
+- **`@CircuitBreaker`**: Prevents cascading failures by opening the circuit when a threshold of remote calls fail.
+- **`@Retry`**: Automatically retries failed synchronous API calls a specified number of times before giving up.
+- **`@TimeLimiter`**: Enforces strict timeout limits on asynchronous/future calls to ensure threads are not blocked indefinitely.
+
+### Asynchronous Messaging
+- **`@KafkaListener`**: Placed on methods in our consumer services to asynchronously ingest messages from Kafka topics (e.g., `order-events`).
+
+### Data & Transactions
+- **`@Transactional`**: Applied at the service layer to ensure local database operations (like saving an Order and inserting into an Outbox table) either fully succeed or completely rollback.
+
+### Aspect-Oriented Programming (AOP)
+- **`@Aspect` & `@Around`**: Used to define our centralized audit logging. It intercepts methods to track business operations without cluttering the core logic.
+
+### Global Exception Handling
+- **`@RestControllerAdvice` & `@ExceptionHandler`**: Intercepts exceptions (like `UserNotFoundException` or `RestClientResponseException`) thrown anywhere in the application and converts them into standardized JSON error responses.
+
+### Code Generation
+- **`@Mapper`**: A MapStruct annotation that automatically generates high-performance Factory classes at compile-time to map database Entities to immutable DTO Records.
 
 ---
 
