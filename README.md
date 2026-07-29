@@ -70,45 +70,54 @@ This project implements the **Database-per-Service** architectural pattern. Each
 
 ## 🏗️ Architecture & Visual Sequence Blueprints
 
-### 1. High-Level System Architecture Flowchart
+### 1. Hexagonal (Ports & Adapters) System Architecture Flowchart
 ```mermaid
-flowchart TB
-    %% 1. Client & Edge Layer
-    UI["🖥️ React 19 + Vite Frontend"]
-    GW["🌐 API Gateway :8080<br/>RS256 JWT Auth · Rate Limiting · Circuit Breaker"]
-
-    %% 2. Microservices Domain Layer
-    subgraph Services ["3️⃣ Microservices Domain Tier (Java 21 · Spring Boot 3.3)"]
-        direction LR
-        US["👤 User Service<br/>:8081"]
-        PS["📦 Product Service<br/>:8083"]
-        OS["🛒 Order Service<br/>:8082"]
-        PAYS["💳 Payment Service<br/>:8085"]
-        NS["🔔 Notification Service<br/>:8084"]
+graph LR
+    %% Driving Adapters (Left / Ingress)
+    subgraph Driving ["🔌 Driving Adapters & Edge Ingress"]
+        UI["🖥️ React 19 UI"]
+        GW["🌐 API Gateway :8080"]
     end
 
-    %% 3. Data & Messaging Layer
-    subgraph DataMesh ["4️⃣ Distributed Database, Cache & Event Mesh Tier"]
-        direction LR
-        RD[("⚡ Redis 7.2<br/>Cache & Lock")]
-        PG[("🐘 PostgreSQL 16<br/>DB per Service")]
-        KF["🌊 Apache Kafka 3.8<br/>Saga Event Bus"]
-        JG["🔭 Jaeger :16686<br/>Distributed Tracing"]
+    %% Hexagonal Domain Core (Center)
+    subgraph Core ["⬡ Hexagonal Domain Microservices Core"]
+        US["👤 User Service<br/>RBAC & Auth"]
+        PS["📦 Product Service<br/>SKU Catalog"]
+        OS["🛒 Order Service<br/>Saga Orchestrator"]
+        PAYS["💳 Payment Service<br/>RSA-2048 PCI-DSS"]
+        NS["🔔 Notify Service<br/>Alerts & SSE"]
     end
 
-    %% Flow Connections
+    %% Driven Adapters (Right / Egress)
+    subgraph Driven ["🔌 Driven Adapters (Data, Cache & Event Mesh)"]
+        RD[("⚡ Redis 7.2<br/>Distributed Cache")]
+        PG[("🐘 PostgreSQL 16<br/>Database-per-Service")]
+        KF["🌊 Apache Kafka 3.8<br/>Event Bus"]
+        JG["🔭 Jaeger :16686<br/>Tracing Spans"]
+    end
+
+    %% Flow: Driving -> Core
     UI ==>|"HTTP / Bearer JWT"| GW
-    GW -->|"1. Validate Token"| US
-    GW -->|"2. Catalog / Lock"| PS
-    GW -->|"3. Create Order"| OS
-    GW -->|"4. Process Payment"| PAYS
+    GW -->|"1. /users"| US
+    GW -->|"2. /products"| PS
+    GW -->|"3. /orders"| OS
+    GW -->|"4. /payments"| PAYS
 
-    PS -.->|"Cache / RLock"| RD
-    US & PS & OS & PAYS -->|"ACID TX & Outbox"| PG
-    OS & PAYS ==>|"Publish Events"| KF
+    %% Flow: Core -> Driven
+    PS -.->|"RLock & Cache"| RD
+    US & PS & OS & PAYS -->|"ACID TX"| PG
+    OS & PAYS ==>|"Outbox Events"| KF
     KF ==>|"Consume Alerts"| NS
     KF ==>|"Confirm Orders"| OS
-    US & PS & OS & PAYS & NS -.-|"W3C Traces"| JG
+    US & PS & OS & PAYS & NS -.-|"W3C Trace"| JG
+
+    %% Styling for High-Contrast Hexagonal Visibility
+    classDef driving fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px,color:#ffffff;
+    classDef core fill:#312e81,stroke:#6366f1,stroke-width:2px,color:#ffffff;
+    classDef driven fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ffffff;
+    class UI,GW driving;
+    class US,PS,OS,PAYS,NS core;
+    class RD,PG,KF,JG driven;
 ```
 
 ### 2. Sequence Diagram 1: Secure Order Creation & Saga Choreography Flow
@@ -116,32 +125,38 @@ flowchart TB
 sequenceDiagram
     autonumber
     actor User
-    participant UI as React UI
-    participant GW as Gateway :8080
-    participant OS as Order :8082
-    participant PS as Product :8083
-    participant NS as Notify :8084
-    participant RD as Redis 7.2
-    participant DB as Postgres 16
-    participant KF as Kafka 3.8
+    participant UI as React 19 UI
+    participant GW as API Gateway :8080
+    participant OS as Order Service :8082
+    participant PS as Product Service :8083
+    participant RD as Redis 7.2 (Cache/Lock)
+    participant DB as PostgreSQL 16 (ACID)
+    participant KF as Apache Kafka 3.8
+    participant NS as Notification Service
 
-    User->>+UI: Submit Checkout (SKU, Qty)
+    Note over User,GW: Phase 1: Driving Port Ingress & Token Authentication
+    User->>+UI: Submit Checkout (SKU, Quantity)
     UI->>+GW: POST /api/v1/orders (Bearer JWT)
-    GW->>GW: Verify RS256 Signature & IP Token Bucket
-    GW->>+OS: Dispatch Route /api/v1/orders
-    OS->>+PS: Query Catalog & Lock Inventory
-    PS->>RD: Acquire RLock("lock:product:{sku}")
-    RD-->>PS: Lock Acquired (Sub-ms lease)
-    PS-->>-OS: Inventory Available & Locked
+    GW->>GW: Validate RS256 JWT Signature & Rate Limit Bucket
+
+    Note over GW,PS: Phase 2: Hexagonal Domain Core & Inventory Validation
+    GW->>+OS: Dispatch Request -> /api/v1/orders
+    OS->>+PS: Verify SKU Catalog & Stock Availability
+    PS->>RD: Acquire Distributed Lock: RLock("lock:product:{sku}")
+    RD-->>PS: Lock Granted (Sub-millisecond Lease)
+    PS-->>-OS: Inventory Reserved & Available
+
+    Note over OS,DB: Phase 3: Driven Adapter ACID Dual-Commit (Outbox Pattern)
     OS->>DB: ACID TX: INSERT Order (PENDING) + outbox_events
-    DB-->>OS: SQL TX Committed Successfully
+    DB-->>OS: Transaction Committed Successfully
     OS-->>-UI: HTTP 201 Created (Order PENDING)
-    UI-->>-User: Render Optimistic Order Confirmation Badge
-    Note over OS,KF: Loom Virtual Thread Scheduler Polls outbox_events
-    OS->>+KF: Produce "order-events" Topic (Idempotent)
-    KF->>+NS: Consume "order-events"
-    NS->>NS: Send SMS / Email Confirmation Receipt
-    NS-->>-KF: Event Acknowledged
+    UI-->>-User: Render Optimistic Confirmation Badge
+
+    Note over OS,NS: Phase 4: Asynchronous Saga Event Mesh Relay
+    OS->>+KF: Relay "order-events" (Loom Virtual Thread Publisher)
+    KF->>+NS: Consume Event & Produce Alert
+    NS->>NS: Dispatch SMS & Email Order Receipt
+    NS-->>-KF: Event Acknowledged (Offset Committed)
 ```
 
 ### 3. Sequence Diagram 2: PCI-DSS RSA-2048 Secure Payment Tokenization Flow
@@ -149,28 +164,32 @@ sequenceDiagram
 sequenceDiagram
     autonumber
     actor User
-    participant UI as PaymentModal
-    participant PAY as Payment :8085
-    participant OS as Order :8082
-    participant DB as Postgres 16
-    participant KF as Kafka 3.8
+    participant UI as PaymentModal (React)
+    participant PAY as Payment Service :8085
+    participant DB as PostgreSQL 16 (ACID)
+    participant KF as Apache Kafka 3.8
+    participant OS as Order Service :8082
 
-    User->>+UI: Click "Pay Now" & Select 1 of 6 Instruments
+    Note over User,PAY: Phase 1: Security Handshake & Cryptographic Tokenization (Like S3 Presign)
+    User->>+UI: Click "Pay Now" & Select Payment Instrument
     UI->>+PAY: GET /api/v1/payments/security/public-key
-    PAY-->>-UI: Return RSA-2048 Merchant Public Key (PEM)
-    UI->>UI: Tokenize & Encrypt PAN (ENC:RSA2048_...)
-    UI->>+PAY: POST /api/v1/payments (Header: Idempotency-Key)
-    PAY->>DB: Verify unique idempotency_key index
-    DB-->>PAY: Key Valid (0% Duplicate Charge Risk)
+    PAY-->>-UI: Return RSA-2048 Merchant Public Key (PEM format)
+    UI->>UI: Encrypt Card/PAN Locally -> ENC:RSA2048_...
+
+    Note over UI,DB: Phase 2: Idempotent Payment Processing & Outbox Commit
+    UI->>+PAY: POST /api/v1/payments (Header: X-Idempotency-Key)
+    PAY->>DB: Check Idempotency Key Index (0% Duplicate Risk)
+    DB-->>PAY: Unique Request Verified
     PAY->>DB: ACID TX: UPDATE Payment SUCCESS + outbox_events
-    DB-->>PAY: SQL TX Committed Successfully
-    PAY-->>-UI: HTTP 200 OK (Payment Processed)
-    UI-->>-User: Render Paid & Confirmed UI Badge
-    Note over PAY,KF: Loom Virtual Thread Scheduler Polls outbox_events
-    PAY->>+KF: Produce "payment-events" Topic
+    DB-->>PAY: Transaction Committed Successfully
+    PAY-->>-UI: HTTP 200 OK (Payment Confirmed)
+    UI-->>-User: Render Success UI Badge
+
+    Note over PAY,OS: Phase 3: Driven Event Choreography & Order Confirmation
+    PAY->>+KF: Relay "payment-events" Topic (Loom Virtual Thread Publisher)
     KF->>+OS: Consume "payment-events"
-    OS->>DB: UPDATE Order Status -> CONFIRMED
-    OS-->>-KF: Event Acknowledged
+    OS->>DB: ACID TX: UPDATE Order Status -> CONFIRMED
+    OS-->>-KF: Event Acknowledged (Offset Committed)
 ```
 
 ---
