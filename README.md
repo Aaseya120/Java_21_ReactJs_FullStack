@@ -71,7 +71,7 @@ This project implements the **Database-per-Service** architectural pattern. Each
 ## 🏗️ Architecture & Visual Sequence Blueprints
 
 ### Visual System Design Blueprint (End-to-End Architecture)
-![Full Stack Microservices System Design Blueprint](docs/images/system-architecture-blueprint.jpg)
+![Full Stack Microservices System Design Blueprint](docs/images/system-architecture-blueprint.jpg?v=20260729_0849)
 
 > [!TIP]
 > **How to Zoom, Pan, and Move Diagrams with Your Cursor**:
