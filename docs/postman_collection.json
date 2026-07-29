@@ -21,11 +21,14 @@
     { "key": "order_service_url",      "value": "http://localhost:8082", "type": "string" },
     { "key": "product_service_url",    "value": "http://localhost:8083", "type": "string" },
     { "key": "notification_service_url","value": "http://localhost:8084", "type": "string" },
+    { "key": "payment_service_url",    "value": "http://localhost:8085", "type": "string" },
     { "key": "access_token",           "value": "", "type": "string" },
     { "key": "refresh_token",          "value": "", "type": "string" },
     { "key": "user_id",                "value": "", "type": "string" },
     { "key": "product_id",             "value": "", "type": "string" },
-    { "key": "order_id",               "value": "", "type": "string" }
+    { "key": "order_id",               "value": "", "type": "string" },
+    { "key": "payment_id",             "value": "", "type": "string" },
+    { "key": "idempotency_key",        "value": "IDEM-WEB-001", "type": "string" }
   ],
   "item": [
 
@@ -92,6 +95,18 @@
           },
           "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
             "pm.test('Notification Service is UP', () => pm.response.to.have.status(200));"
+          ]}}]
+        },
+        {
+          "name": "Payment Service Health (Direct :8085)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{payment_service_url}}/actuator/health", "host": ["{{payment_service_url}}"], "path": ["actuator","health"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Payment Service is UP', () => pm.response.to.have.status(200));"
           ]}}]
         }
       ]
@@ -636,7 +651,77 @@
     },
 
     {
-      "name": "7️⃣ Circuit Breaker Fallbacks",
+      "name": "6️⃣ Payments (Tokenized PCI-DSS, UPI & NetBanking)",
+      "description": "Payment processing lifecycle with RSA-2048 tokenization, idempotency keys, and refund workflows.",
+      "item": [
+        {
+          "name": "Process Payment (Credit Card)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Idempotency-Key", "value": "{{idempotency_key}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"orderId\": {{order_id}},\n    \"userId\": {{user_id}},\n    \"amount\": 99.99,\n    \"currency\": \"USD\",\n    \"paymentMethod\": \"CREDIT_CARD\",\n    \"idempotencyKey\": \"{{idempotency_key}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{gateway_url}}/api/v1/payments", "host": ["{{gateway_url}}"], "path": ["api","v1","payments"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Payment Processed (200/201)', () => pm.expect([200, 201]).to.include(pm.response.code));",
+            "const body = pm.response.json();",
+            "const data = body.data || body;",
+            "if (data.id) {",
+            "    pm.collectionVariables.set('payment_id', data.id);",
+            "    console.log('✅ payment_id saved:', data.id);",
+            "}"
+          ]}}]
+        },
+        {
+          "name": "Get Payment by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{gateway_url}}/api/v1/payments/{{payment_id}}", "host": ["{{gateway_url}}"], "path": ["api","v1","payments","{{payment_id}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Get Payment OK (200)', () => pm.response.to.have.status(200));"
+          ]}}]
+        },
+        {
+          "name": "Get Payments by Order ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{gateway_url}}/api/v1/payments/order/{{order_id}}", "host": ["{{gateway_url}}"], "path": ["api","v1","payments","order","{{order_id}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Get Order Payments OK (200)', () => pm.response.to.have.status(200));"
+          ]}}]
+        },
+        {
+          "name": "Refund Payment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"reason\": \"Customer requested refund\",\n    \"amount\": 99.99\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{gateway_url}}/api/v1/payments/{{payment_id}}/refund", "host": ["{{gateway_url}}"], "path": ["api","v1","payments","{{payment_id}}","refund"] }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Refund Succeeded (200/202)', () => pm.expect([200, 202]).to.include(pm.response.code));"
+          ]}}]
+        }
+      ]
+    },
+
+    {
+      "name": "8️⃣ Circuit Breaker Fallbacks",
       "description": "Test circuit breaker fallback responses. These return a graceful error when a downstream service is unavailable.",
       "item": [
         {
@@ -673,6 +758,15 @@
             "method": "GET",
             "header": [],
             "url": { "raw": "{{gateway_url}}/fallback/notification", "host": ["{{gateway_url}}"], "path": ["fallback","notification"] }
+          }
+        },
+        {
+          "name": "Payment Service Fallback",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{gateway_url}}/fallback/payment", "host": ["{{gateway_url}}"], "path": ["fallback","payment"] }
           }
         }
       ]
@@ -773,6 +867,23 @@
               "path": ["api","v1","aggregator","order-details","{{order_id}}"]
             },
             "description": "Hit aggregator directly on order-service (port 8082) bypassing the gateway."
+          }
+        },
+        {
+          "name": "Payment — Process (Direct :8085)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Idempotency-Key", "value": "{{idempotency_key}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"orderId\": {{order_id}},\n    \"userId\": {{user_id}},\n    \"amount\": 99.99,\n    \"currency\": \"USD\",\n    \"paymentMethod\": \"CREDIT_CARD\",\n    \"idempotencyKey\": \"{{idempotency_key}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{payment_service_url}}/api/v1/payments", "host": ["{{payment_service_url}}"], "path": ["api","v1","payments"] }
           }
         }
       ]

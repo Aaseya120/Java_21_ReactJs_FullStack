@@ -8,7 +8,9 @@ import { ordersApi } from '../../api/orders.api';
 import { productsApi } from '../../api/products.api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { getServiceErrorMessage } from '../../utils/errorHelper';
 import { TableSkeleton } from '../../components/common/Skeleton';
+import { PaymentModal } from '../../components/common/PaymentModal';
 
 const createOrderSchema = z.object({
   userId: z.coerce.string().trim().min(1, 'User ID is required'),
@@ -182,7 +184,6 @@ function OrderDetailModal({ order, onClose, onStatusChange }) {
   const { user } = useAuth();
   const [nextStatus, setNextStatus] = useState('');
   const [loading, setLoading] = useState(false);
-  const toast = useToast();
 
   const handleStatusChange = async (targetStatus) => {
     const statusToApply = targetStatus || nextStatus;
@@ -220,7 +221,7 @@ function OrderDetailModal({ order, onClose, onStatusChange }) {
           {/* Order Info */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {[
-              ['Order ID', order.id],
+              ['Order Number', order.orderNumber || order.id],
               ['User ID', order.userId],
               ['Product ID', order.productId],
               ['Quantity', order.quantity],
@@ -343,6 +344,7 @@ export default function OrdersPage() {
   const [filterUserId, setFilterUserId] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [payingOrder, setPayingOrder] = useState(null);
   const toast = useToast();
   const qc = useQueryClient();
 
@@ -371,6 +373,7 @@ export default function OrdersPage() {
       qc.setQueryData(['orders', page, filterUserId, user?.id, user?.role], (old) => {
         const optimisticOrder = {
           id: 'optimistic-' + Date.now(),
+          orderNumber: 'ORD-PENDING',
           userId: newOrderData.userId,
           productId: newOrderData.productId,
           quantity: newOrderData.quantity,
@@ -396,7 +399,7 @@ export default function OrdersPage() {
       if (context?.previousOrders) {
         qc.setQueryData(['orders', page, filterUserId, user?.id, user?.role], context.previousOrders);
       }
-      toast.error(err.response?.data?.message || 'Failed to place order. Optimistic update rolled back.');
+      toast.error(getServiceErrorMessage(err, 'Failed to place order. Optimistic update rolled back.'));
     },
     onSuccess: () => {
       toast.success('Order placed successfully!');
@@ -409,13 +412,13 @@ export default function OrdersPage() {
   const statusMutation = useMutation({
     mutationFn: ({ id, status }) => ordersApi.updateStatus(id, status),
     onSuccess: () => { toast.success('Order status updated!'); qc.invalidateQueries(['orders']); },
-    onError: (err) => toast.error(err.response?.data?.message || 'Status update failed'),
+    onError: (err) => toast.error(getServiceErrorMessage(err, 'Status update failed')),
   });
 
   const cancelMutation = useMutation({
     mutationFn: ordersApi.cancel,
     onSuccess: () => { toast.success('Order cancelled'); qc.invalidateQueries(['orders']); },
-    onError: (err) => toast.error(err.response?.data?.message || 'Cancel failed'),
+    onError: (err) => toast.error(getServiceErrorMessage(err, 'Cancel failed')),
   });
 
   return (
@@ -577,7 +580,7 @@ export default function OrdersPage() {
             ) : (
               orders.map(o => (
                 <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(o)}>
-                  <td><strong style={{ color: 'var(--primary)' }}>#{o.id}</strong></td>
+                  <td><strong style={{ color: 'var(--primary)' }}>{o.orderNumber || '#' + o.id}</strong></td>
                   <td><code>{o.userId}</code></td>
                   <td><code>#{o.productId}</code></td>
                   <td>{o.quantity}</td>
@@ -595,6 +598,23 @@ export default function OrdersPage() {
                       <button className="btn btn--secondary btn--sm" onClick={() => setSelectedOrder(o)}>
                         {user?.role === 'ADMIN' ? '⚙️ Manage' : 'View'}
                       </button>
+                      {o.status === 'PENDING' && (
+                        <button
+                          type="button"
+                          className="btn btn--sm"
+                          style={{
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            color: '#fff',
+                            border: 'none',
+                            boxShadow: '0 0 10px rgba(16, 185, 129, 0.4)',
+                            fontWeight: 700,
+                          }}
+                          title="Secure PCI-DSS RSA-2048 Checkout"
+                          onClick={() => setPayingOrder(o)}
+                        >
+                          💳 Pay Now
+                        </button>
+                      )}
                       {user?.role === 'ADMIN' && o.status === 'PENDING' && (
                         <button className="btn btn--primary btn--sm"
                           title="Quick Confirm"
@@ -646,6 +666,16 @@ export default function OrdersPage() {
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
           onStatusChange={(id, status) => statusMutation.mutateAsync({ id, status })}
+        />
+      )}
+      {payingOrder && (
+        <PaymentModal
+          order={payingOrder}
+          onClose={() => setPayingOrder(null)}
+          onSuccess={() => {
+            setPayingOrder(null);
+            qc.invalidateQueries(['orders']);
+          }}
         />
       )}
     </div>

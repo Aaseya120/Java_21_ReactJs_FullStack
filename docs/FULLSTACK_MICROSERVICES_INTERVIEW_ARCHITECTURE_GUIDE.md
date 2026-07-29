@@ -17,58 +17,57 @@ This document is an exhaustive, authoritative guide to the architecture, design 
 
 ## 1. End-to-End System Architecture (Visual Diagrams)
 
-### 1.1 Full-Stack Container & Service Topology
+### 1.1 Full-Stack Vertical Container & Service Topology
 
 ```mermaid
 graph TB
-    subgraph "Client Tier (Browser)"
-        UI["React 19 Frontend<br/>(Vite, Zod, Skeletons, ErrorBoundary)"]
+    subgraph CLIENT_LAYER ["1️⃣ CLIENT TIER (React 19 + Vite Dashboard)"]
+        UI["🖥️ OrdersPage.jsx & PaymentModal.jsx<br/>(TanStack Query · Optimistic UI · SSE)"]
     end
 
-    subgraph "Perimeter / Gateway Tier"
-        API_GW["Spring Cloud Gateway (8080)<br/>• Redis Rate Limiter (RequestRateLimiter)<br/>• CORS Deduplication<br/>• Resilience4j Circuit Breaker & Bulkhead"]
+    subgraph EDGE_GATEWAY ["2️⃣ INGRESS & SECURITY GATEWAY TIER (:8080)"]
+        GW["🌐 Spring Cloud Gateway :8080<br/>(🔒 RS256 JWT Auth · ⚡ Resilience4j Circuit Breaker · 🛡️ Redis Rate Limiter)"]
     end
 
-    subgraph "Security IAM Tier"
-        KC["Keycloak IAM Server (8180)<br/>• OIDC / OAuth2 JWT Provider<br/>• Roles: USER, ADMIN"]
+    subgraph DOMAIN_SERVICES ["3️⃣ MICROSERVICES DOMAIN TIER (Java 21 · Spring Boot 3.3.2)"]
+        direction TB
+        US["👤 User Service :8081<br/>(JWT Provider · RBAC Claims)"]
+        PS["📦 Product Service :8083<br/>(SKU Catalog · @Cacheable · Redisson Inventory Lock)"]
+        OS["🛒 Order Service :8082<br/>(Saga Outbox · BFF Aggregator · Virtual Threads)"]
+        PAYS["💳 Payment Service :8085<br/>(PCI-DSS RSA-2048 Cryptography · Idempotency Guard)"]
+        NS["🔔 Notification Service :8084<br/>(Idempotent Kafka Consumer · SMS & Email Alert)"]
     end
 
-    subgraph "Microservices Tier (Java 21 / Spring Boot 3)"
-        USER_SVC["User Service (8081)<br/>• JWT Validation<br/>• Virtual Threads"]
-        ORDER_SVC["Order Service (8082)<br/>• Saga Orchestrator<br/>• Outbox Event Publisher<br/>• Aggregator Service"]
-        PROD_SVC["Product Service (8083)<br/>• Distributed Inventory<br/>• Redisson RLock / RBucket"]
-        NOTIF_SVC["Notification Service (8084)<br/>• Kafka Idempotent Consumer<br/>• SMTP / SMS Service"]
+    subgraph DATA_EVENT_MESH ["4️⃣ DISTRIBUTED DATA STORAGE, CACHE & EVENT MESH TIER"]
+        direction TB
+        RD[("⚡ Redis 7.2 Distributed Cache<br/>(RLock Inventory Lock · Rate Limiter Buckets)")]
+        PG[("🐘 PostgreSQL 16 ACID Database<br/>(users · orders · payment_transactions · outbox_events)")]
+        KF["🌊 Apache Kafka 3.8 Event Mesh<br/>(order-events · payment-events Idempotent Topics)"]
+        JG["🔭 Jaeger Tracing :16686<br/>(OpenTelemetry W3C Correlation Trace Spans)"]
     end
 
-    subgraph "Persistence & Caching Tier"
-        USER_DB[("PostgreSQL<br/>user_db")]
-        ORDER_DB[("PostgreSQL<br/>order_db")]
-        PROD_DB[("PostgreSQL<br/>product_db")]
-        REDIS[("Redis Cluster (6379)<br/>• Cache & Rate Limit Buckets<br/>• Distributed Locks & Idempotency")]
-    end
+    UI ==>|"1. POST /api/v1/orders (Bearer JWT)"| GW
+    GW ==>|"2. Route /users (Validate Token)"| US
+    GW ==>|"3. Route /products (Lock Inventory)"| PS
+    GW ==>|"4. Route /orders (Create Order PENDING)"| OS
+    GW ==>|"5. Route /payments (RSA-2048 Charge)"| PAYS
 
-    subgraph "Event-Driven Messaging Tier"
-        KAFKA["Apache Kafka (9092)<br/>• Topics: order-events, user-events<br/>• Partitions & Consumer Groups"]
-    end
+    PS -.->|"3a. Check Cache @Cacheable"| RD
+    PS -->|"3b. Acquire RLock lock:product:{sku}"| RD
+    PS -->|"3c. Query SKU Catalog"| PG
 
-    UI -->|"HTTP REST / JWT Bearer"| API_GW
-    UI -.->|"OIDC Auth / Token Exchange"| KC
-    API_GW -->|"Route /api/v1/users/**"| USER_SVC
-    API_GW -->|"Route /api/v1/orders/** & /aggregator/**"| ORDER_SVC
-    API_GW -->|"Route /api/v1/products/**"| PROD_SVC
-    API_GW -->|"Route /api/v1/notifications/**"| NOTIF_SVC
+    OS -->|"4a. ACID Dual-Commit Order + outbox_events"| PG
+    OS ==>|"4b. Virtual Thread Scheduler Relay"| KF
 
-    USER_SVC --> USER_DB
-    ORDER_SVC --> ORDER_DB
-    PROD_SVC --> PROD_DB
+    PAYS -->|"5a. Verify Idempotency & Save Payment"| PG
+    PAYS ==>|"5b. Outbox Relay to Kafka"| KF
 
-    API_GW <-->|"Rate Limiting"| REDIS
-    PROD_SVC <-->|"RLock & RBucket"| REDIS
-    NOTIF_SVC <-->|"Idempotency Check (TTL)"| REDIS
+    KF ==>|"6. Consume Event & Dispatch Alert"| NS
+    KF ==>|"7. Consume Payment & Confirm Order"| OS
 
-    ORDER_SVC -->|"Publish via Outbox"| KAFKA
-    KAFKA -->|"Consume (idempotent)"| NOTIF_SVC
-    KAFKA -->|"Consume (Saga step)"| PROD_SVC
+    OS -.-|"Trace Headers"| JG
+    PAYS -.-|"Trace Headers"| JG
+    NS -.-|"Trace Headers"| JG
 ```
 
 ### 1.2 Event-Driven Saga & Transactional Outbox Workflow
@@ -76,43 +75,84 @@ graph TB
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as Client (React UI)
-    participant GW as API Gateway
-    participant OS as Order Service
-    participant ODB as Order DB (Postgres)
-    participant K as Apache Kafka
-    participant PS as Product Service
-    participant NS as Notification Service
-    participant RD as Redis (Idempotency)
-
-    User->>GW: POST /api/v1/orders (JWT Bearer)
-    GW->>OS: Forward Request (with X-Correlation-ID)
-    OS->>ODB: 1. BEGIN TX: Save Order (status=PENDING)
-    OS->>ODB: 2. Save OutboxEvent (ORDER_CREATED JSON)
-    ODB-->>OS: COMMIT TX (Atomic local write)
-    OS-->>GW: 201 Created (Order Details)
-    GW-->>User: Order rendered Optimistically
-
-    Note over OS,K: Asynchronous Outbox Relay / Scheduler
-    OS->>K: Publish message to "order-events" topic
-
-    par Saga Inventory Step
-        K->>PS: Consume ORDER_CREATED
-        PS->>RD: Acquire Redisson RLock (lock:inventory:productId)
-        PS->>PS: Deduct stock quantity & update Postgres
-        PS->>RD: Release RLock & update RBucket cache
-        PS->>K: Publish INVENTORY_RESERVED event
-    and Notification Dispatch Step
-        K->>NS: Consume ORDER_CREATED (key=orderId)
-        NS->>RD: setIfAbsent("idempotency:event:orderId", "PROCESSED", 24h)
-        alt Duplicate Kafka Message
-            RD-->>NS: false (Key already exists -> SKIP execution)
-        else Fresh Kafka Message
-            RD-->>NS: true (Key acquired)
-            NS->>NS: Send Welcome/Confirmation Email via SMTP
-            NS->>K: Manual Kafka ACK (acknowledge)
-        end
+    actor User as User
+    
+    box rgb(30, 58, 138) CLIENT
+    participant UI as React UI
     end
+    
+    box rgb(22, 78, 99) GATEWAY
+    participant GW as Gateway :8080
+    end
+    
+    box rgb(49, 46, 129) MICROSERVICES
+    participant OS as Order :8082
+    participant PS as Product :8083
+    participant NS as Notify :8084
+    end
+    
+    box rgb(6, 78, 59) DATA & MESH
+    participant RD as Redis 7.2
+    participant DB as Postgres 16
+    participant KF as Kafka 3.8
+    end
+
+    User->>+UI: Submit Checkout (SKU, Qty)
+    UI->>+GW: POST /api/v1/orders (Bearer JWT)
+    GW->>GW: Verify RS256 Signature & IP Token Bucket
+    GW->>+OS: Dispatch Route /api/v1/orders
+    OS->>+PS: Query Catalog & Lock Inventory
+    PS->>RD: Acquire RLock("lock:product:{sku}")
+    RD-->>PS: Lock Acquired (Sub-ms lease)
+    PS-->>-OS: Inventory Available & Locked
+    OS->>DB: ACID TX: INSERT Order (PENDING) + outbox_events
+    DB-->>OS: SQL TX Committed Successfully
+    OS-->>-UI: HTTP 201 Created (Order PENDING)
+    UI-->>-User: Render Optimistic Order Confirmation Badge
+    Note over OS,KF: Loom Virtual Thread Scheduler Polls outbox_events
+    OS->>+KF: Produce "order-events" Topic (Idempotent)
+    KF->>+NS: Consume "order-events"
+    NS->>NS: Send SMS / Email Confirmation Receipt
+    NS-->>-KF: Event Acknowledged
+```
+
+### 1.3 PCI-DSS RSA-2048 Secure Payment Tokenization Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User
+    
+    box rgb(30, 58, 138) CLIENT
+    participant UI as PaymentModal
+    end
+    
+    box rgb(49, 46, 129) MICROSERVICES
+    participant PAY as Payment :8085
+    participant OS as Order :8082
+    end
+    
+    box rgb(6, 78, 59) DATA & MESH
+    participant DB as Postgres 16
+    participant KF as Kafka 3.8
+    end
+
+    User->>+UI: Click "Pay Now" & Select 1 of 6 Instruments
+    UI->>+PAY: GET /api/v1/payments/security/public-key
+    PAY-->>-UI: Return RSA-2048 Merchant Public Key (PEM)
+    UI->>UI: Tokenize & Encrypt PAN (ENC:RSA2048_...)
+    UI->>+PAY: POST /api/v1/payments (Header: Idempotency-Key)
+    PAY->>DB: Verify unique idempotency_key index
+    DB-->>PAY: Key Valid (0% Duplicate Charge Risk)
+    PAY->>DB: ACID TX: UPDATE Payment SUCCESS + outbox_events
+    DB-->>PAY: SQL TX Committed Successfully
+    PAY-->>-UI: HTTP 200 OK (Payment Processed)
+    UI-->>-User: Render Paid & Confirmed UI Badge
+    Note over PAY,KF: Loom Virtual Thread Scheduler Polls outbox_events
+    PAY->>+KF: Produce "payment-events" Topic
+    KF->>+OS: Consume "payment-events"
+    OS->>DB: UPDATE Order Status -> CONFIRMED
+    OS-->>-KF: Event Acknowledged
 ```
 
 ---
@@ -308,6 +348,15 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 ### 2.10 IDOR (Insecure Direct Object Reference) Ownership Security
 * **Concept:** Even if a user has a valid JWT, they must not be allowed to inspect or manipulate data belonging to another user.
 * **Project Example:** In `OrderController` and `AggregatorController`, the backend checks whether the `userId` of the requested resource matches the `userId` claim inside the authenticated security context principal (or if the user holds the `ADMIN` authority).
+
+### 2.11 Production-Ready Payment Microservice Architecture & RSA-2048 Card Cryptography
+* **Concept:** A PCI-DSS and EMVCo compliant payment processing microservice (`payment-service` on port 8085) must protect sensitive cardholder data, prevent duplicate billing on network retries, and reliably publish payment events without distributed transaction locking.
+* **Key Architectural Patterns Implemented:**
+  - **RSA-2048 Asymmetric Cryptography (`PaymentCryptographyService`):** Exposes `GET /api/v1/payments/security/public-key` for client-side card cryptogram encryption (Visa Token Service / Apple Pay simulation). Uses merchant RSA Private Key for server-side decryption and generates `SHA256withRSA` digital signatures for Visa/Mastercard transaction authorization payloads.
+  - **Java 21 Sealed Interfaces & Pattern Matching for Switch (`PaymentInstrument`, `GatewayExecutionResult`):** Models 22 global payment instruments (`CREDIT_CARD`, `UPI`, `NET_BANKING`, `WALLET`, `BNPL`, `EMI`, `EMANDATE`, `CBDC`) with compiler-checked exhaustive switch statements.
+  - **Idempotency Protection:** Enforced via `idempotency_key` unique database constraint and service-layer validation to guarantee that retried API calls return the existing payment without charging the customer twice.
+  - **Transactional Outbox & Relay Scheduler:** Atomically writes `PaymentOutboxEvent` in the same local database transaction as `Payment`, then polls every 5s to publish to Kafka topic `payment-events`.
+  - **Financial Audit Trail (`PaymentAuditLog`):** Logs immutable audit entries for every state transition (`PENDING` ➔ `SUCCESS` / `FAILED` / `REFUNDED`).
 
 ---
 

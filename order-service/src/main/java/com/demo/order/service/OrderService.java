@@ -64,7 +64,10 @@ public class OrderService {
 
 	@Transactional
 	public OrderResponse createOrder(CreateOrderRequest request) {
-		Order order = Order.builder().userId(request.userId()).productId(request.productId())
+		long userOrderCount = orderRepository.countByUserId(request.userId());
+		String orderNumber = "ORD-" + request.userId() + "-" + (userOrderCount + 1);
+
+		Order order = Order.builder().orderNumber(orderNumber).userId(request.userId()).productId(request.productId())
 				.quantity(request.quantity()).totalPrice(request.totalPrice()).notes(request.notes())
 				.status(OrderStatus.PENDING).build();
 

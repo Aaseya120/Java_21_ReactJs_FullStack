@@ -8,7 +8,7 @@ import com.demo.order.entity.OrderStatus;
 /**
  * Order response DTO — Java 21 record.
  */
-public record OrderResponse(Long id, Long userId, Long productId, int quantity, BigDecimal totalPrice,
+public record OrderResponse(Long id, String orderNumber, Long userId, Long productId, int quantity, BigDecimal totalPrice,
 		OrderStatus status, String notes, OffsetDateTime createdAt, OffsetDateTime updatedAt,
 		/** Human-readable status description via pattern matching switch */
 		String statusDescription) {

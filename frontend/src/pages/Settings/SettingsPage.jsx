@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { getConfig, saveConfig, resetConfig } from '../../utils/config';
 import { healthApi } from '../../api/health.api';
 import { useToast } from '../../context/ToastContext';
-import { getAccessToken, getRefreshToken, decodeToken } from '../../utils/token';
+import { getAccessToken, decodeToken } from '../../utils/token';
 
 const SERVICE_FIELDS = [
   { key: 'gatewayUrl',            label: 'API Gateway',           icon: '🌐', port: '8080' },
@@ -43,15 +43,8 @@ export default function SettingsPage() {
     setTesting(prev => ({ ...prev, [key]: false }));
   };
 
-  const testAll = async (formValues) => {
+  const testAll = async () => {
     setTesting(Object.fromEntries(SERVICE_FIELDS.map(f => [f.key, true])));
-    const urlMap = {
-      gateway: formValues.gatewayUrl,
-      user: formValues.userServiceUrl,
-      order: formValues.orderServiceUrl,
-      product: formValues.productServiceUrl,
-      notification: formValues.notificationServiceUrl,
-    };
     const results = await healthApi.checkAll();
     const mapped = Object.fromEntries(
       SERVICE_FIELDS.map((f, i) => {

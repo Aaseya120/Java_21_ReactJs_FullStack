@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { authApi } from '../../api/auth.api';
+import { getLoginErrorMessage, getRegisterErrorMessage, getServiceErrorMessage } from '../../utils/errorHelper';
 import '../../styles/globals.css';
 
 const loginSchema = z.object({
@@ -72,7 +73,7 @@ export default function LoginPage() {
       toast.success('Welcome back!');
       navigate('/');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed. Check your Email or User ID and Password.');
+      toast.error(getLoginErrorMessage(err));
     }
   };
 
@@ -88,10 +89,7 @@ export default function LoginPage() {
       toast.success('Registration successful! Please save your User ID.');
       registerForm.reset();
     } catch (err) {
-      const serverMsg = err.response?.data?.errorDesc || err.response?.data?.message;
-      const httpStatus = err.response?.status;
-      const networkErr = !err.response ? `Network error — is the gateway running? (${err.message})` : null;
-      toast.error(networkErr || serverMsg || `Registration failed (HTTP ${httpStatus}).`);
+      toast.error(getRegisterErrorMessage(err));
       console.error('[Register error]', err);
     }
   };
@@ -106,20 +104,14 @@ export default function LoginPage() {
       setRecoveredUser(data.data);
       toast.success('User ID recovered successfully!');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'No account found matching that Email or Mobile Number.');
+      toast.error(getServiceErrorMessage(err, 'No account found matching that Email or Mobile Number.'));
     } finally {
       setRecovering(false);
     }
   };
 
   return (
-    <div style={{
-      height: '100vh',
-      display: 'flex',
-      background: 'var(--bg-base)',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
+    <div className="login-container">
       {/* Animated background blobs */}
       <div style={{
         position: 'absolute', width: 600, height: 600,

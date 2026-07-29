@@ -109,11 +109,11 @@ export default function NotificationsPage() {
 
       es.onmessage = handleMessage;
       es.addEventListener('notification', handleMessage);
-      es.addEventListener('ping', (e) => { /* ignore heartbeat */ });
+      es.addEventListener('ping', () => { /* ignore heartbeat */ });
 
       es.onerror = () => {
         setConnected(false);
-        setConnectionError('Stream connection lost. The service may be unavailable or the connection timed out.');
+        setConnectionError('🚨 Notification Service or API Gateway is offline or unreachable. Please check backend microservice health.');
       };
     } catch (err) {
       setConnectionError('Failed to create SSE connection: ' + err.message);

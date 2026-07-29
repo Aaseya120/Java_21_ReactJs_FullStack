@@ -1,5 +1,4 @@
 // src/pages/Health/HealthPage.jsx
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { healthApi } from '../../api/health.api';
 import { getConfig } from '../../utils/config';
@@ -12,7 +11,7 @@ const SERVICE_META = {
   notification: { label: 'Notification Service',   icon: '🔔', desc: 'SSE streams, Kafka consumer' },
 };
 
-function HealthCard({ id, meta, data, url }) {
+function HealthCard({ id: _id, meta, data, url }) {
   const isUp = data?.status === 'UP';
   return (
     <div className="card" style={{

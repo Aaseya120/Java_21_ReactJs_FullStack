@@ -42,6 +42,9 @@ public class Order {
 	@Column(updatable = false, nullable = false)
 	private Long id;
 
+	@Column(name = "order_number", nullable = false, length = 50)
+	private String orderNumber;
+
 	@Column(nullable = false)
 	private Long userId;
 

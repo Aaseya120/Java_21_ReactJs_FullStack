@@ -1,0 +1,2641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Java 21 · Spring Boot Microservices · Full Stack Guide</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+:root {
+  --bg: #0b0f19;
+  --bg2: #0f172a;
+  --bg3: #1e293b;
+  --card: #111827;
+  --border: #1e293b;
+  --accent: #38bdf8;
+  --accent2: #818cf8;
+  --accent3: #10b981;
+  --accent4: #fbbf24;
+  --accent5: #f87171;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --code-bg: #080c14;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.75;
+  font-size: 16px;
+  letter-spacing: 0.15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  position: fixed; left:0; top:0; bottom:0; width:270px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 100;
+  padding-bottom: 2rem;
+}
+#sidebar::-webkit-scrollbar { width:4px; }
+#sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius:4px; }
+
+.sidebar-header {
+  padding: 1.5rem 1.2rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #0a0e1a, #0f1a2e);
+}
+.sidebar-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+.sidebar-sub {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.nav-section { padding: 0.75rem 1rem 0.25rem; }
+.nav-section-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--muted);
+  transition: all 0.15s;
+  margin-top: 2px;
+  border: 1px solid transparent;
+}
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: rgba(0,212,255,0.08); color: var(--accent); border-color: rgba(0,212,255,0.2); }
+.nav-item .dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+
+/* ── MAIN ── */
+main {
+  margin-left: 270px;
+  padding: 2.5rem 3rem;
+  max-width: 1100px;
+}
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(135deg, #060d1a 0%, #0d1535 40%, #0a1628 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 3rem;
+  margin-bottom: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content:'';
+  position: absolute; top:-60px; right:-60px;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(0,212,255,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero::after {
+  content:'';
+  position: absolute; bottom:-80px; left:20%;
+  width: 400px; height: 200px;
+  background: radial-gradient(ellipse, rgba(124,58,237,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 2.4rem;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  margin-bottom: 1rem;
+}
+.hero h1 span { color: var(--accent); }
+.hero p { color: var(--muted); max-width: 600px; font-size: 0.95rem; }
+.tech-pills {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 1.5rem;
+}
+.pill {
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  border: 1px solid;
+}
+.pill-blue { color: var(--accent); border-color: rgba(0,212,255,0.3); background: rgba(0,212,255,0.05); }
+.pill-purple { color: #a78bfa; border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.05); }
+.pill-green { color: var(--accent3); border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
+.pill-amber { color: var(--accent4); border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.05); }
+.pill-red { color: #f87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.05); }
+
+/* ── SECTIONS ── */
+.section {
+  margin-bottom: 3rem;
+  scroll-margin-top: 2rem;
+}
+.section-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.section-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: -0.5px;
+}
+.section-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.badge {
+  font-size: 0.6rem;
+  padding: 2px 7px;
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.badge-req { background: rgba(245,158,11,0.15); color: var(--accent4); }
+.badge-install { background: rgba(16,185,129,0.15); color: var(--accent3); }
+.badge-config { background: rgba(0,212,255,0.15); color: var(--accent); }
+.badge-code { background: rgba(124,58,237,0.15); color: #a78bfa; }
+.badge-warn { background: rgba(239,68,68,0.15); color: #f87171; }
+
+/* ── CODE BLOCKS ── */
+.code-wrap {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 0.75rem 0;
+  overflow: hidden;
+}
+.code-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px;
+  background: #0b1220;
+  border-bottom: 1px solid var(--border);
+}
+.code-lang {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--accent);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.code-file {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+.copy-btn {
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.2);
+  color: var(--accent);
+  font-size: 0.65rem;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.15s;
+}
+.copy-btn:hover { background: rgba(0,212,255,0.2); }
+pre {
+  padding: 1.4rem 1.6rem;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88rem;
+  line-height: 1.75;
+  color: #e2e8f0;
+  background: var(--code-bg);
+  border-radius: 8px;
+}
+pre::-webkit-scrollbar { height: 4px; }
+pre::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* Syntax highlighting with AAA WCAG contrast */
+.kw { color: #c084fc; font-weight: 600; }
+.str { color: #86efac; }
+.com { color: #94a3b8; font-style: italic; }
+.ann { color: #fbbf24; font-weight: 600; }
+.cls { color: #7dd3fc; }
+.num { color: #fb923c; }
+.fn { color: #60a5fa; }
+.prop { color: #a5f3fc; }
+
+/* ── GRID ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+/* ── STEPS ── */
+.steps { counter-reset: step; }
+.step {
+  display: flex; gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1.2rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  counter-increment: step;
+}
+.step::before {
+  content: counter(step);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.3);
+  color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.step-content { flex: 1; }
+.step-title { font-weight: 600; font-size: 0.88rem; margin-bottom: 4px; }
+.step-desc { font-size: 0.82rem; color: var(--muted); }
+
+/* ── ARCH DIAGRAM ── */
+.arch-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 1.5rem;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  line-height: 1.8;
+}
+.arch-row { display: flex; align-items: center; gap: 8px; }
+.arch-node {
+  padding: 6px 14px; border-radius: 6px;
+  font-weight: 600; white-space: nowrap;
+}
+.arch-arrow { color: var(--muted); flex: 0 0 auto; }
+.arch-blue { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.3); color: var(--accent); }
+.arch-purple { background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.4); color: #c084fc; }
+.arch-green { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--accent3); }
+.arch-amber { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--accent4); }
+.arch-red { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; }
+.arch-sep { border-top: 1px dashed var(--border); margin: 4px 0; }
+
+/* ── PREREQ TABLE ── */
+table { width:100%; border-collapse: collapse; }
+th { font-family: 'Syne', sans-serif; font-size: 0.85rem; text-align: left; padding: 12px 14px; border-bottom: 2px solid var(--border); color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.6px; background: rgba(15, 23, 42, 0.6); }
+td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.9rem; vertical-align: top; line-height: 1.6; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(56, 189, 248, 0.05); }
+.td-tech { font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 0.85rem; font-weight: 600; }
+.td-ver { color: var(--accent3); font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; }
+
+/* ── INFO BOX ── */
+.info-box {
+  display: flex; gap: 12px;
+  padding: 1rem 1.2rem;
+  border-radius: 8px;
+  margin: 0.75rem 0;
+  font-size: 0.83rem;
+}
+.info-tip { background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.2); }
+.info-warn { background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2); }
+.info-note { background: rgba(0,212,255,0.07); border: 1px solid rgba(0,212,255,0.2); }
+.info-icon { font-size: 1rem; flex-shrink: 0; margin-top: 2px; }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 4px; margin-bottom: -1px; }
+.tab {
+  padding: 7px 14px;
+  border-radius: 6px 6px 0 0;
+  border: 1px solid transparent;
+  font-size: 0.78rem;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.15s;
+}
+.tab.active { background: var(--code-bg); border-color: var(--border); border-bottom-color: var(--code-bg); color: var(--accent); }
+.tab:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── PROJECT STRUCTURE ── */
+.tree {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  line-height: 2;
+  padding: 1.2rem;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.tree-dir { color: var(--accent); }
+.tree-file { color: #cbd5e1; }
+.tree-comment { color: var(--muted); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  #sidebar { display: none; }
+  main { margin-left: 0; padding: 1.5rem; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 1.8rem; }
+}
+
+  /* Zoom Controls Toolbar & Fullscreen Modal */
+  .zoom-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    background: #0f172a;
+    padding: 10px 16px;
+    border-radius: 10px 10px 0 0;
+    border: 2px solid #1e293b;
+    border-bottom: none;
+    margin-top: 10px;
+  }
+  .zoom-toolbar-label {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-right: auto;
+    font-weight: 500;
+  }
+  .zoom-btn {
+    background: #1e293b;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .zoom-btn:hover {
+    background: #334155;
+    border-color: #38bdf8;
+    color: #38bdf8;
+    transform: translateY(-1px);
+  }
+  .zoom-btn:active {
+    transform: translateY(0);
+  }
+  .mermaid-wrap {
+    background: #090d16;
+    padding: 20px;
+    border-radius: 0 0 12px 12px;
+    border: 2px solid #1e293b;
+    overflow: visible;
+    position: relative;
+    max-height: none;
+    width: 100%;
+  }
+  .mermaid-wrap .mermaid svg {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block;
+    margin: 0 auto;
+  }
+  .mermaid-wrap.zoomed-mode {
+    overflow: auto;
+    max-height: 850px;
+  }
+  .mermaid-wrap.fullscreen-mode {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 999999;
+    max-height: none;
+    border-radius: 0;
+    background: #090d16;
+    padding: 60px 40px 40px 40px;
+    overflow: auto;
+  }
+  .mermaid-wrap .mermaid {
+    transform-origin: top left;
+    transition: transform 0.2s ease-out;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title">Microservices<br>Master Guide</div>
+    <div class="sidebar-sub">Java 21 · Spring Boot · AWS · K8s</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Getting Started</div>
+    <div class="nav-item active" onclick="scrollToSection('prereqs')"><span class="dot" style="background:#f59e0b"></span>Prerequisites</div>
+    <div class="nav-item" onclick="scrollToSection('architecture')"><span class="dot" style="background:#00d4ff"></span>Architecture Overview</div>
+    <div class="nav-item" onclick="scrollToSection('java21')"><span class="dot" style="background:#f97316"></span>Java 21 Setup</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Core Services</div>
+    <div class="nav-item" onclick="scrollToSection('springboot')"><span class="dot" style="background:#86efac"></span>Spring Boot</div>
+    <div class="nav-item" onclick="scrollToSection('docker')"><span class="dot" style="background:#38bdf8"></span>Docker</div>
+    <div class="nav-item" onclick="scrollToSection('kafka')"><span class="dot" style="background:#c084fc"></span>Apache Kafka</div>
+    <div class="nav-item" onclick="scrollToSection('redis')"><span class="dot" style="background:#ef4444"></span>Redis</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Infrastructure</div>
+    <div class="nav-item" onclick="scrollToSection('kubernetes')"><span class="dot" style="background:#60a5fa"></span>Kubernetes</div>
+    <div class="nav-item" onclick="scrollToSection('apigateway')"><span class="dot" style="background:#fbbf24"></span>API Gateway</div>
+    <div class="nav-item" onclick="scrollToSection('aws')"><span class="dot" style="background:#fb923c"></span>AWS Setup</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">End-to-End Project</div>
+    <div class="nav-item" onclick="scrollToSection('project')"><span class="dot" style="background:#34d399"></span>Project Structure</div>
+    <div class="nav-item" onclick="scrollToSection('services')"><span class="dot" style="background:#a78bfa"></span>Microservices Code</div>
+    <div class="nav-item" onclick="scrollToSection('paymentservice')"><span class="dot" style="background:#10b981"></span>Payment Service (PCI-DSS)</div>
+    <div class="nav-item" onclick="scrollToSection('deployment')"><span class="dot" style="background:#f472b6"></span>Deployment</div>
+    <div class="nav-item" onclick="scrollToSection('testing')"><span class="dot" style="background:#94a3b8"></span>Testing</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-label">Interview Master Review</div>
+    <div class="nav-item" onclick="scrollToSection('interviewcheatsheet')"><span class="dot" style="background:#00d4ff"></span>Full Stack Cheat Sheet</div>
+    <div class="nav-item" onclick="scrollToSection('systemdesignblueprint')"><span class="dot" style="background:#34d399"></span>Architecture & Sequence Diagrams</div>
+  </div>
+</nav>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">// Complete Developer Reference</div>
+  <h1>Java 21 <span>Microservices</span><br>Full Stack Guide</h1>
+  <p>End-to-end setup, configuration, and working code for Spring Boot microservices with AWS, Docker, Kubernetes, Redis, Kafka, and API Gateway.</p>
+  <div class="tech-pills">
+    <span class="pill pill-amber">Java 21 LTS</span>
+    <span class="pill pill-green">Spring Boot 3.3</span>
+    <span class="pill pill-blue">Docker 26</span>
+    <span class="pill pill-blue">Kubernetes 1.30</span>
+    <span class="pill pill-purple">Apache Kafka 3.7</span>
+    <span class="pill pill-red">Redis 7.2</span>
+    <span class="pill pill-amber">AWS EKS / ECR</span>
+    <span class="pill pill-green">Spring Cloud Gateway</span>
+  </div>
+</div>
+
+<!-- ══ SECTION 1: PREREQUISITES ══ -->
+<div class="section" id="architecture">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3)">🏗️</div>
+    <div>
+      <div class="section-num">SECTION 01</div>
+      <div class="section-title">Architecture Overview</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">End-to-End System Architecture</div>
+    <div class="arch-box">
+      <div style="color:var(--muted);margin-bottom:8px">── CLIENT LAYER ──────────────────────────────────────────</div>
+      <div class="arch-row">
+        <span class="arch-node arch-blue">Browser / Mobile App</span>
+        <span class="arch-arrow">──HTTPS──▶</span>
+        <span class="arch-node arch-amber">AWS Route 53 (DNS)</span>
+        <span class="arch-arrow">──▶</span>
+        <span class="arch-node arch-amber">AWS ALB</span>
+      </div>
+      <div class="arch-sep"></div>
+      <div style="color:var(--muted);margin-bottom:8px">── API GATEWAY LAYER ─────────────────────────────────────</div>
+      <div class="arch-row">
+        <span class="arch-arrow" style="margin-left:40px">▼</span>
+      </div>
+      <div class="arch-row">
+        <span class="arch-node arch-green">Spring Cloud Gateway</span>
+        <span style="color:var(--muted);font-size:0.7rem;margin-left:8px">[Auth Filter · Rate Limit · Routing · Circuit Breaker]</span>
+      </div>
+      <div class="arch-sep"></div>
+      <div style="color:var(--muted);margin-bottom:8px">── MICROSERVICES LAYER ───────────────────────────────────</div>
+      <div class="arch-row" style="flex-wrap:wrap;gap:8px">
+        <span class="arch-node arch-blue">User Service :8081</span>
+        <span class="arch-node arch-blue">Order Service :8082</span>
+        <span class="arch-node arch-blue">Product Service :8083</span>
+        <span class="arch-node arch-blue">Notification :8084</span>
+        <span class="arch-node arch-blue">Payment Service :8085</span>
+      </div>
+      <div class="arch-sep"></div>
+      <div style="color:var(--muted);margin-bottom:8px">── DATA / MESSAGING LAYER ────────────────────────────────</div>
+      <div class="arch-row" style="flex-wrap:wrap;gap:8px">
+        <span class="arch-node arch-red">Redis Cache :6379</span>
+        <span class="arch-node arch-purple">Kafka Broker :9092</span>
+        <span class="arch-node arch-amber">PostgreSQL :5432</span>
+        <span class="arch-node arch-green">Jaeger Tracing :16686</span>
+      </div>
+      <div class="arch-sep"></div>
+      <div style="color:var(--muted);margin-bottom:8px">── INFRASTRUCTURE (AWS) ──────────────────────────────────</div>
+      <div class="arch-row" style="flex-wrap:wrap;gap:8px">
+        <span class="arch-node arch-amber">EKS Cluster</span>
+        <span class="arch-node arch-amber">ECR Registry</span>
+        <span class="arch-node arch-amber">RDS PostgreSQL</span>
+        <span class="arch-node arch-amber">ElastiCache Redis</span>
+        <span class="arch-node arch-amber">MSK Kafka</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-title">Technology Stack & Architectural Review Guide: Why & How We Used Each Technology <span class="badge badge-config">Interview Guide</span></div>
+    <div style="overflow-x:auto;margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:22%">Technology / Pattern</th>
+            <th style="width:38%">Why It Was Chosen (The Architectural Rationale)</th>
+            <th style="width:40%">How It Is Implemented & Achieved in Codebase</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Java 21 Virtual Threads (Loom)</strong></td>
+            <td>Eliminates OS thread exhaustion during high-concurrency database and REST calls without the debugging complexity of Reactive (WebFlux/RxJava) code.</td>
+            <td>Configured via <code>spring.threads.virtual.enabled=true</code> in <code>application.yml</code> across all microservices; used in <code>PaymentOutboxRelayScheduler</code> virtual thread executors.</td>
+          </tr>
+          <tr>
+            <td><strong>Java 21 Sealed Interfaces & Records</strong></td>
+            <td>Enforces compile-time exhaustive domain modeling so that unhandled payment types or illegal state transitions fail at build time.</td>
+            <td><code>public sealed interface PaymentInstrument permits CardInstrument, UpiInstrument...</code> paired with pattern matching <code>switch (instrument)</code> in <code>PaymentService.java</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Spring Cloud Gateway (:8080)</strong></td>
+            <td>Centralizes cross-cutting concerns: JWT token authentication, route matching, rate limiting, and fallback circuit breaking.</td>
+            <td><code>JwtAuthenticationFilter</code> verifying RS256/HMAC tokens + Resilience4j circuit breakers in <code>application.yml</code> routing traffic to ports :8081–:8085.</td>
+          </tr>
+          <tr>
+            <td><strong>Transactional Outbox (Postgres + Kafka)</strong></td>
+            <td>Solves the distributed dual-write problem between relational ACID commits and Kafka event publishing, guaranteeing <em>exactly-once</em> event processing.</td>
+            <td>Each service commits domain state and an <code>outbox_events</code> row in the same SQL transaction. A background scheduler polls unpublished rows and publishes to Kafka.</td>
+          </tr>
+          <tr>
+            <td><strong>Distributed Locking (Redis 7.2 + Redisson)</strong></td>
+            <td>Prevents inventory overselling and race conditions when multiple concurrent orders attempt to decrement stock for the same SKU.</td>
+            <td><code>RLock lock = redissonClient.getLock("lock:product:" + productId)</code> with explicit TTL lease timing in <code>ProductService.java</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>PCI-DSS RSA-2048 Cryptography</strong></td>
+            <td>Guarantees raw PAN card numbers, CVVs, and sensitive bank tokens never touch application logs, databases, or network traces in plaintext.</td>
+            <td><code>PaymentCryptographyService</code> generates RSA-2048 key pairs, encrypts checkout tokens (<code>ENC:RSA2048_...</code>), and signs webhooks using <code>SHA256withRSA</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Idempotency Guard (<code>idempotency_key</code>)</strong></td>
+            <td>Protects customers from duplicate charges or double order creation during network retries, double-clicks, or browser refreshes.</td>
+            <td>Unique database index on <code>payment_transactions(idempotency_key)</code> + programmatic check returning cached success state in <code>PaymentService.java</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>React 19 + Vite Frontend Dashboard</strong></td>
+            <td>Provides a responsive, production-ready admin and customer portal with TanStack Query caching and zero-flicker UI updates.</td>
+            <td>Integrated <code>PaymentModal.jsx</code> supporting 6 PCI-DSS payment instruments with client-side RSA tokenization simulation into <code>OrdersPage.jsx</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Hybrid Docker / Local JVM Deployment</strong></td>
+            <td>Optimizes local dev speed by running heavy I/O infrastructure in Docker while keeping Java services in fast native JVMs for rapid debugging.</td>
+            <td><code>docker-compose-infra.yml</code> runs PostgreSQL, Redis, Kafka, Jaeger, Prometheus, and Grafana; microservices run externally pointing to <code>localhost</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 3: JAVA 21 ══ -->
+<div class="section" id="systemdesignblueprint">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3)">🗺️</div>
+    <div>
+      <div class="section-num">SECTION 02</div>
+      <div class="section-title">End-to-End Visual Architecture & Sequence Diagrams (System Design Blueprint)</div>
+    </div>
+  </div>
+
+  <style>
+    .vis-arch-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin: 20px 0;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+    .vis-layer {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 16px;
+      background: rgba(30, 41, 59, 0.5);
+    }
+    .vis-layer-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .vis-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .vis-card {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 14px;
+      transition: all 0.25s ease;
+    }
+    .vis-card:hover {
+      transform: translateY(-3px);
+      border-color: #00d4ff;
+      box-shadow: 0 6px 15px rgba(0, 212, 255, 0.2);
+    }
+    .vis-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .vis-card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .vis-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(0, 212, 255, 0.15);
+      color: #00d4ff;
+      border: 1px solid rgba(0, 212, 255, 0.3);
+    }
+    .vis-card-desc {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      line-height: 1.45;
+    }
+    .vis-arrow-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #38bdf8;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      gap: 8px;
+      margin: -2px 0;
+    }
+    .vis-pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .vis-pill {
+      font-size: 0.75rem;
+      padding: 5px 10px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+    }
+  </style>
+
+  <div class="card">
+    <div class="card-title">1. Full Stack Microservices System Design Visual Architecture Blueprint <span class="badge badge-code">Visual Architecture</span></div>
+    
+    <!-- Visual CSS Architecture Blueprint -->
+    <div class="vis-arch-container">
+      <div class="vis-layer" style="border-color: rgba(56, 189, 248, 0.3);">
+        <div class="vis-layer-title" style="color: #38bdf8;">🖥️ CLIENT TIER (React 19 + Vite Dashboard)</div>
+        <div class="vis-grid">
+          <div class="vis-card">
+            <div class="vis-card-header"><span class="vis-card-title">OrdersPage.jsx</span><span class="vis-badge">UI State</span></div>
+            <div class="vis-card-desc">TanStack Query auto-caching, optimistic order confirmation, real-time SSE refresh.</div>
+          </div>
+          <div class="vis-card">
+            <div class="vis-card-header"><span class="vis-card-title">PaymentModal.jsx</span><span class="vis-badge">PCI-DSS UI</span></div>
+            <div class="vis-card-desc">Client-side RSA-2048 Public Key tokenization simulation for 6 payment instruments.</div>
+          </div>
+          <div class="vis-card">
+            <div class="vis-card-header"><span class="vis-card-title">payment.api.js</span><span class="vis-badge">HTTP Client</span></div>
+            <div class="vis-card-desc">Axios interceptor injecting JWT bearer tokens and unique <code>Idempotency-Key</code> headers.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vis-arrow-row">
+        <span>▼</span><span>HTTPS / REST JSON / Server-Sent Events (SSE)</span><span>▼</span>
+      </div>
+
+      <div class="vis-layer" style="border-color: rgba(0, 212, 255, 0.4); background: rgba(0, 212, 255, 0.05);">
+        <div class="vis-layer-title" style="color: #00d4ff;">🌐 INGRESS & SECURITY EDGE GATEWAY (Spring Cloud Gateway :8080)</div>
+        <div class="vis-card" style="border-color: rgba(0, 212, 255, 0.3);">
+          <div class="vis-card-header"><span class="vis-card-title">Single Entry Point Router (:8080)</span><span class="vis-badge">Edge Gateway</span></div>
+          <div class="vis-pill-group">
+            <span class="vis-pill" style="border-color: #38bdf8; color: #38bdf8;">🔒 JwtAuthenticationFilter (RS256 / HMAC)</span>
+            <span class="vis-pill" style="border-color: #f59e0b; color: #f59e0b;">⚡ Resilience4j Circuit Breaker (50% Fail Threshold)</span>
+            <span class="vis-pill" style="border-color: #ef4444; color: #ef4444;">🛡️ Redis Token Bucket Rate Limiter (10 req/s)</span>
+            <span class="vis-pill" style="border-color: #10b981; color: #10b981;">🌐 CORS & SSL Termination</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="vis-arrow-row">
+        <span>▼</span><span>Load Balanced Internal Route Dispatching (:8081 – :8085)</span><span>▼</span>
+      </div>
+
+      <div class="vis-layer" style="border-color: rgba(168, 85, 247, 0.3);">
+        <div class="vis-layer-title" style="color: #c084fc;">☕ DOMAIN MICROSERVICES TIER (Java 21 · Spring Boot 3.3.2 · Virtual Threads)</div>
+        <div class="vis-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+          <div class="vis-card">
+            <div class="vis-card-header"><span class="vis-card-title">User Service</span><span class="vis-badge">:8081</span></div>
+            <div class="vis-card-desc">JWT Token Provider, User Profile CRUD, RBAC Role Claims (ROLE_USER, ROLE_ADMIN).</div>
+          </div>
+          <div class="vis-card">
+            <div class="vis-card-header"><span class="vis-card-title">Order Service</span><span class="vis-badge">:8082</span></div>
+            <div class="vis-card-desc">Order Creation, Saga Outbox State, OrderAggregator BFF, Loom Virtual Threads.</div>
+          </div>
+          <div class="vis-card">
+            <div class="vis-card-header"><span class="vis-card-title">Product Service</span><span class="vis-badge">:8083</span></div>
+            <div class="vis-card-desc">Catalog Querying, Redis <code>@Cacheable</code>, Redisson <code>RLock("lock:product:{sku}")</code>.</div>
+          </div>
+          <div class="vis-card">
+            <div class="vis-card-header"><span class="vis-card-title">Payment Service</span><span class="vis-badge">:8085</span></div>
+            <div class="vis-card-desc">PCI-DSS RSA-2048 Cryptography, <code>SHA256withRSA</code> Signatures, Idempotency Guard.</div>
+          </div>
+          <div class="vis-card">
+            <div class="vis-card-header"><span class="vis-card-title">Notification</span><span class="vis-badge">:8084</span></div>
+            <div class="vis-card-desc">Idempotent Kafka Event Consumer, SMS & Email Receipt Alert Generation.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vis-arrow-row">
+        <span>▼</span><span>ACID DB Commits / Virtual Thread Outbox Polling / Idempotent Pub-Sub Event Streaming</span><span>▼</span>
+      </div>
+
+      <div class="vis-layer" style="border-color: rgba(16, 185, 129, 0.3);">
+        <div class="vis-layer-title" style="color: #10b981;">📦 DISTRIBUTED DATA, CACHE & EVENT MESH TIER</div>
+        <div class="vis-grid">
+          <div class="vis-card">
+            <div class="vis-card-header"><span class="vis-card-title">PostgreSQL 16</span><span class="vis-badge">ACID DB</span></div>
+            <div class="vis-card-desc">Transactional storage: <code>users</code>, <code>orders</code>, <code>payment_transactions</code>, <code>outbox_events</code>.</div>
+          </div>
+          <div class="vis-card">
+            <div class="vis-card-header"><span class="vis-card-title">Redis 7.2 Cache</span><span class="vis-badge">Cache / Lock</span></div>
+            <div class="vis-card-desc">Sub-millisecond catalog reads & Redisson Distributed Inventory Locks.</div>
+          </div>
+          <div class="vis-card">
+            <div class="vis-card-header"><span class="vis-card-title">Apache Kafka 3.8</span><span class="vis-badge">Event Mesh</span></div>
+            <div class="vis-card-desc">Idempotent Topics: <code>order-events</code> (Saga) & <code>payment-events</code> (Outbox relay).</div>
+          </div>
+          <div class="vis-card">
+            <div class="vis-card-header"><span class="vis-card-title">Jaeger Tracing</span><span class="vis-badge">:16686</span></div>
+            <div class="vis-card-desc">OpenTelemetry W3C correlation trace spans across HTTP & Kafka boundaries.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-title" style="margin-top:25px;">Interactive Mermaid Graphical Flowchart Diagram <span class="badge badge-config">Interactive Chart</span></div>
+    <div class="zoom-toolbar">
+  <span class="zoom-toolbar-label">💡 Interactive Chart Controls (Click to Zoom In/Out, Reset, or Fullscreen)</span>
+  <button onclick="zoomMermaid(this, 1.25)" class="zoom-btn">➕ Zoom In</button>
+  <button onclick="zoomMermaid(this, 0.8)" class="zoom-btn">➖ Zoom Out</button>
+  <button onclick="zoomMermaid(this, 'reset')" class="zoom-btn">🔄 Reset (100%)</button>
+  <button onclick="toggleMermaidFullscreen(this)" class="zoom-btn">⛶ Fullscreen</button>
+</div>
+<div class="mermaid-wrap" data-scale="1">
+      <div class="mermaid">
+graph TB
+    subgraph CLIENT_LAYER ["1️⃣ CLIENT TIER (React 19 + Vite Dashboard)"]
+        UI["🖥️ OrdersPage.jsx & PaymentModal.jsx<br/>(TanStack Query · Optimistic UI · SSE)"]
+    end
+
+    subgraph EDGE_GATEWAY ["2️⃣ INGRESS & SECURITY GATEWAY TIER (:8080)"]
+        GW["🌐 Spring Cloud Gateway :8080<br/>(🔒 RS256 JWT Auth · ⚡ Resilience4j Circuit Breaker · 🛡️ Redis Rate Limiter)"]
+    end
+
+    subgraph DOMAIN_SERVICES ["3️⃣ MICROSERVICES DOMAIN TIER (Java 21 · Spring Boot 3.3.2)"]
+        direction TB
+        US["👤 User Service :8081<br/>(JWT Provider · RBAC Claims)"]
+        PS["📦 Product Service :8083<br/>(SKU Catalog · @Cacheable · Redisson Inventory Lock)"]
+        OS["🛒 Order Service :8082<br/>(Saga Outbox · BFF Aggregator · Virtual Threads)"]
+        PAYS["💳 Payment Service :8085<br/>(PCI-DSS RSA-2048 Cryptography · Idempotency Guard)"]
+        NS["🔔 Notification Service :8084<br/>(Idempotent Kafka Consumer · SMS & Email Alert)"]
+    end
+
+    subgraph DATA_EVENT_MESH ["4️⃣ DISTRIBUTED DATA STORAGE, CACHE & EVENT MESH TIER"]
+        direction TB
+        RD[("⚡ Redis 7.2 Distributed Cache<br/>(RLock Inventory Lock · Rate Limiter Buckets)")]
+        PG[("🐘 PostgreSQL 16 ACID Database<br/>(users · orders · payment_transactions · outbox_events)")]
+        KF["🌊 Apache Kafka 3.8 Event Mesh<br/>(order-events · payment-events Idempotent Topics)"]
+        JG["🔭 Jaeger Tracing :16686<br/>(OpenTelemetry W3C Correlation Trace Spans)"]
+    end
+
+    UI ==>|"1. POST /api/v1/orders (Bearer JWT)"| GW
+    GW ==>|"2. Route /users (Validate Token)"| US
+    GW ==>|"3. Route /products (Lock Inventory)"| PS
+    GW ==>|"4. Route /orders (Create Order PENDING)"| OS
+    GW ==>|"5. Route /payments (RSA-2048 Charge)"| PAYS
+
+    PS -.->|"3a. Check Cache @Cacheable"| RD
+    PS -->|"3b. Acquire RLock lock:product:{sku}"| RD
+    PS -->|"3c. Query SKU Catalog"| PG
+
+    OS -->|"4a. ACID Dual-Commit Order + outbox_events"| PG
+    OS ==>|"4b. Virtual Thread Scheduler Relay"| KF
+
+    PAYS -->|"5a. Verify Idempotency & Save Payment"| PG
+    PAYS ==>|"5b. Outbox Relay to Kafka"| KF
+
+    KF ==>|"6. Consume Event & Dispatch Alert"| NS
+    KF ==>|"7. Consume Payment & Confirm Order"| OS
+
+    OS -.-|"Trace Headers"| JG
+    PAYS -.-|"Trace Headers"| JG
+    NS -.-|"Trace Headers"| JG
+
+    classDef clientStyle fill:#1e3a8a,stroke:#60a5fa,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef edgeStyle fill:#164e63,stroke:#22d3ee,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef serviceStyle fill:#312e81,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef dataStyle fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ffffff,font-weight:bold;
+    classDef eventStyle fill:#78350f,stroke:#fbbf24,stroke-width:2px,color:#ffffff,font-weight:bold;
+
+    class UI clientStyle;
+    class GW edgeStyle;
+    class US,OS,PS,PAYS,NS serviceStyle;
+    class PG,RD dataStyle;
+    class KF,JG eventStyle;
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Card 2: Sequence Diagram 1 (Secure Order Creation & Saga Outbox Flow) ══ -->
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-title">2. Sequence Diagram 1: Secure Order Creation & Saga Choreography Flow <span class="badge badge-config">Sequence Flow</span></div>
+    
+    <!-- Visual Step-by-Step Sequence Flow Grid (100% Visible Offline/Online) -->
+    <div class="vis-arch-container" style="border-color: rgba(56, 189, 248, 0.3);">
+      <div class="vis-layer-title" style="color: #38bdf8;">🔄 STEP-BY-STEP ORDER CREATION & SAGA OUTBOX EXECUTION PATH</div>
+      <div class="vis-grid">
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 1: POST /orders</span><span class="vis-badge">React 19 UI</span></div>
+          <div class="vis-card-desc">User submits checkout payload via <code>OrdersPage.jsx</code> with RS256 JWT Bearer token.</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 2: Security Filter</span><span class="vis-badge">Gateway :8080</span></div>
+          <div class="vis-card-desc"><code>JwtAuthenticationFilter</code> validates RS256 signature; Redis Rate Limiter checks IP bucket.</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 3: Redisson Lock</span><span class="vis-badge">Product :8083</span></div>
+          <div class="vis-card-desc"><code>order-service</code> queries SKU catalog and acquires Redis lock <code>RLock("lock:product:{sku}")</code>.</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 4: ACID Commit</span><span class="vis-badge">Postgres 16</span></div>
+          <div class="vis-card-desc">Dual-commit in single SQL TX: <code>INSERT INTO orders (PENDING)</code> + <code>outbox_events</code>.</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 5: Virtual Thread</span><span class="vis-badge">Loom Scheduler</span></div>
+          <div class="vis-card-desc"><code>OrderOutboxRelayScheduler</code> polls unpublished outbox rows on Java 21 Virtual Threads.</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 6: Kafka Publish</span><span class="vis-badge">Kafka 3.8</span></div>
+          <div class="vis-card-desc">Produces idempotent event to topic <code>"order-events"</code> with W3C OpenTelemetry trace headers.</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 7: Alert Trigger</span><span class="vis-badge">Notification :8084</span></div>
+          <div class="vis-card-desc">Idempotent consumer reads event from Kafka and dispatches customer SMS/Email confirmation.</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 8: UI Feedback</span><span class="vis-badge">HTTP 201</span></div>
+          <div class="vis-card-desc">Client receives immediate <code>201 Created (PENDING)</code> response without waiting for SMS alerts.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-title" style="margin-top:20px;">Interactive Mermaid Sequence Diagram (Order & Saga Outbox) <span class="badge badge-config">Interactive Chart</span></div>
+    <div class="zoom-toolbar">
+  <span class="zoom-toolbar-label">💡 Interactive Chart Controls (Click to Zoom In/Out, Reset, or Fullscreen)</span>
+  <button onclick="zoomMermaid(this, 1.25)" class="zoom-btn">➕ Zoom In</button>
+  <button onclick="zoomMermaid(this, 0.8)" class="zoom-btn">➖ Zoom Out</button>
+  <button onclick="zoomMermaid(this, 'reset')" class="zoom-btn">🔄 Reset (100%)</button>
+  <button onclick="toggleMermaidFullscreen(this)" class="zoom-btn">⛶ Fullscreen</button>
+</div>
+<div class="mermaid-wrap" data-scale="1">
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User as User
+    
+    box rgb(30, 58, 138) CLIENT
+    participant UI as React UI
+    end
+    
+    box rgb(22, 78, 99) GATEWAY
+    participant GW as Gateway :8080
+    end
+    
+    box rgb(49, 46, 129) MICROSERVICES
+    participant OS as Order :8082
+    participant PS as Product :8083
+    participant NS as Notify :8084
+    end
+    
+    box rgb(6, 78, 59) DATA & MESH
+    participant RD as Redis 7.2
+    participant DB as Postgres 16
+    participant KF as Kafka 3.8
+    end
+
+    User->>+UI: Submit Checkout (SKU, Qty)
+    UI->>+GW: POST /api/v1/orders (Bearer JWT)
+    GW->>GW: Verify RS256 Signature & IP Token Bucket
+    GW->>+OS: Dispatch Route /api/v1/orders
+    OS->>+PS: Query Catalog & Lock Inventory
+    PS->>RD: Acquire RLock("lock:product:{sku}")
+    RD-->>PS: Lock Acquired (Sub-ms lease)
+    PS-->>-OS: Inventory Available & Locked
+    OS->>DB: ACID TX: INSERT Order (PENDING) + outbox_events
+    DB-->>OS: SQL TX Committed Successfully
+    OS-->>-UI: HTTP 201 Created (Order PENDING)
+    UI-->>-User: Render Optimistic Order Confirmation Badge
+    Note over OS,KF: Loom Virtual Thread Scheduler Polls outbox_events
+    OS->>+KF: Produce "order-events" Topic (Idempotent)
+    KF->>+NS: Consume "order-events"
+    NS->>NS: Send SMS / Email Confirmation Receipt
+    NS-->>-KF: Event Acknowledged
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Card 3: Sequence Diagram 2 (PCI-DSS RSA-2048 Secure Payment Flow) ══ -->
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-title">3. Sequence Diagram 2: PCI-DSS RSA-2048 Secure Payment & Idempotency Execution Flow <span class="badge badge-warn">PCI-DSS Flow</span></div>
+    
+    <!-- Visual Step-by-Step Sequence Flow Grid (100% Visible Offline/Online) -->
+    <div class="vis-arch-container" style="border-color: rgba(16, 185, 129, 0.3);">
+      <div class="vis-layer-title" style="color: #10b981;">🔒 STEP-BY-STEP PCI-DSS CRYPTOGRAPHY & IDEMPOTENT PAYMENT PATH</div>
+      <div class="vis-grid">
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 1: Instrument Select</span><span class="vis-badge">PaymentModal.jsx</span></div>
+          <div class="vis-card-desc">User chooses 1 of 6 sealed instruments (Visa, MasterCard, Amex, Rupay, UPI, NetBanking).</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 2: RSA Public Key</span><span class="vis-badge">GET /public-key</span></div>
+          <div class="vis-card-desc">Client fetches RSA-2048 Merchant Public Key (X.509 PEM format) from <code>payment-service</code>.</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 3: Client Encrypt</span><span class="vis-badge">ENC:RSA2048_</span></div>
+          <div class="vis-card-desc">React encrypts card token client-side so PAN/CVV never touch logs or network in plaintext.</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 4: Idempotency Check</span><span class="vis-badge">Payment :8085</span></div>
+          <div class="vis-card-desc">Verifies HTTP header <code>Idempotency-Key</code> against unique Postgres index (0% duplicate risk).</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 5: Decrypt & Charge</span><span class="vis-badge">RSA Private Key</span></div>
+          <div class="vis-card-desc">Decrypts token, executes charge, and ACID dual-commits <code>SUCCESS</code> status + outbox event.</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 6: Outbox Relay</span><span class="vis-badge">Virtual Thread</span></div>
+          <div class="vis-card-desc"><code>PaymentOutboxRelayScheduler</code> polls and publishes <code>"payment-events"</code> to Kafka 3.8.</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 7: Order Confirm</span><span class="vis-badge">Order :8082</span></div>
+          <div class="vis-card-desc"><code>order-service</code> consumes payment event and transitions Order from <code>PENDING</code> ➔ <code>CONFIRMED</code>.</div>
+        </div>
+        <div class="vis-card">
+          <div class="vis-card-header"><span class="vis-card-title">Step 8: Customer Receipt</span><span class="vis-badge">Notification :8084</span></div>
+          <div class="vis-card-desc"><code>notification-service</code> consumes payment event and sends receipt with SHA-256 webhook digest.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-title" style="margin-top:20px;">Interactive Mermaid Sequence Diagram (RSA-2048 Payment & Idempotency) <span class="badge badge-config">Interactive Chart</span></div>
+    <div class="zoom-toolbar">
+  <span class="zoom-toolbar-label">💡 Interactive Chart Controls (Click to Zoom In/Out, Reset, or Fullscreen)</span>
+  <button onclick="zoomMermaid(this, 1.25)" class="zoom-btn">➕ Zoom In</button>
+  <button onclick="zoomMermaid(this, 0.8)" class="zoom-btn">➖ Zoom Out</button>
+  <button onclick="zoomMermaid(this, 'reset')" class="zoom-btn">🔄 Reset (100%)</button>
+  <button onclick="toggleMermaidFullscreen(this)" class="zoom-btn">⛶ Fullscreen</button>
+</div>
+<div class="mermaid-wrap" data-scale="1">
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User as User
+    
+    box rgb(30, 58, 138) CLIENT
+    participant UI as PaymentModal
+    end
+    
+    box rgb(49, 46, 129) MICROSERVICES
+    participant PAY as Payment :8085
+    participant OS as Order :8082
+    end
+    
+    box rgb(6, 78, 59) DATA & MESH
+    participant DB as Postgres 16
+    participant KF as Kafka 3.8
+    end
+
+    User->>+UI: Click "Pay Now" & Select 1 of 6 Instruments
+    UI->>+PAY: GET /api/v1/payments/security/public-key
+    PAY-->>-UI: Return RSA-2048 Merchant Public Key (PEM)
+    UI->>UI: Tokenize & Encrypt PAN (ENC:RSA2048_...)
+    UI->>+PAY: POST /api/v1/payments (Header: Idempotency-Key)
+    PAY->>DB: Verify unique idempotency_key index
+    DB-->>PAY: Key Valid (0% Duplicate Charge Risk)
+    PAY->>DB: ACID TX: UPDATE Payment SUCCESS + outbox_events
+    DB-->>PAY: SQL TX Committed Successfully
+    PAY-->>-UI: HTTP 200 OK (Payment Processed)
+    UI-->>-User: Render Paid & Confirmed UI Badge
+    Note over PAY,KF: Loom Virtual Thread Scheduler Polls outbox_events
+    PAY->>+KF: Produce "payment-events" Topic
+    KF->>+OS: Consume "payment-events"
+    OS->>DB: UPDATE Order Status -> CONFIRMED
+    OS-->>-KF: Event Acknowledged
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-title">4. System Design Justifications & Architectural Trade-off Review <span class="badge badge-install">System Design</span></div>
+    <div style="overflow-x:auto;margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:25%">Architectural Decision</th>
+            <th style="width:35%">Why Chosen in This Project (The Benefit)</th>
+            <th style="width:40%">Alternative Rejected & Why (Interview Trade-off)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Eventual Consistency via Sagas vs. 2PC</strong></td>
+            <td>Guarantees high system availability and low latency across microservices without holding database locks across network calls.</td>
+            <td><strong>Rejected: 2-Phase Commit (2PC) / XA Transactions.</strong> 2PC introduces strict blocking locks and a single coordinator point of failure, severely degrading scalability.</td>
+          </tr>
+          <tr>
+            <td><strong>Transactional Outbox vs. Direct Kafka Publish</strong></td>
+            <td>Guarantees <em>exactly-once</em> event production by committing database changes and outbox rows in a single ACID PostgreSQL transaction.</td>
+            <td><strong>Rejected: Direct Kafka Producer after SQL Commit.</strong> If the app crashes after SQL commit but before Kafka send, downstream services never get notified, breaking data integrity.</td>
+          </tr>
+          <tr>
+            <td><strong>Redis Distributed Locks vs. DB Row Locks</strong></td>
+            <td>Redisson locks (<code>RLock</code>) run in-memory with sub-millisecond TTL leases, protecting inventory without locking PostgreSQL tables.</td>
+            <td><strong>Rejected: SQL <code>SELECT ... FOR UPDATE</code>.</strong> Database row-level locking under high concurrent checkout spikes leads to connection pool exhaustion and SQL deadlocks.</td>
+          </tr>
+          <tr>
+            <td><strong>Java 21 Virtual Threads vs. Reactive WebFlux</strong></td>
+            <td>Virtual Threads (Loom) allow writing clean, sequential imperative code while scaling to millions of concurrent I/O tasks.</td>
+            <td><strong>Rejected: Spring WebFlux / RxJava.</strong> Reactive programming requires non-blocking JDBC drivers (R2DBC), complex stack traces, and steeper developer learning curves.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="project">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3)">📁</div>
+    <div>
+      <div class="section-num">SECTION 03</div>
+      <div class="section-title">End-to-End Full Stack Project Structure</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Project Layout & Multi-Module Architecture</div>
+    <div class="tree">
+      <span class="tree-dir">Java_21_ReactJs_FullStack/</span><br/>
+      ├── <span class="tree-file">pom.xml</span> <span class="tree-comment"># Root Maven POM (Spring Boot 3.3, Java 21)</span><br/>
+      ├── <span class="tree-file">docker-compose.yml</span> <span class="tree-comment"># Microservices container setup</span><br/>
+      ├── <span class="tree-file">docker-compose-infra.yml</span> <span class="tree-comment"># PostgreSQL, Redis, Kafka, Jaeger, Grafana</span><br/>
+      ├── <span class="tree-dir">api-gateway/</span> <span class="tree-comment"># Spring Cloud Gateway (:8080)</span><br/>
+      ├── <span class="tree-dir">user-service/</span> <span class="tree-comment"># User profile & JWT Auth (:8081)</span><br/>
+      ├── <span class="tree-dir">order-service/</span> <span class="tree-comment"># Order creation & Kafka Events (:8082)</span><br/>
+      ├── <span class="tree-dir">product-service/</span> <span class="tree-comment"># Catalog & Redis inventory cache (:8083)</span><br/>
+      ├── <span class="tree-dir">notification-service/</span> <span class="tree-comment"># Kafka Consumer & Email alerts (:8084)</span><br/>
+      ├── <span class="tree-dir">payment-service/</span> <span class="tree-comment"># PCI-DSS RSA-2048 Payment Service (:8085)</span><br/>
+      ├── <span class="tree-dir">k8s/</span> <span class="tree-comment"># Kubernetes deployment, ingress & HPA manifests</span><br/>
+      └── <span class="tree-dir">frontend/</span> <span class="tree-comment"># React 19 + Vite UI Dashboard</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 12: SERVICES ══ -->
+<div class="section" id="prereqs">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3)">📋</div>
+    <div>
+      <div class="section-num">SECTION 04</div>
+      <div class="section-title">Prerequisites</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Hardware Requirements <span class="badge badge-req">Minimum</span></div>
+    <div class="grid-3">
+      <div style="text-align:center;padding:1rem;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:1.5rem;margin-bottom:4px">💻</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--accent)">CPU</div>
+        <div style="font-size:0.82rem;color:var(--muted);margin-top:4px">8-core (16 recommended)</div>
+      </div>
+      <div style="text-align:center;padding:1rem;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:1.5rem;margin-bottom:4px">🧠</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--accent)">RAM</div>
+        <div style="font-size:0.82rem;color:var(--muted);margin-top:4px">16 GB (32 GB recommended)</div>
+      </div>
+      <div style="text-align:center;padding:1rem;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:1.5rem;margin-bottom:4px">💾</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--accent)">Disk</div>
+        <div style="font-size:0.82rem;color:var(--muted);margin-top:4px">50 GB free SSD</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Software Prerequisites <span class="badge badge-req">Required</span></div>
+    <table>
+      <thead><tr><th>Tool</th><th>Version</th><th>Purpose</th><th>Download</th></tr></thead>
+      <tbody>
+        <tr><td class="td-tech">Java JDK</td><td class="td-ver">21 LTS</td><td>Runtime & compilation</td><td style="color:var(--muted);font-size:0.78rem">sdkman.io or adoptium.net</td></tr>
+        <tr><td class="td-tech">Maven / Gradle</td><td class="td-ver">3.9+ / 8+</td><td>Build tool</td><td style="color:var(--muted);font-size:0.78rem">maven.apache.org</td></tr>
+        <tr><td class="td-tech">Docker Desktop</td><td class="td-ver">26+</td><td>Containers</td><td style="color:var(--muted);font-size:0.78rem">docker.com/products</td></tr>
+        <tr><td class="td-tech">kubectl</td><td class="td-ver">1.30+</td><td>K8s CLI</td><td style="color:var(--muted);font-size:0.78rem">kubectl.io</td></tr>
+        <tr><td class="td-tech">Helm</td><td class="td-ver">3.15+</td><td>K8s package manager</td><td style="color:var(--muted);font-size:0.78rem">helm.sh</td></tr>
+        <tr><td class="td-tech">AWS CLI</td><td class="td-ver">2.x</td><td>AWS operations</td><td style="color:var(--muted);font-size:0.78rem">aws.amazon.com/cli</td></tr>
+        <tr><td class="td-tech">eksctl</td><td class="td-ver">latest</td><td>EKS cluster management</td><td style="color:var(--muted);font-size:0.78rem">eksctl.io</td></tr>
+        <tr><td class="td-tech">IntelliJ IDEA</td><td class="td-ver">2024+</td><td>IDE (recommended)</td><td style="color:var(--muted);font-size:0.78rem">jetbrains.com</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="info-box info-note">
+    <div class="info-icon">ℹ️</div>
+    <div><strong>OS Support:</strong> All commands in this guide work on macOS, Linux, and Windows (WSL2). Windows users should install WSL2 + Ubuntu 22.04 before proceeding.</div>
+  </div>
+</div>
+
+<!-- ══ SECTION 2: ARCHITECTURE ══ -->
+<div class="section" id="java21">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3)">☕</div>
+    <div>
+      <div class="section-num">SECTION 05</div>
+      <div class="section-title">Java 21 Installation & Setup</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Install via SDKMAN (Recommended) <span class="badge badge-install">Install</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">BASH</span><span class="code-file">Terminal</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="com"># 1. Install SDKMAN</span>
+curl -s "https://get.sdkman.io" | bash
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+<span class="com"># 2. Install Java 21 (Temurin / Eclipse Adoptium)</span>
+sdk install java 21.0.3-tem
+
+<span class="com"># 3. Set as default</span>
+sdk default java 21.0.3-tem
+
+<span class="com"># 4. Verify</span>
+java -version
+<span class="com"># openjdk version "21.0.3" 2024-04-16 LTS</span>
+
+<span class="com"># 5. Install Maven</span>
+sdk install maven 3.9.7
+
+<span class="com"># 6. Verify Maven</span>
+mvn -version</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Key Java 21 Features Used in This Guide <span class="badge badge-code">Code</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">JAVA 21</span><span class="code-file">Java21Features.java</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="com">// ── 1. RECORDS (compact data carriers) ─────────────────────</span>
+<span class="kw">public record</span> <span class="cls">OrderRequest</span>(<span class="cls">String</span> userId, <span class="cls">String</span> productId, <span class="num">int</span> qty) {}
+<span class="kw">public record</span> <span class="cls">ApiResponse</span>&lt;T&gt;(<span class="cls">T</span> data, <span class="cls">String</span> message, <span class="kw">boolean</span> success) {}
+
+<span class="com">// ── 2. SEALED CLASSES ───────────────────────────────────────</span>
+<span class="kw">public sealed interface</span> <span class="cls">PaymentResult</span>
+    <span class="kw">permits</span> <span class="cls">PaymentSuccess</span>, <span class="cls">PaymentFailed</span>, <span class="cls">PaymentPending</span> {}
+
+<span class="kw">record</span> <span class="cls">PaymentSuccess</span>(<span class="cls">String</span> txId)       <span class="kw">implements</span> <span class="cls">PaymentResult</span> {}
+<span class="kw">record</span> <span class="cls">PaymentFailed</span>(<span class="cls">String</span> reason)     <span class="kw">implements</span> <span class="cls">PaymentResult</span> {}
+<span class="kw">record</span> <span class="cls">PaymentPending</span>(<span class="cls">String</span> refId)     <span class="kw">implements</span> <span class="cls">PaymentResult</span> {}
+
+<span class="com">// ── 3. PATTERN MATCHING with switch ─────────────────────────</span>
+<span class="kw">String</span> <span class="fn">describePayment</span>(<span class="cls">PaymentResult</span> result) {
+    <span class="kw">return switch</span> (result) {
+        <span class="kw">case</span> <span class="cls">PaymentSuccess</span> s  -> <span class="str">"Success: tx="</span> + s.txId();
+        <span class="kw">case</span> <span class="cls">PaymentFailed</span> f   -> <span class="str">"Failed: "</span>    + f.reason();
+        <span class="kw">case</span> <span class="cls">PaymentPending</span> p  -> <span class="str">"Pending: ref="</span>+ p.refId();
+    };
+}
+
+<span class="com">// ── 4. VIRTUAL THREADS (Project Loom) ───────────────────────</span>
+<span class="com">// In application.properties (Spring Boot auto-enables this)</span>
+<span class="com">// spring.threads.virtual.enabled=true</span>
+
+<span class="com">// ── 5. TEXT BLOCKS ──────────────────────────────────────────</span>
+<span class="cls">String</span> json = <span class="str">"""
+    {
+        "orderId": "%s",
+        "status": "CONFIRMED",
+        "timestamp": "%s"
+    }
+    """</span>.formatted(orderId, <span class="cls">Instant</span>.now());</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 4: SPRING BOOT ══ -->
+<div class="section" id="springboot">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(134,239,172,0.1);border:1px solid rgba(134,239,172,0.3)">🌱</div>
+    <div>
+      <div class="section-num">SECTION 06</div>
+      <div class="section-title">Spring Boot 3.3 Microservices</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Parent POM — Multi-Module Project <span class="badge badge-config">Config</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">XML</span><span class="code-file">pom.xml (root)</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="kw">&lt;project&gt;</span>
+  <span class="kw">&lt;groupId&gt;</span>com.demo<span class="kw">&lt;/groupId&gt;</span>
+  <span class="kw">&lt;artifactId&gt;</span>microservices-demo<span class="kw">&lt;/artifactId&gt;</span>
+  <span class="kw">&lt;version&gt;</span>1.0.0<span class="kw">&lt;/version&gt;</span>
+  <span class="kw">&lt;packaging&gt;</span>pom<span class="kw">&lt;/packaging&gt;</span>
+
+  <span class="kw">&lt;parent&gt;</span>
+    <span class="kw">&lt;groupId&gt;</span>org.springframework.boot<span class="kw">&lt;/groupId&gt;</span>
+    <span class="kw">&lt;artifactId&gt;</span>spring-boot-starter-parent<span class="kw">&lt;/artifactId&gt;</span>
+    <span class="kw">&lt;version&gt;</span>3.3.2<span class="kw">&lt;/version&gt;</span>
+  <span class="kw">&lt;/parent&gt;</span>
+
+  <span class="kw">&lt;properties&gt;</span>
+    <span class="kw">&lt;java.version&gt;</span>21<span class="kw">&lt;/java.version&gt;</span>
+    <span class="kw">&lt;spring-cloud.version&gt;</span>2023.0.3<span class="kw">&lt;/spring-cloud.version&gt;</span>
+  <span class="kw">&lt;/properties&gt;</span>
+
+  <span class="kw">&lt;modules&gt;</span>
+    <span class="kw">&lt;module&gt;</span>api-gateway<span class="kw">&lt;/module&gt;</span>
+    <span class="kw">&lt;module&gt;</span>user-service<span class="kw">&lt;/module&gt;</span>
+    <span class="kw">&lt;module&gt;</span>order-service<span class="kw">&lt;/module&gt;</span>
+    <span class="kw">&lt;module&gt;</span>product-service<span class="kw">&lt;/module&gt;</span>
+    <span class="kw">&lt;module&gt;</span>notification-service<span class="kw">&lt;/module&gt;</span>
+    <span class="kw">&lt;module&gt;</span>service-registry<span class="kw">&lt;/module&gt;</span>
+  <span class="kw">&lt;/modules&gt;</span>
+
+  <span class="kw">&lt;dependencyManagement&gt;</span>
+    <span class="kw">&lt;dependencies&gt;</span>
+      <span class="kw">&lt;dependency&gt;</span>
+        <span class="kw">&lt;groupId&gt;</span>org.springframework.cloud<span class="kw">&lt;/groupId&gt;</span>
+        <span class="kw">&lt;artifactId&gt;</span>spring-cloud-dependencies<span class="kw">&lt;/artifactId&gt;</span>
+        <span class="kw">&lt;version&gt;</span>${spring-cloud.version}<span class="kw">&lt;/version&gt;</span>
+        <span class="kw">&lt;type&gt;</span>pom<span class="kw">&lt;/type&gt;</span>
+        <span class="kw">&lt;scope&gt;</span>import<span class="kw">&lt;/scope&gt;</span>
+      <span class="kw">&lt;/dependency&gt;</span>
+    <span class="kw">&lt;/dependencies&gt;</span>
+  <span class="kw">&lt;/dependencyManagement&gt;</span>
+<span class="kw">&lt;/project&gt;</span></pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Order Service — Complete Example <span class="badge badge-code">Full Code</span></div>
+
+    <div style="margin-bottom:0.5rem;font-size:0.82rem;color:var(--muted)">pom.xml dependencies for order-service:</div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">XML</span><span class="code-file">order-service/pom.xml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="kw">&lt;dependencies&gt;</span>
+  <span class="com">&lt;!-- Web --&gt;</span>
+  <span class="kw">&lt;dependency&gt;&lt;groupId&gt;</span>org.springframework.boot<span class="kw">&lt;/groupId&gt;</span>
+              <span class="kw">&lt;artifactId&gt;</span>spring-boot-starter-web<span class="kw">&lt;/artifactId&gt;&lt;/dependency&gt;</span>
+  <span class="com">&lt;!-- Data JPA --&gt;</span>
+  <span class="kw">&lt;dependency&gt;&lt;groupId&gt;</span>org.springframework.boot<span class="kw">&lt;/groupId&gt;</span>
+              <span class="kw">&lt;artifactId&gt;</span>spring-boot-starter-data-jpa<span class="kw">&lt;/artifactId&gt;&lt;/dependency&gt;</span>
+  <span class="com">&lt;!-- Redis --&gt;</span>
+  <span class="kw">&lt;dependency&gt;&lt;groupId&gt;</span>org.springframework.boot<span class="kw">&lt;/groupId&gt;</span>
+              <span class="kw">&lt;artifactId&gt;</span>spring-boot-starter-data-redis<span class="kw">&lt;/artifactId&gt;&lt;/dependency&gt;</span>
+  <span class="com">&lt;!-- Kafka --&gt;</span>
+  <span class="kw">&lt;dependency&gt;&lt;groupId&gt;</span>org.springframework.kafka<span class="kw">&lt;/groupId&gt;</span>
+              <span class="kw">&lt;artifactId&gt;</span>spring-kafka<span class="kw">&lt;/artifactId&gt;&lt;/dependency&gt;</span>
+  <span class="com">&lt;!-- Eureka Client --&gt;</span>
+  <span class="kw">&lt;dependency&gt;&lt;groupId&gt;</span>org.springframework.cloud<span class="kw">&lt;/groupId&gt;</span>
+              <span class="kw">&lt;artifactId&gt;</span>spring-cloud-starter-netflix-eureka-client<span class="kw">&lt;/artifactId&gt;&lt;/dependency&gt;</span>
+  <span class="com">&lt;!-- Actuator --&gt;</span>
+  <span class="kw">&lt;dependency&gt;&lt;groupId&gt;</span>org.springframework.boot<span class="kw">&lt;/groupId&gt;</span>
+              <span class="kw">&lt;artifactId&gt;</span>spring-boot-starter-actuator<span class="kw">&lt;/artifactId&gt;&lt;/dependency&gt;</span>
+  <span class="com">&lt;!-- PostgreSQL --&gt;</span>
+  <span class="kw">&lt;dependency&gt;&lt;groupId&gt;</span>org.postgresql<span class="kw">&lt;/groupId&gt;</span>
+              <span class="kw">&lt;artifactId&gt;</span>postgresql<span class="kw">&lt;/artifactId&gt;&lt;/dependency&gt;</span>
+  <span class="com">&lt;!-- Lombok --&gt;</span>
+  <span class="kw">&lt;dependency&gt;&lt;groupId&gt;</span>org.projectlombok<span class="kw">&lt;/groupId&gt;</span>
+              <span class="kw">&lt;artifactId&gt;</span>lombok<span class="kw">&lt;/artifactId&gt;&lt;scope&gt;</span>provided<span class="kw">&lt;/scope&gt;&lt;/dependency&gt;</span>
+  <span class="com">&lt;!-- Validation --&gt;</span>
+  <span class="kw">&lt;dependency&gt;&lt;groupId&gt;</span>org.springframework.boot<span class="kw">&lt;/groupId&gt;</span>
+              <span class="kw">&lt;artifactId&gt;</span>spring-boot-starter-validation<span class="kw">&lt;/artifactId&gt;&lt;/dependency&gt;</span>
+<span class="kw">&lt;/dependencies&gt;</span></pre>
+    </div>
+
+    <div style="margin:1rem 0 0.5rem;font-size:0.82rem;color:var(--muted)">application.yml:</div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">YAML</span><span class="code-file">order-service/src/main/resources/application.yml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="prop">server</span>:
+  <span class="prop">port</span>: <span class="num">8082</span>
+
+<span class="prop">spring</span>:
+  <span class="prop">application</span>:
+    <span class="prop">name</span>: <span class="str">order-service</span>
+  <span class="prop">threads</span>:
+    <span class="prop">virtual</span>:
+      <span class="prop">enabled</span>: <span class="kw">true</span>          <span class="com"># Java 21 Virtual Threads</span>
+  <span class="prop">datasource</span>:
+    <span class="prop">url</span>: <span class="str">jdbc:postgresql://localhost:5432/orders_db</span>
+    <span class="prop">username</span>: <span class="str">${DB_USER:postgres}</span>
+    <span class="prop">password</span>: <span class="str">${DB_PASS:secret}</span>
+    <span class="prop">hikari</span>:
+      <span class="prop">maximum-pool-size</span>: <span class="num">20</span>
+  <span class="prop">jpa</span>:
+    <span class="prop">hibernate</span>:
+      <span class="prop">ddl-auto</span>: <span class="str">validate</span>
+    <span class="prop">show-sql</span>: <span class="kw">false</span>
+  <span class="prop">data</span>:
+    <span class="prop">redis</span>:
+      <span class="prop">host</span>: <span class="str">${REDIS_HOST:localhost}</span>
+      <span class="prop">port</span>: <span class="num">6379</span>
+      <span class="prop">timeout</span>: <span class="str">2000ms</span>
+  <span class="prop">kafka</span>:
+    <span class="prop">bootstrap-servers</span>: <span class="str">${KAFKA_BROKERS:localhost:9092}</span>
+    <span class="prop">producer</span>:
+      <span class="prop">key-serializer</span>: <span class="str">org.apache.kafka.common.serialization.StringSerializer</span>
+      <span class="prop">value-serializer</span>: <span class="str">org.springframework.kafka.support.serializer.JsonSerializer</span>
+      <span class="prop">acks</span>: <span class="str">all</span>
+      <span class="prop">retries</span>: <span class="num">3</span>
+    <span class="prop">consumer</span>:
+      <span class="prop">group-id</span>: <span class="str">order-service-group</span>
+      <span class="prop">auto-offset-reset</span>: <span class="str">earliest</span>
+      <span class="prop">key-deserializer</span>: <span class="str">org.apache.kafka.common.serialization.StringDeserializer</span>
+      <span class="prop">value-deserializer</span>: <span class="str">org.springframework.kafka.support.serializer.JsonDeserializer</span>
+
+<span class="prop">eureka</span>:
+  <span class="prop">client</span>:
+    <span class="prop">service-url</span>:
+      <span class="prop">defaultZone</span>: <span class="str">http://localhost:8761/eureka/</span>
+  <span class="prop">instance</span>:
+    <span class="prop">prefer-ip-address</span>: <span class="kw">true</span>
+
+<span class="prop">management</span>:
+  <span class="prop">endpoints</span>:
+    <span class="prop">web</span>:
+      <span class="prop">exposure</span>:
+        <span class="prop">include</span>: <span class="str">health,info,metrics,prometheus</span></pre>
+    </div>
+
+    <div style="margin:1rem 0 0.5rem;font-size:0.82rem;color:var(--muted)">Entity, Repository, Service, Controller:</div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">JAVA</span><span class="code-file">Order.java · OrderRepository.java · OrderService.java · OrderController.java</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="com">// ── Order.java (Entity) ──────────────────────────────────────</span>
+<span class="ann">@Entity</span>
+<span class="ann">@Table</span>(name = <span class="str">"orders"</span>)
+<span class="ann">@Data</span> <span class="ann">@NoArgsConstructor</span> <span class="ann">@AllArgsConstructor</span> <span class="ann">@Builder</span>
+<span class="kw">public class</span> <span class="cls">Order</span> {
+    <span class="ann">@Id</span>
+    <span class="ann">@GeneratedValue</span>(strategy = GenerationType.UUID)
+    <span class="kw">private</span> <span class="cls">String</span> id;
+
+    <span class="ann">@Column</span>(nullable = <span class="kw">false</span>)
+    <span class="kw">private</span> <span class="cls">String</span> userId;
+
+    <span class="ann">@Column</span>(nullable = <span class="kw">false</span>)
+    <span class="kw">private</span> <span class="cls">String</span> productId;
+
+    <span class="kw">private</span> <span class="num">int</span> quantity;
+    <span class="kw">private</span> <span class="cls">BigDecimal</span> totalPrice;
+
+    <span class="ann">@Enumerated</span>(EnumType.STRING)
+    <span class="kw">private</span> <span class="cls">OrderStatus</span> status;
+
+    <span class="ann">@CreationTimestamp</span>
+    <span class="kw">private</span> <span class="cls">LocalDateTime</span> createdAt;
+}
+
+<span class="kw">enum</span> <span class="cls">OrderStatus</span> { PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED }
+
+<span class="com">// ── OrderRepository.java ────────────────────────────────────</span>
+<span class="ann">@Repository</span>
+<span class="kw">public interface</span> <span class="cls">OrderRepository</span> <span class="kw">extends</span> <span class="cls">JpaRepository</span>&lt;<span class="cls">Order</span>, <span class="cls">String</span>&gt; {
+    <span class="cls">List</span>&lt;<span class="cls">Order</span>&gt; <span class="fn">findByUserId</span>(<span class="cls">String</span> userId);
+    <span class="cls">List</span>&lt;<span class="cls">Order</span>&gt; <span class="fn">findByStatus</span>(<span class="cls">OrderStatus</span> status);
+}
+
+<span class="com">// ── OrderService.java ───────────────────────────────────────</span>
+<span class="ann">@Service</span>
+<span class="ann">@RequiredArgsConstructor</span>
+<span class="ann">@Slf4j</span>
+<span class="kw">public class</span> <span class="cls">OrderService</span> {
+
+    <span class="kw">private final</span> <span class="cls">OrderRepository</span> orderRepository;
+    <span class="kw">private final</span> <span class="cls">RedisTemplate</span>&lt;<span class="cls">String</span>, <span class="cls">Order</span>&gt; redisTemplate;
+    <span class="kw">private final</span> <span class="cls">KafkaTemplate</span>&lt;<span class="cls">String</span>, <span class="cls">OrderEvent</span>&gt; kafkaTemplate;
+
+    <span class="kw">private static final</span> <span class="cls">String</span> CACHE_KEY = <span class="str">"order:"</span>;
+    <span class="kw">private static final</span> <span class="cls">String</span> TOPIC    = <span class="str">"order-events"</span>;
+
+    <span class="ann">@Transactional</span>
+    <span class="kw">public</span> <span class="cls">Order</span> <span class="fn">createOrder</span>(<span class="cls">OrderRequest</span> req) {
+        <span class="cls">Order</span> order = <span class="cls">Order</span>.builder()
+            .userId(req.userId())
+            .productId(req.productId())
+            .quantity(req.qty())
+            .status(<span class="cls">OrderStatus</span>.PENDING)
+            .build();
+
+        order = orderRepository.save(order);
+        log.info(<span class="str">"Order created: {}"</span>, order.getId());
+
+        <span class="com">// Cache in Redis (TTL 10 min)</span>
+        redisTemplate.opsForValue().set(
+            CACHE_KEY + order.getId(), order,
+            <span class="cls">Duration</span>.ofMinutes(<span class="num">10</span>));
+
+        <span class="com">// Publish to Kafka</span>
+        kafkaTemplate.send(TOPIC,
+            order.getId(),
+            <span class="kw">new</span> <span class="cls">OrderEvent</span>(order.getId(), <span class="str">"ORDER_CREATED"</span>, order.getUserId()));
+
+        <span class="kw">return</span> order;
+    }
+
+    <span class="kw">public</span> <span class="cls">Order</span> <span class="fn">getOrder</span>(<span class="cls">String</span> id) {
+        <span class="com">// Try Redis first</span>
+        <span class="cls">Order</span> cached = redisTemplate.opsForValue().get(CACHE_KEY + id);
+        <span class="kw">if</span> (cached != <span class="kw">null</span>) <span class="kw">return</span> cached;
+
+        <span class="com">// Fallback to DB</span>
+        <span class="kw">return</span> orderRepository.findById(id)
+            .orElseThrow(() -> <span class="kw">new</span> <span class="cls">OrderNotFoundException</span>(id));
+    }
+}
+
+<span class="com">// ── OrderController.java ────────────────────────────────────</span>
+<span class="ann">@RestController</span>
+<span class="ann">@RequestMapping</span>(<span class="str">"/api/orders"</span>)
+<span class="ann">@RequiredArgsConstructor</span>
+<span class="kw">public class</span> <span class="cls">OrderController</span> {
+
+    <span class="kw">private final</span> <span class="cls">OrderService</span> orderService;
+
+    <span class="ann">@PostMapping</span>
+    <span class="kw">public</span> <span class="cls">ResponseEntity</span>&lt;<span class="cls">ApiResponse</span>&lt;<span class="cls">Order</span>&gt;&gt; <span class="fn">createOrder</span>(
+            <span class="ann">@Valid</span> <span class="ann">@RequestBody</span> <span class="cls">OrderRequest</span> req) {
+        <span class="cls">Order</span> order = orderService.createOrder(req);
+        <span class="kw">return</span> <span class="cls">ResponseEntity</span>.status(<span class="num">201</span>)
+            .body(<span class="kw">new</span> <span class="cls">ApiResponse</span>&lt;&gt;(order, <span class="str">"Order created"</span>, <span class="kw">true</span>));
+    }
+
+    <span class="ann">@GetMapping</span>(<span class="str">"/{id}"</span>)
+    <span class="kw">public</span> <span class="cls">ResponseEntity</span>&lt;<span class="cls">ApiResponse</span>&lt;<span class="cls">Order</span>&gt;&gt; <span class="fn">getOrder</span>(<span class="ann">@PathVariable</span> <span class="cls">String</span> id) {
+        <span class="kw">return</span> <span class="cls">ResponseEntity</span>.ok(
+            <span class="kw">new</span> <span class="cls">ApiResponse</span>&lt;&gt;(orderService.getOrder(id), <span class="str">"OK"</span>, <span class="kw">true</span>));
+    }
+
+    <span class="ann">@GetMapping</span>(<span class="str">"/user/{userId}"</span>)
+    <span class="kw">public</span> <span class="cls">ResponseEntity</span>&lt;<span class="cls">ApiResponse</span>&lt;<span class="cls">List</span>&lt;<span class="cls">Order</span>&gt;&gt;&gt; <span class="fn">getUserOrders</span>(
+            <span class="ann">@PathVariable</span> <span class="cls">String</span> userId) {
+        <span class="kw">return</span> <span class="cls">ResponseEntity</span>.ok(
+            <span class="kw">new</span> <span class="cls">ApiResponse</span>&lt;&gt;(orderService.getByUser(userId), <span class="str">"OK"</span>, <span class="kw">true</span>));
+    }
+}</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 5: DOCKER ══ -->
+<div class="section" id="docker">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3)">🐋</div>
+    <div>
+      <div class="section-num">SECTION 07</div>
+      <div class="section-title">Docker Setup & Containerization</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Docker Install & Verify <span class="badge badge-install">Install</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">BASH</span><span class="code-file">Terminal</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="com"># macOS: install Docker Desktop from docker.com/products/docker-desktop
+# Linux:</span>
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+<span class="com"># Verify</span>
+docker --version          <span class="com"># Docker version 26.x.x</span>
+docker compose version    <span class="com"># Docker Compose version v2.x</span></pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Optimized Dockerfile (Multi-Stage) <span class="badge badge-config">Config</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">DOCKERFILE</span><span class="code-file">order-service/Dockerfile</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="com"># ── Stage 1: Build ──────────────────────────────────────────</span>
+<span class="kw">FROM</span> eclipse-temurin:21-jdk-alpine <span class="kw">AS</span> builder
+<span class="kw">WORKDIR</span> /build
+<span class="kw">COPY</span> pom.xml .
+<span class="kw">COPY</span> .mvn/ .mvn/
+<span class="kw">COPY</span> mvnw .
+<span class="kw">RUN</span> ./mvnw dependency:go-offline -q
+<span class="kw">COPY</span> src/ src/
+<span class="kw">RUN</span> ./mvnw package -DskipTests -q
+
+<span class="com"># ── Stage 2: Extract layers (Spring Boot Layertools) ────────</span>
+<span class="kw">FROM</span> eclipse-temurin:21-jdk-alpine <span class="kw">AS</span> layers
+<span class="kw">WORKDIR</span> /app
+<span class="kw">COPY</span> --from=builder /build/target/*.jar app.jar
+<span class="kw">RUN</span> java -Djarmode=layertools -jar app.jar extract
+
+<span class="com"># ── Stage 3: Runtime (minimal image) ────────────────────────</span>
+<span class="kw">FROM</span> eclipse-temurin:21-jre-alpine
+<span class="kw">RUN</span> addgroup -S spring && adduser -S spring -G spring
+<span class="kw">USER</span> spring:spring
+<span class="kw">WORKDIR</span> /app
+<span class="kw">COPY</span> --from=layers /app/dependencies/          ./
+<span class="kw">COPY</span> --from=layers /app/spring-boot-loader/    ./
+<span class="kw">COPY</span> --from=layers /app/snapshot-dependencies/ ./
+<span class="kw">COPY</span> --from=layers /app/application/           ./
+<span class="kw">EXPOSE</span> 8082
+<span class="kw">ENTRYPOINT</span> ["java", "-XX:+UseZGC", "-XX:+ZGenerational",
+             "-Dspring.profiles.active=prod", "org.springframework.boot.loader.launch.JarLauncher"]</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Docker Compose — Core Infrastructure <span class="badge badge-config">Config</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">YAML</span><span class="code-file">docker-compose-infra.yml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="prop">services</span>:
+  <span class="prop">postgres</span>:
+    <span class="prop">image</span>: <span class="str">postgres:16-alpine</span>
+    <span class="prop">container_name</span>: <span class="str">pg-infra</span>
+    <span class="prop">environment</span>:
+      <span class="prop">POSTGRES_USER</span>: <span class="str">postgres</span>
+      <span class="prop">POSTGRES_PASSWORD</span>: <span class="str">secret</span>
+      <span class="prop">POSTGRES_DB</span>: <span class="str">orders_db</span>
+    <span class="prop">ports</span>:
+      - <span class="str">"5432:5432"</span>
+    <span class="prop">volumes</span>:
+      - <span class="str">pg_data:/var/lib/postgresql/data</span>
+    <span class="prop">healthcheck</span>:
+      <span class="prop">test</span>: [<span class="str">"CMD-SHELL"</span>, <span class="str">"pg_isready -U postgres"</span>]
+      <span class="prop">interval</span>: <span class="str">10s</span>
+      <span class="prop">timeout</span>: <span class="str">5s</span>
+      <span class="prop">retries</span>: <span class="num">5</span>
+
+  <span class="prop">redis</span>:
+    <span class="prop">image</span>: <span class="str">redis:7.2-alpine</span>
+    <span class="prop">container_name</span>: <span class="str">redis-infra</span>
+    <span class="prop">ports</span>:
+      - <span class="str">"6379:6379"</span>
+    <span class="prop">command</span>: [<span class="str">"redis-server"</span>, <span class="str">"--appendonly"</span>, <span class="str">"yes"</span>]
+
+  <span class="prop">zookeeper</span>:
+    <span class="prop">image</span>: <span class="str">confluentinc/cp-zookeeper:7.6.0</span>
+    <span class="prop">environment</span>:
+      <span class="prop">ZOOKEEPER_CLIENT_PORT</span>: <span class="num">2181</span>
+    <span class="prop">ports</span>:
+      - <span class="str">"2181:2181"</span>
+
+  <span class="prop">kafka</span>:
+    <span class="prop">image</span>: <span class="str">confluentinc/cp-kafka:7.6.0</span>
+    <span class="prop">depends_on</span>:
+      - <span class="str">zookeeper</span>
+    <span class="prop">ports</span>:
+      - <span class="str">"9092:9092"</span>
+    <span class="prop">environment</span>:
+      <span class="prop">KAFKA_BROKER_ID</span>: <span class="num">1</span>
+      <span class="prop">KAFKA_ZOOKEEPER_CONNECT</span>: <span class="str">zookeeper:2181</span>
+      <span class="prop">KAFKA_ADVERTISED_LISTENERS</span>: <span class="str">PLAINTEXT://localhost:9092</span>
+      <span class="prop">KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR</span>: <span class="num">1</span>
+
+<span class="prop">volumes</span>:
+  <span class="prop">pg_data</span>:</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 6: KAFKA ══ -->
+<div class="section" id="kafka">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(192,132,252,0.1);border:1px solid rgba(192,132,252,0.3)">📨</div>
+    <div>
+      <div class="section-num">SECTION 08</div>
+      <div class="section-title">Apache Kafka 3.7 Messaging & Event-Driven Architecture</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Kafka Event Producer <span class="badge badge-code">Java 21</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">JAVA</span><span class="code-file">OrderEventProducer.java</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="ann">@Service</span>
+<span class="ann">@RequiredArgsConstructor</span>
+<span class="ann">@Slf4j</span>
+<span class="kw">public class</span> <span class="cls">OrderEventProducer</span> {
+
+    <span class="kw">private final</span> <span class="cls">KafkaTemplate</span>&lt;<span class="cls">String</span>, <span class="cls">OrderEvent</span>&gt; kafkaTemplate;
+    <span class="kw">private static final</span> <span class="cls">String</span> TOPIC = <span class="str">"order-events"</span>;
+
+    <span class="kw">public void</span> <span class="fn">publishOrderCreated</span>(<span class="cls">String</span> orderId, <span class="cls">String</span> userId) {
+        <span class="cls">OrderEvent</span> event = <span class="kw">new</span> <span class="cls">OrderEvent</span>(orderId, <span class="str">"ORDER_CREATED"</span>, userId, <span class="cls">Instant</span>.now());
+
+        kafkaTemplate.send(TOPIC, orderId, event)
+            .whenComplete((result, ex) -> {
+                <span class="kw">if</span> (ex != <span class="kw">null</span>) {
+                    log.error(<span class="str">"Failed to publish Kafka event for order {}: {}"</span>, orderId, ex.getMessage());
+                } <span class="kw">else</span> {
+                    log.info(<span class="str">"Published event to topic {} [partition {} offset {}]"</span>,
+                        TOPIC,
+                        result.getRecordMetadata().partition(),
+                        result.getRecordMetadata().offset());
+                }
+            });
+    }
+}
+
+<span class="kw">public record</span> <span class="cls">OrderEvent</span>(
+    <span class="cls">String</span> orderId,
+    <span class="cls">String</span> eventType,
+    <span class="cls">String</span> userId,
+    <span class="cls">Instant</span> timestamp
+) {}</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Kafka Event Consumer with Dead Letter Topic (DLT) <span class="badge badge-code">Consumer</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">JAVA</span><span class="code-file">OrderEventConsumer.java</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="ann">@Component</span>
+<span class="ann">@RequiredArgsConstructor</span>
+<span class="ann">@Slf4j</span>
+<span class="kw">public class</span> <span class="cls">OrderEventConsumer</span> {
+
+    <span class="kw">private final</span> <span class="cls">NotificationService</span> notificationService;
+
+    <span class="ann">@RetryableTopic</span>(
+        attempts = <span class="str">"3"</span>,
+        backoff = <span class="ann">@Backoff</span>(delay = <span class="num">2000</span>, multiplier = <span class="num">2.0</span>),
+        dltStrategy = <span class="cls">DltStrategy</span>.FAIL_ON_ERROR
+    )
+    <span class="ann">@KafkaListener</span>(
+        topics = <span class="str">"order-events"</span>,
+        groupId = <span class="str">"notification-service-group"</span>
+    )
+    <span class="kw">public void</span> <span class="fn">handleOrderEvent</span>(<span class="ann">@Payload</span> <span class="cls">OrderEvent</span> event, <span class="ann">@Header</span>(<span class="cls">KafkaHeaders</span>.RECEIVED_KEY) <span class="cls">String</span> key) {
+        log.info(<span class="str">"Received order event [{}] for orderId: {}"</span>, event.eventType(), event.orderId());
+        notificationService.sendOrderConfirmationEmail(event.userId(), event.orderId());
+    }
+
+    <span class="ann">@DltHandler</span>
+    <span class="kw">public void</span> <span class="fn">handleDlt</span>(<span class="cls">OrderEvent</span> event, <span class="ann">@Header</span>(<span class="cls">KafkaHeaders</span>.RECEIVED_TOPIC) <span class="cls">String</span> topic) {
+        log.error(<span class="str">"Event {} sent to DLT topic {} after retries exhausted"</span>, event.orderId(), topic);
+    }
+}</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 7: REDIS ══ -->
+<div class="section" id="redis">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3)">⚡</div>
+    <div>
+      <div class="section-num">SECTION 09</div>
+      <div class="section-title">Redis 7.2 Caching & Rate Limiting</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Spring Boot Redis Configuration <span class="badge badge-config">Cache Config</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">JAVA</span><span class="code-file">RedisConfig.java</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="ann">@Configuration</span>
+<span class="ann">@EnableCaching</span>
+<span class="kw">public class</span> <span class="cls">RedisConfig</span> {
+
+    <span class="ann">@Bean</span>
+    <span class="kw">public</span> <span class="cls">RedisCacheConfiguration</span> <span class="fn">cacheConfiguration</span>() {
+        <span class="kw">return</span> <span class="cls">RedisCacheConfiguration</span>.defaultCacheConfig()
+            .entryTtl(<span class="cls">Duration</span>.ofMinutes(<span class="num">15</span>))
+            .disableCachingNullValues()
+            .serializeKeysWith(<span class="cls">RedisSerializationContext</span>.<span class="cls">SerializationPair</span>
+                .fromSerializer(<span class="kw">new</span> <span class="cls">StringRedisSerializer</span>()))
+            .serializeValuesWith(<span class="cls">RedisSerializationContext</span>.<span class="cls">SerializationPair</span>
+                .fromSerializer(<span class="kw">new</span> <span class="cls">GenericJackson2JsonRedisSerializer</span>()));
+    }
+
+    <span class="ann">@Bean</span>
+    <span class="kw">public</span> <span class="cls">RedisTemplate</span>&lt;<span class="cls">String</span>, <span class="cls">Object</span>&gt; <span class="fn">redisTemplate</span>(<span class="cls">RedisConnectionFactory</span> cf) {
+        <span class="cls">RedisTemplate</span>&lt;<span class="cls">String</span>, <span class="cls">Object</span>&gt; template = <span class="kw">new</span> <span class="cls">RedisTemplate</span>&lt;&gt;();
+        template.setConnectionFactory(cf);
+        template.setKeySerializer(<span class="kw">new</span> <span class="cls">StringRedisSerializer</span>());
+        template.setValueSerializer(<span class="kw">new</span> <span class="cls">GenericJackson2JsonRedisSerializer</span>());
+        <span class="kw">return</span> template;
+    }
+}</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 8: KUBERNETES ══ -->
+<div class="section" id="apigateway">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3)">🛡️</div>
+    <div>
+      <div class="section-num">SECTION 10</div>
+      <div class="section-title">Spring Cloud Gateway & Perimeter Security</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Gateway Routing & Rate Limiting <span class="badge badge-config">application.yml</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">YAML</span><span class="code-file">api-gateway/src/main/resources/application.yml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="prop">server</span>:
+  <span class="prop">port</span>: <span class="num">8080</span>
+
+<span class="prop">spring</span>:
+  <span class="prop">application</span>:
+    <span class="prop">name</span>: <span class="str">api-gateway</span>
+  <span class="prop">cloud</span>:
+    <span class="prop">gateway</span>:
+      <span class="prop">default-filters</span>:
+        - <span class="str">DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST</span>
+      <span class="prop">routes</span>:
+        - <span class="prop">id</span>: <span class="str">order-service-route</span>
+          <span class="prop">uri</span>: <span class="str">lb://order-service</span>
+          <span class="prop">predicates</span>:
+            - <span class="str">Path=/api/orders/**</span>
+          <span class="prop">filters</span>:
+            - <span class="prop">name</span>: <span class="str">CircuitBreaker</span>
+              <span class="prop">args</span>:
+                <span class="prop">name</span>: <span class="str">orderServiceCb</span>
+                <span class="prop">fallbackUri</span>: <span class="str">forward:/fallback/orders</span>
+            - <span class="prop">name</span>: <span class="str">RequestRateLimiter</span>
+              <span class="prop">args</span>:
+                <span class="prop">redis-rate-limiter.replenishRate</span>: <span class="num">10</span>
+                <span class="prop">redis-rate-limiter.burstCapacity</span>: <span class="num">20</span>
+                <span class="prop">key-resolver</span>: <span class="str">"#{@ipKeyResolver}"</span></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 10: AWS SETUP ══ -->
+<div class="section" id="services">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3)">⚙️</div>
+    <div>
+      <div class="section-num">SECTION 11</div>
+      <div class="section-title">Microservices Code Reference</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Product Service — Redis Caching Service <span class="badge badge-code">Full Code</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">JAVA</span><span class="code-file">ProductService.java</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="ann">@Service</span>
+<span class="ann">@RequiredArgsConstructor</span>
+<span class="ann">@Slf4j</span>
+<span class="kw">public class</span> <span class="cls">ProductService</span> {
+
+    <span class="kw">private final</span> <span class="cls">ProductRepository</span> productRepository;
+
+    <span class="ann">@Cacheable</span>(value = <span class="str">"products"</span>, key = <span class="str">"#id"</span>)
+    <span class="kw">public</span> <span class="cls">Product</span> <span class="fn">getProductById</span>(<span class="cls">String</span> id) {
+        log.info(<span class="str">"Fetching product from database: {}"</span>, id);
+        <span class="kw">return</span> productRepository.findById(id)
+            .orElseThrow(() -> <span class="kw">new</span> <span class="cls">RuntimeException</span>(<span class="str">"Product not found: "</span> + id));
+    }
+
+    <span class="ann">@CachePut</span>(value = <span class="str">"products"</span>, key = <span class="str">"#product.id"</span>)
+    <span class="kw">public</span> <span class="cls">Product</span> <span class="fn">updateProduct</span>(<span class="cls">Product</span> product) {
+        log.info(<span class="str">"Updating product in DB and cache: {}"</span>, product.getId());
+        <span class="kw">return</span> productRepository.save(product);
+    }
+}</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 13: PAYMENT SERVICE & RSA-2048 CRYPTOGRAPHY ══ -->
+<div class="section" id="paymentservice">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3)">💳</div>
+    <div>
+      <div class="section-num">SECTION 12</div>
+      <div class="section-title">Payment Service (PCI-DSS & RSA-2048 Cryptography)</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">RSA-2048 Asymmetric Security & Java 21 Sealed Interfaces <span class="badge badge-code">Full Code</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">JAVA</span><span class="code-file">PaymentCryptographyService.java</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="ann">@Service</span>
+<span class="ann">@Slf4j</span>
+<span class="kw">public class</span> <span class="cls">PaymentCryptographyService</span> {
+
+    <span class="kw">private</span> <span class="cls">KeyPair</span> rsaKeyPair;
+
+    <span class="ann">@PostConstruct</span>
+    <span class="kw">public void</span> <span class="fn">init</span>() <span class="kw">throws</span> <span class="cls">Exception</span> {
+        <span class="cls">KeyPairGenerator</span> generator = <span class="cls">KeyPairGenerator</span>.getInstance(<span class="str">"RSA"</span>);
+        generator.initialize(<span class="num">2048</span>);
+        <span class="kw">this</span>.rsaKeyPair = generator.generateKeyPair();
+    }
+
+    <span class="kw">public</span> <span class="cls">String</span> <span class="fn">getPublicKeyPem</span>() {
+        <span class="kw">return</span> <span class="str">"-----BEGIN PUBLIC KEY-----\n"</span> +
+            <span class="cls">Base64</span>.getEncoder().encodeToString(rsaKeyPair.getPublic().getEncoded()) +
+            <span class="str">"\n-----END PUBLIC KEY-----"</span>;
+    }
+
+    <span class="kw">public</span> <span class="cls">String</span> <span class="fn">signPayload</span>(<span class="cls">String</span> payload) <span class="kw">throws</span> <span class="cls">Exception</span> {
+        <span class="cls">Signature</span> privateSignature = <span class="cls">Signature</span>.getInstance(<span class="str">"SHA256withRSA"</span>);
+        privateSignature.initSign(rsaKeyPair.getPrivate());
+        privateSignature.update(payload.getBytes(<span class="cls">StandardCharsets</span>.UTF_8));
+        <span class="kw">return</span> <span class="cls">Base64</span>.getEncoder().encodeToString(privateSignature.sign());
+    }
+}</pre>
+    </div>
+
+    <div class="card-title" style="margin-top:20px;">Java 21 Sealed Payment Instruments & Pattern Matching Switch</div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">JAVA</span><span class="code-file">PaymentInstrument.java</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="kw">public sealed interface</span> <span class="cls">PaymentInstrument</span>
+    <span class="kw">permits</span> <span class="cls">CardInstrument</span>, <span class="cls">UpiInstrument</span>, <span class="cls">NetBankingInstrument</span>, <span class="cls">WalletInstrument</span>,
+            <span class="cls">BnplInstrument</span>, <span class="cls">DirectDebitMandateInstrument</span>, <span class="cls">EmiInstrument</span>, <span class="cls">BankTransferInstrument</span> {
+
+    <span class="cls">String</span> <span class="fn">getMaskedIdentifier</span>();
+}</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 14: DEPLOYMENT ══ -->
+<div class="section" id="testing">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.3)">🧪</div>
+    <div>
+      <div class="section-num">SECTION 13</div>
+      <div class="section-title">Testing & Verification</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Integration Testing with Testcontainers <span class="badge badge-code">Test Java 21</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">JAVA</span><span class="code-file">OrderServiceIntegrationTest.java</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="ann">@SpringBootTest</span>
+<span class="ann">@Testcontainers</span>
+<span class="kw">public class</span> <span class="cls">OrderServiceIntegrationTest</span> {
+
+    <span class="ann">@Container</span>
+    <span class="kw">static final</span> <span class="cls">PostgreSQLContainer</span>&lt;?&gt; postgres =
+        <span class="kw">new</span> <span class="cls">PostgreSQLContainer</span>&lt;&gt;(<span class="str">"postgres:16-alpine"</span>);
+
+    <span class="ann">@Container</span>
+    <span class="kw">static final</span> <span class="cls">GenericContainer</span>&lt;?&gt; redis =
+        <span class="kw">new</span> <span class="cls">GenericContainer</span>&lt;&gt;(<span class="str">"redis:7.2-alpine"</span>).withExposedPorts(<span class="num">6379</span>);
+
+    <span class="ann">@DynamicPropertySource</span>
+    <span class="kw">static void</span> <span class="fn">configureProperties</span>(<span class="cls">DynamicPropertyRegistry</span> registry) {
+        registry.add(<span class="str">"spring.datasource.url"</span>, postgres::getJdbcUrl);
+        registry.add(<span class="str">"spring.datasource.username"</span>, postgres::getUsername);
+        registry.add(<span class="str">"spring.datasource.password"</span>, postgres::getPassword);
+        registry.add(<span class="str">"spring.data.redis.host"</span>, redis::getHost);
+        registry.add(<span class="str">"spring.data.redis.port"</span>, () -> redis.getMappedPort(<span class="num">6379</span>));
+    }
+
+    <span class="ann">@Test</span>
+    <span class="kw">void</span> <span class="fn">shouldCreateOrderSuccessfully</span>() {
+        <span class="com">// Test implementation</span>
+    }
+}</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 16: INTERVIEW MASTER CHEAT SHEET ══ -->
+<div class="section" id="kubernetes">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.3)">☸️</div>
+    <div>
+      <div class="section-num">SECTION 14</div>
+      <div class="section-title">Kubernetes 1.30 Orchestration & Deployment</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Order Service Deployment & ClusterIP Service <span class="badge badge-config">K8s YAML</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">YAML</span><span class="code-file">k8s/order-service-deployment.yaml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="prop">apiVersion</span>: <span class="str">apps/v1</span>
+<span class="prop">kind</span>: <span class="str">Deployment</span>
+<span class="prop">metadata</span>:
+  <span class="prop">name</span>: <span class="str">order-service</span>
+  <span class="prop">namespace</span>: <span class="str">production</span>
+  <span class="prop">labels</span>:
+    <span class="prop">app</span>: <span class="str">order-service</span>
+<span class="prop">spec</span>:
+  <span class="prop">replicas</span>: <span class="num">3</span>
+  <span class="prop">selector</span>:
+    <span class="prop">matchLabels</span>:
+      <span class="prop">app</span>: <span class="str">order-service</span>
+  <span class="prop">template</span>:
+    <span class="prop">metadata</span>:
+      <span class="prop">labels</span>:
+        <span class="prop">app</span>: <span class="str">order-service</span>
+    <span class="prop">spec</span>:
+      <span class="prop">containers</span>:
+        - <span class="prop">name</span>: <span class="str">order-service</span>
+          <span class="prop">image</span>: <span class="str">123456789012.dkr.ecr.us-east-1.amazonaws.com/order-service:1.0.0</span>
+          <span class="prop">imagePullPolicy</span>: <span class="str">IfNotPresent</span>
+          <span class="prop">ports</span>:
+            - <span class="prop">containerPort</span>: <span class="num">8082</span>
+          <span class="prop">env</span>:
+            - <span class="prop">name</span>: <span class="str">SPRING_PROFILES_ACTIVE</span>
+              <span class="prop">value</span>: <span class="str">"prod"</span>
+            - <span class="prop">name</span>: <span class="str">DB_USER</span>
+              <span class="prop">valueFrom</span>:
+                <span class="prop">secretKeyRef</span>:
+                  <span class="prop">name</span>: <span class="str">db-secret</span>
+                  <span class="prop">key</span>: <span class="str">username</span>
+            - <span class="prop">name</span>: <span class="str">DB_PASS</span>
+              <span class="prop">valueFrom</span>:
+                <span class="prop">secretKeyRef</span>:
+                  <span class="prop">name</span>: <span class="str">db-secret</span>
+                  <span class="prop">key</span>: <span class="str">password</span>
+          <span class="prop">resources</span>:
+            <span class="prop">requests</span>:
+              <span class="prop">memory</span>: <span class="str">"512Mi"</span>
+              <span class="prop">cpu</span>: <span class="str">"500m"</span>
+            <span class="prop">limits</span>:
+              <span class="prop">memory</span>: <span class="str">"1024Mi"</span>
+              <span class="prop">cpu</span>: <span class="str">"1000m"</span>
+          <span class="prop">livenessProbe</span>:
+            <span class="prop">httpGet</span>:
+              <span class="prop">path</span>: <span class="str">/actuator/health/liveness</span>
+              <span class="prop">port</span>: <span class="num">8082</span>
+            <span class="prop">initialDelaySeconds</span>: <span class="num">30</span>
+            <span class="prop">periodSeconds</span>: <span class="num">10</span>
+          <span class="prop">readinessProbe</span>:
+            <span class="prop">httpGet</span>:
+              <span class="prop">path</span>: <span class="str">/actuator/health/readiness</span>
+              <span class="prop">port</span>: <span class="num">8082</span>
+            <span class="prop">initialDelaySeconds</span>: <span class="num">15</span>
+            <span class="prop">periodSeconds</span>: <span class="num">5</span>
+---
+<span class="prop">apiVersion</span>: <span class="str">v1</span>
+<span class="prop">kind</span>: <span class="str">Service</span>
+<span class="prop">metadata</span>:
+  <span class="prop">name</span>: <span class="str">order-service</span>
+  <span class="prop">namespace</span>: <span class="str">production</span>
+<span class="prop">spec</span>:
+  <span class="prop">type</span>: <span class="str">ClusterIP</span>
+  <span class="prop">selector</span>:
+    <span class="prop">app</span>: <span class="str">order-service</span>
+  <span class="prop">ports</span>:
+    - <span class="prop">port</span>: <span class="num">8082</span>
+      <span class="prop">targetPort</span>: <span class="num">8082</span></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 9: API GATEWAY ══ -->
+<div class="section" id="aws">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3)">☁️</div>
+    <div>
+      <div class="section-num">SECTION 15</div>
+      <div class="section-title">AWS EKS, ECR & Cloud Infrastructure Setup</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Provision EKS Cluster with eksctl <span class="badge badge-install">AWS CLI</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">BASH</span><span class="code-file">Terminal</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="com"># 1. Create AWS EKS Cluster with Managed Node Group</span>
+eksctl create cluster \
+  --name prod-microservices-eks \
+  --region us-east-1 \
+  --version 1.30 \
+  --nodegroup-name standard-workers \
+  --node-type t3.large \
+  --nodes 3 \
+  --nodes-min 2 \
+  --nodes-max 5 \
+  --managed
+
+<span class="com"># 2. Configure kubectl context</span>
+aws eks update-kubeconfig --region us-east-1 --name prod-microservices-eks
+
+<span class="com"># 3. Verify cluster nodes</span>
+kubectl get nodes -o wide</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 11: PROJECT STRUCTURE ══ -->
+<div class="section" id="deployment">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(244,114,182,0.1);border:1px solid rgba(244,114,182,0.3)">🚀</div>
+    <div>
+      <div class="section-num">SECTION 16</div>
+      <div class="section-title">Production Deployment & CI/CD</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">GitHub Actions Pipeline <span class="badge badge-config">CI/CD YAML</span></div>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-lang">YAML</span><span class="code-file">.github/workflows/deploy.yml</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
+      <pre><span class="prop">name</span>: <span class="str">Deploy Microservices to AWS EKS</span>
+<span class="prop">on</span>:
+  <span class="prop">push</span>:
+    <span class="prop">branches</span>: [ <span class="str">"main"</span> ]
+
+<span class="prop">jobs</span>:
+  <span class="prop">build-and-deploy</span>:
+    <span class="prop">runs-on</span>: <span class="str">ubuntu-latest</span>
+    <span class="prop">steps</span>:
+      - <span class="prop">name</span>: <span class="str">Checkout code</span>
+        <span class="prop">uses</span>: <span class="str">actions/checkout@v4</span>
+
+      - <span class="prop">name</span>: <span class="str">Set up JDK 21</span>
+        <span class="prop">uses</span>: <span class="str">actions/setup-java@v4</span>
+        <span class="prop">with</span>:
+          <span class="prop">java-version</span>: <span class="str">'21'</span>
+          <span class="prop">distribution</span>: <span class="str">'temurin'</span>
+          <span class="prop">cache</span>: <span class="str">'maven'</span>
+
+      - <span class="prop">name</span>: <span class="str">Build with Maven</span>
+        <span class="prop">run</span>: <span class="str">mvn clean package -DskipTests</span>
+
+      - <span class="prop">name</span>: <span class="str">Deploy to Kubernetes</span>
+        <span class="prop">run</span>: |
+          <span class="str">kubectl apply -f k8s/order-service-deployment.yaml --validate=false</span></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 15: TESTING ══ -->
+<div class="section" id="interviewcheatsheet">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3)">🎯</div>
+    <div>
+      <div class="section-num">SECTION 17</div>
+      <div class="section-title">Full Stack Microservices Interview Master Cheat Sheet</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">1. Java Language Evolution in Practice (Java 8 vs Java 17 vs Java 21) <span class="badge badge-config">JDK Comparison</span></div>
+    <div style="overflow-x:auto;margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:15%">JDK Version</th>
+            <th style="width:25%">Key Features Used</th>
+            <th style="width:30%">Where Used in Codebase (Exact Class)</th>
+            <th style="width:30%">How It Is Achieved & Why It Matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Java 8</strong></td>
+            <td>Streams API, Optional, Functional Interfaces, Lambda Expressions</td>
+            <td>All <code>*Service.java</code> and <code>*Controller.java</code> classes across 7 modules</td>
+            <td>Used for declarative collection filtering, mapping, and null-safe data transformations without verbose imperative loops.</td>
+          </tr>
+          <tr>
+            <td><strong>Java 17</strong></td>
+            <td>Records, Sealed Classes/Interfaces, Text Blocks, Pattern Matching for <code>instanceof</code></td>
+            <td><code>PaymentRequest</code>, <code>OrderEvent</code>, <code>PaymentInstrument</code>, custom SQL queries</td>
+            <td><strong>Records</strong> replace boilerplate DTOs with immutable data carriers. <strong>Sealed interfaces</strong> define closed domain hierarchies.</td>
+          </tr>
+          <tr>
+            <td><strong>Java 21</strong></td>
+            <td>Virtual Threads (Project Loom), Pattern Matching for <code>switch</code>, Sequenced Collections</td>
+            <td><code>PaymentService.java</code>, <code>PaymentOutboxRelayScheduler.java</code>, <code>application.yml</code></td>
+            <td><strong>Virtual Threads</strong> (<code>spring.threads.virtual.enabled=true</code>) eliminate OS thread starvation during high-concurrency DB/Kafka calls. <strong>Pattern matching switch</strong> unpacks sealed payment instruments safely.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-title">2. Distributed Microservices Architecture & Design Patterns <span class="badge badge-code">Patterns</span></div>
+    <div style="overflow-x:auto;margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:20%">Design Pattern</th>
+            <th style="width:25%">Where Used in Codebase</th>
+            <th style="width:28%">How It Is Achieved in Code</th>
+            <th style="width:27%">Why We Chose It (Interview Justification)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Saga Pattern (Choreography)</strong></td>
+            <td><code>order-service</code> ➔ <code>product-service</code> ➔ <code>payment-service</code> ➔ <code>notification-service</code></td>
+            <td>Kafka topics: <code>order-events</code>, <code>payment-events</code>. Order state transitions: <code>PENDING</code> ➔ <code>CONFIRMED</code> / <code>CANCELLED</code> / <code>REFUNDED</code>.</td>
+            <td>Maintains eventual consistency across distributed microservices without distributed two-phase commit (2PC) locks. Includes compensating transactions on failure.</td>
+          </tr>
+          <tr>
+            <td><strong>Transactional Outbox Pattern</strong></td>
+            <td><code>order-service</code> (<code>outbox_events</code>), <code>payment-service</code> (<code>outbox_events</code>)</td>
+            <td>Domain entity and JSON outbox row commit in a single ACID Postgres transaction. <code>PaymentOutboxRelayScheduler</code> polls and publishes to Kafka.</td>
+            <td>Solves the distributed dual-write problem between SQL database writes and Kafka event publishing, guaranteeing <em>exactly-once</em> delivery.</td>
+          </tr>
+          <tr>
+            <td><strong>API Gateway Pattern</strong></td>
+            <td><code>api-gateway</code> (<code>:8080</code>)</td>
+            <td>Spring Cloud Gateway configured in <code>application.yml</code> with route predicates, filters, and JWT authentication.</td>
+            <td>Single entry point for all frontend traffic. Simplifies client communication and centralizes cross-cutting security, SSL, and rate limiting.</td>
+          </tr>
+          <tr>
+            <td><strong>Aggregator / BFF Pattern</strong></td>
+            <td><code>order-service</code> (<code>OrderAggregatorService.java</code>)</td>
+            <td>Fetches user details from `:8081`, order details from Postgres, and product catalog from `:8083` via concurrent REST calls.</td>
+            <td>Reduces round-trips for the React frontend by consolidating multi-service data into a single unified JSON payload.</td>
+          </tr>
+          <tr>
+            <td><strong>CQRS & Idempotency Pattern</strong></td>
+            <td><code>payment-service</code> (<code>payment_transactions.idempotency_key</code>)</td>
+            <td>Unique database constraint + programmatic lookup in <code>PaymentService.java</code> returning cached result on duplicate keys.</td>
+            <td>Prevents double billing when network timeouts cause clients or Kafka consumers to retry identical POST requests.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-title">3. Security, Authentication & PCI-DSS Cryptography <span class="badge badge-warn">Security</span></div>
+    <div style="overflow-x:auto;margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:22%">Security Feature</th>
+            <th style="width:25%">Where Used in Codebase</th>
+            <th style="width:28%">How Achieved (Technical Implementation)</th>
+            <th style="width:25%">Interview Purpose & Rationale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Stateless JWT & Role Auth</strong></td>
+            <td><code>api-gateway</code> (<code>JwtAuthenticationFilter</code>), <code>user-service</code> (<code>JwtTokenProvider</code>)</td>
+            <td>RS256 / HMAC-SHA256 signed access tokens (15m TTL) & refresh tokens (7d TTL). Roles: <code>ROLE_ADMIN</code>, <code>ROLE_USER</code>.</td>
+            <td>Eliminates server-side session state, enabling horizontal pod scaling across Kubernetes without sticky sessions.</td>
+          </tr>
+          <tr>
+            <td><strong>OAuth2 / Keycloak Readiness</strong></td>
+            <td><code>api-gateway</code> & <code>user-service</code> security config</td>
+            <td>Standard OpenID Connect (OIDC) JWT claims parsing (<code>sub</code>, <code>roles</code>, <code>exp</code>) compatible with Keycloak or Okta.</td>
+            <td>Allows seamless migration from local JWT issuance to enterprise identity providers without changing downstream microservices.</td>
+          </tr>
+          <tr>
+            <td><strong>PCI-DSS RSA-2048 Cryptography</strong></td>
+            <td><code>payment-service</code> (<code>PaymentCryptographyService</code>), React <code>PaymentModal.jsx</code></td>
+            <td><code>KeyPairGenerator("RSA", 2048)</code> generates public/private keys. Client encrypts card tokens (<code>ENC:RSA2048_...</code>); backend signs webhooks (<code>SHA256withRSA</code>).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-title">4. Resilience4j & Fault Tolerance (Circuit Breaker, Retry, Rate Limit) <span class="badge badge-req">Resilience</span></div>
+    <div style="overflow-x:auto;margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:20%">Resilience Mechanism</th>
+            <th style="width:25%">Where Used in Codebase</th>
+            <th style="width:28%">How Achieved (Configuration & Code)</th>
+            <th style="width:27%">Why We Chose It (System Design)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Circuit Breaker & Fallback</strong></td>
+            <td><code>api-gateway</code> (<code>application.yml</code> via Resilience4j)</td>
+            <td>Trips open when failure rate reaches 50% over a sliding window of 10 calls. Routes to a fast JSON fallback endpoint.</td>
+            <td>Prevents cascading failures across the microservices mesh when a downstream database or service becomes unresponsive.</td>
+          </tr>
+          <tr>
+            <td><strong>Retry & Exponential Backoff</strong></td>
+            <td>Kafka consumer listeners & Gateway routing filters</td>
+            <td>Configured with 3 retry attempts and exponential backoff jitter (200ms ➔ 400ms ➔ 800ms) before sending to Dead Letter Queue (DLQ).</td>
+            <td>Absorbs temporary network blips or database lock contention without failing user transactions.</td>
+          </tr>
+          <tr>
+            <td><strong>Redis Token Bucket Rate Limit</strong></td>
+            <td><code>api-gateway</code> (<code>RequestRateLimiter</code> Gateway filter)</td>
+            <td>Uses Redis <code>replenishRate: 10</code> (tokens/sec) and <code>burstCapacity: 20</code> keyed by client IP address.</td>
+            <td>Protects downstream microservices from DDoS attacks, brute-force login attempts, and runaway scraper scripts.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-title">5. Database Consistency, ACID, Isolation, Schema Versioning & SOLID <span class="badge badge-install">DB & OOP</span></div>
+    <div style="overflow-x:auto;margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:20%">Concept / Principle</th>
+            <th style="width:25%">Where Used in Codebase</th>
+            <th style="width:28%">How Achieved in Code</th>
+            <th style="width:27%">Interview Explanation & Importance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>ACID & DB Isolation Levels</strong></td>
+            <td>All Spring Data JPA transactional services</td>
+            <td><code>@Transactional(isolation = Isolation.READ_COMMITTED)</code> ensures atomicity of domain state and outbox events.</td>
+            <td>Prevents dirty reads while maintaining high concurrency throughput across PostgreSQL 16 connection pools.</td>
+          </tr>
+          <tr>
+            <td><strong>Schema Versioning (DDL Evolution)</strong></td>
+            <td>PostgreSQL database tables across services</td>
+            <td>Structured schema initialization scripts (<code>V1__init_schema.sql</code>) creating indexed tables and unique idempotency constraints.</td>
+            <td>Ensures reproducible zero-downtime database migrations across development, staging, and production Kubernetes clusters.</td>
+          </tr>
+          <tr>
+            <td><strong>SOLID Principles</strong></td>
+            <td>All 7 Java 21 microservices modules</td>
+            <td>
+              • <strong>S</strong>: Distinct Service/Repo/Controller layers.<br>
+              • <strong>O</strong>: Sealed interfaces open for extension, closed for modification.<br>
+              • <strong>L/I/D</strong>: Interface-driven clients with Spring constructor injection.
+            </td>
+            <td>Ensures high testability, loose coupling, and maintainability across a multi-developer enterprise codebase.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-title">6. Messaging, Caching & Distributed Locking (Kafka, Redis, Redisson) <span class="badge badge-code">Distributed Infra</span></div>
+    <div style="overflow-x:auto;margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:20%">Infra Component</th>
+            <th style="width:25%">Where Used in Codebase</th>
+            <th style="width:28%">How Achieved (Technical Specs)</th>
+            <th style="width:27%">Why We Chose It (Architectural Benefit)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Redis 7.2 Distributed Cache</strong></td>
+            <td><code>product-service</code> (<code>ProductService.java</code>)</td>
+            <td>Spring Cache annotation (<code>@Cacheable("products")</code>) and Redis template serialization storing catalog JSON items.</td>
+            <td>Delivers sub-millisecond read latency for product catalogs, offloading 90%+ of read traffic from PostgreSQL.</td>
+          </tr>
+          <tr>
+            <td><strong>Redisson Distributed Locking</strong></td>
+            <td><code>product-service</code> inventory deduction</td>
+            <td><code>RLock lock = redissonClient.getLock("lock:product:" + sku)</code> with explicit tryLock lease expiration.</td>
+            <td>Prevents race conditions and overselling when thousands of concurrent shoppers attempt to purchase the last remaining stock.</td>
+          </tr>
+          <tr>
+            <td><strong>Apache Kafka 3.8 Event Streaming</strong></td>
+            <td>All event-driven microservices</td>
+            <td><code>enable.idempotence=true</code>, <code>acks=all</code>, JSON serializer with custom MDC correlation ID propagation headers.</td>
+            <td>Decouples producer services from consumer services, enabling asynchronous order processing and horizontal consumer scaling.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1.5rem">
+    <div class="card-title">7. Cloud-Native DevOps, Kubernetes, CI/CD & Observability <span class="badge badge-config">DevOps & SRE</span></div>
+    <div style="overflow-x:auto;margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:20%">DevOps / SRE Tool</th>
+            <th style="width:25%">Where Used in Codebase</th>
+            <th style="width:28%">How Achieved (Configuration)</th>
+            <th style="width:27%">Why We Chose It (Production Readiness)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Kubernetes (EKS / Ingress / HPA)</strong></td>
+            <td><code>k8s/</code> manifests directory</td>
+            <td>Deployments, NodePort/ClusterIP Services, NGINX Ingress controller, and Horizontal Pod Autoscalers (scaling on CPU > 70%).</td>
+            <td>Provides automated self-healing, rolling zero-downtime deployments, and elastic auto-scaling under traffic spikes.</td>
+          </tr>
+          <tr>
+            <td><strong>Docker & Compose Orchestration</strong></td>
+            <td><code>docker-compose-infra.yml</code> & Dockerfiles</td>
+            <td>Multi-stage Alpine Docker builds for minimal container size; infrastructure compose stack for local development.</td>
+            <td>Guarantees identical environment execution from a developer's laptop to AWS Kubernetes production clusters.</td>
+          </tr>
+          <tr>
+            <td><strong>GitHub Actions CI/CD Pipeline</strong></td>
+            <td><code>.github/workflows/deploy.yml</code></td>
+            <td>Automated JDK 21 Maven tests, Docker image building/pushing to AWS ECR, and <code>kubectl apply</code> rolling EKS updates.</td>
+            <td>Enables continuous integration and automated deployment with built-in rollback safeguards on unit test failure.</td>
+          </tr>
+          <tr>
+            <td><strong>Observability (Jaeger, Prometheus, Grafana)</strong></td>
+            <td>All Spring Boot 3.3.2 microservices</td>
+            <td>Micrometer Tracing bridge + OpenTelemetry exporting W3C trace IDs to Jaeger (<code>:16686</code>) and Prometheus metrics to Grafana.</td>
+            <td>Provides end-to-end distributed tracing across HTTP and Kafka hops, enabling rapid root-cause analysis for latency bottlenecks.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECTION 17: SYSTEM DESIGN & SEQUENCE DIAGRAMS ══ -->
+</main>
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<script>
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.remove('active');
+      if (item.getAttribute('onclick') === `scrollToSection('${id}')`) {
+        item.classList.add('active');
+      }
+    });
+  }
+}
+
+function copyCode(btn) {
+  const codeWrap = btn.closest('.code-wrap');
+  const pre = codeWrap.querySelector('pre');
+  if (pre) {
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      const orig = btn.innerText;
+      btn.innerText = 'COPIED!';
+      btn.style.borderColor = '#10b981';
+      btn.style.color = '#10b981';
+      setTimeout(() => {
+        btn.innerText = orig;
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }, 1500);
+    });
+  }
+}
+
+window.addEventListener('scroll', () => {
+  const sections = document.querySelectorAll('.section');
+  let current = '';
+  sections.forEach(sec => {
+    const top = sec.offsetTop;
+    if (window.scrollY >= top - 120) {
+      current = sec.getAttribute('id');
+    }
+  });
+  if (current) {
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.remove('active');
+      if (item.getAttribute('onclick') === `scrollToSection('${current}')`) {
+        item.classList.add('active');
+      }
+    });
+  }
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  if (typeof mermaid !== 'undefined') {
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      themeVariables: {
+        darkMode: true,
+        background: '#090d16',
+        fontFamily: '"JetBrains Mono", "SF Mono", "Consolas", monospace',
+        fontSize: '15px',
+        primaryColor: '#1e3a8a',
+        primaryBorderColor: '#60a5fa',
+        primaryTextColor: '#ffffff',
+        secondaryColor: '#312e81',
+        secondaryBorderColor: '#a855f7',
+        secondaryTextColor: '#ffffff',
+        tertiaryColor: '#064e3b',
+        tertiaryBorderColor: '#34d399',
+        tertiaryTextColor: '#ffffff',
+        lineColor: '#38bdf8',
+        textColor: '#f8fafc',
+        mainBkg: '#1e293b',
+        nodeBorder: '#38bdf8',
+        clusterBkg: 'rgba(30, 41, 59, 0.75)',
+        clusterBorder: '#64748b',
+        defaultLinkColor: '#38bdf8',
+        actorBkg: '#1e3a8a',
+        actorBorder: '#60a5fa',
+        actorTextColor: '#ffffff',
+        actorLineColor: '#64748b',
+        signalColor: '#38bdf8',
+        signalTextColor: '#f8fafc',
+        labelBoxBkgColor: '#0f172a',
+        labelBoxBorderColor: '#38bdf8',
+        labelTextColor: '#ffffff',
+        loopTextColor: '#ffffff',
+        noteBkgColor: '#1e293b',
+        noteBorderColor: '#38bdf8',
+        noteTextColor: '#ffffff',
+        activationBorderColor: '#38bdf8',
+        activationBkgColor: '#0c4a6e',
+        sequenceNumberColor: '#ffffff'
+      },
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      },
+      sequence: {
+        useMaxWidth: true,
+        showSequenceNumbers: true,
+        actorMargin: 20,
+        boxMargin: 8,
+        boxTextMargin: 5,
+        noteMargin: 8,
+        messageMargin: 28,
+        mirrorActors: false
+      }
+    });
+  }
+</script>
+
+<script>
+  function zoomMermaid(btn, factor) {
+    const wrap = btn.closest('.zoom-toolbar').nextElementSibling;
+    const mermaidDiv = wrap.querySelector('.mermaid') || wrap;
+    if (!mermaidDiv) return;
+    let scale = parseFloat(wrap.getAttribute('data-scale')) || 1.0;
+    if (factor === 'reset') {
+      scale = 1.0;
+      wrap.classList.remove('zoomed-mode');
+    } else {
+      scale = Math.max(0.4, Math.min(4.0, scale * factor));
+      wrap.classList.add('zoomed-mode');
+    }
+    wrap.setAttribute('data-scale', scale);
+    mermaidDiv.style.transform = 'scale(' + scale + ')';
+    mermaidDiv.style.width = (100 * scale) + '%';
+  }
+
+  function toggleMermaidFullscreen(btn) {
+    const wrap = btn.closest('.zoom-toolbar').nextElementSibling;
+    if (wrap.classList.contains('fullscreen-mode')) {
+      wrap.classList.remove('fullscreen-mode');
+      btn.innerHTML = '⛶ Fullscreen';
+      document.body.style.overflow = '';
+    } else {
+      wrap.classList.add('fullscreen-mode');
+      btn.innerHTML = '❌ Exit Fullscreen';
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  // Allow ESC key to exit fullscreen
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.mermaid-wrap.fullscreen-mode').forEach(el => {
+        el.classList.remove('fullscreen-mode');
+        document.body.style.overflow = '';
+      });
+      document.querySelectorAll('.zoom-btn').forEach(btn => {
+        if (btn.innerHTML.includes('Exit Fullscreen')) btn.innerHTML = '⛶ Fullscreen';
+      });
+    }
+  });
+</script>
+
+</body>
+</html>

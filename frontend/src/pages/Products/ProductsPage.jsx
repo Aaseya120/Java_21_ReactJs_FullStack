@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { productsApi } from '../../api/products.api';
 import { useToast } from '../../context/ToastContext';
+import { getServiceErrorMessage } from '../../utils/errorHelper';
 import axios from 'axios';
 
 const CATEGORIES = ['Electronics', 'Clothing', 'Books', 'Home', 'Sports', 'Food', 'Accessories', 'Other', 'Testing'];
@@ -33,7 +34,7 @@ function ProductModal({ product, onClose, onSave }) {
         });
         
         finalImageUrl = finalUrl;
-      } catch (err) {
+      } catch {
         toast.error('Failed to upload image. Please try again.');
         setUploading(false);
         return;
@@ -129,7 +130,7 @@ function StockModal({ product, onClose }) {
       qc.invalidateQueries(['products']);
       onClose();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Stock operation failed');
+      toast.error(getServiceErrorMessage(err, 'Stock operation failed'));
     } finally {
       setLoading(false);
     }
@@ -202,7 +203,7 @@ export default function ProductsPage() {
       qc.invalidateQueries(['products']); 
       setModal(null); 
     },
-    onError: (err) => toast.error(err.response?.data?.message || 'Create failed'),
+    onError: (err) => toast.error(getServiceErrorMessage(err, 'Create failed')),
   });
 
   const updateMutation = useMutation({
@@ -214,13 +215,13 @@ export default function ProductsPage() {
       qc.invalidateQueries(['products']); 
       setModal(null); 
     },
-    onError: (err) => toast.error(err.response?.data?.message || 'Update failed'),
+    onError: (err) => toast.error(getServiceErrorMessage(err, 'Update failed')),
   });
 
   const deleteMutation = useMutation({
     mutationFn: productsApi.delete,
     onSuccess: () => { toast.success('Product deleted'); qc.invalidateQueries(['products']); setDeleteId(null); },
-    onError: (err) => toast.error(err.response?.data?.message || 'Delete failed'),
+    onError: (err) => toast.error(getServiceErrorMessage(err, 'Delete failed')),
   });
 
   const handleSave = async (formData) => {

@@ -27,31 +27,210 @@ A production-ready, full-stack microservices project demonstrating a modern Reac
 | **Orchestration**| Kubernetes |
 | **K8s Packaging**| Helm (Bitnami Charts) |
 
+### Backend Microservices & Ports
+| Service | Port | Description |
+|---------|------|-------------|
+| **API Gateway** | `8080` | Single entry point, RS256 JWT auth, CORS, Rate limiting, Circuit breakers |
+| **User Service** | `8081` | Authentication, Registration, JWT issuance, RBAC claims |
+| **Order Service** | `8082` | Order lifecycle, Saga Outbox pattern, BFF Aggregator (`/api/v1/aggregator/**`) |
+| **Product Service** | `8083` | SKU Catalog, `@Cacheable`, Redisson `RLock` inventory locks |
+| **Notification Service** | `8084` | Idempotent Kafka event consumer, SMS/Email alerts, SSE streams |
+| **Payment Service** | `8085` | PCI-DSS RSA-2048 tokenization, Idempotency keys (`X-Idempotency-Key`), 6 payment instruments |
+
+### 🗄️ Database-per-Service & Table Mapping Matrix (16 Tables Total)
+
+This project implements the **Database-per-Service** architectural pattern. Each stateful microservice owns its own isolated database schema to guarantee loose coupling, independent scalability, and ACID transaction boundaries without shared database dependencies.
+
+| Service | Table Name | Java Entity | Architectural Purpose |
+| :--- | :--- | :--- | :--- |
+| **User Service** | `users` | `User.java` | Stores user profiles, credentials, roles, and status for Role-Based Access Control (RBAC). |
+| | `refresh_tokens` | `RefreshToken.java` | Stores JWT refresh tokens for secure session management and token revocation. |
+| | `outbox_events` | `OutboxEvent.java` | Implements the **Transactional Outbox Pattern** to reliably emit domain events (e.g., `UserCreatedEvent`). |
+| | `audit_logs` | `AuditLog.java` | Records domain audit trails and administrative security actions. |
+| | `log_rest` | `LogRest.java` | Logs HTTP REST request and response payloads for tracing and debugging. |
+| **Product Service** | `products` | `Product.java` | Stores product catalog items, SKU codes, pricing, and available inventory stock. |
+| | `outbox_events` | `OutboxEvent.java` | Implements the Transactional Outbox Pattern to emit product and inventory change events reliably. |
+| | `audit_logs` | `AuditLog.java` | Records audit history for inventory and product catalog updates. |
+| | `log_rest` | `LogRest.java` | Logs HTTP REST API traffic for observability. |
+| **Order Service** | `orders` | `Order.java` | Stores order transactions, user/product IDs, quantities, order notes, and status (`PENDING`, `COMPLETED`, etc.). |
+| | `outbox_events` | `OutboxEvent.java` | Implements the Transactional Outbox Pattern to publish order lifecycle events (e.g., `OrderCreatedEvent`). |
+| | `audit_logs` | `AuditLog.java` | Tracks auditing history for order processing. |
+| | `log_rest` | `LogRest.java` | Logs API requests and responses for troubleshooting order endpoints. |
+| **Payment Service** | `payments` | `Payment.java` | Stores payment transactions, amounts, payment methods, and payment processing status. |
+| | `payment_outbox` | `PaymentOutboxEvent.java` | Dedicated Transactional Outbox table for payment event publishing. |
+| | `payment_audit_log`| `PaymentAuditLog.java` | Dedicated audit trail for sensitive PCI-DSS payment operations. |
+| **Notification Service** | *None (Stateless)* | *N/A* | Stateless Kafka event consumer; triggers email/SMS notifications without needing relational database persistence. |
+| **API Gateway** | *None (Stateless)* | *N/A* | Stateless edge routing layer; handles RS256 JWT validation, CORS, rate limiting, and circuit breakers. |
+
+#### Why are there recurring tables (`outbox_events`, `audit_logs`, `log_rest`) across services?
+- **Transactional Outbox Pattern (`outbox_events`, `payment_outbox`)**: Prevents distributed race conditions. Events are written to an outbox table within the same ACID database transaction as the primary entity (`orders`, `users`, etc.), and a background Virtual Thread publisher relays them to Apache Kafka.
+- **Shared Domain Audit & Observability (`audit_logs`, `log_rest`)**: Entities defined in `common-module` are mapped into each service's individual schema to maintain compliance and HTTP request tracing per microservice.
+
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture & Visual Sequence Blueprints
 
+### 1. Top-to-Bottom Vertical System Architecture Flowchart
+```mermaid
+graph TB
+    subgraph CLIENT_LAYER ["1️⃣ CLIENT TIER (React 19 + Vite Dashboard)"]
+        UI["🖥️ OrdersPage.jsx & PaymentModal.jsx<br/>(TanStack Query · Optimistic UI · SSE)"]
+    end
+
+    subgraph EDGE_GATEWAY ["2️⃣ INGRESS & SECURITY GATEWAY TIER (:8080)"]
+        GW["🌐 Spring Cloud Gateway :8080<br/>(🔒 RS256 JWT Auth · ⚡ Resilience4j Circuit Breaker · 🛡️ Redis Rate Limiter)"]
+    end
+
+    subgraph DOMAIN_SERVICES ["3️⃣ MICROSERVICES DOMAIN TIER (Java 21 · Spring Boot 3.3.2)"]
+        direction TB
+        US["👤 User Service :8081<br/>(JWT Provider · RBAC Claims)"]
+        PS["📦 Product Service :8083<br/>(SKU Catalog · @Cacheable · Redisson Inventory Lock)"]
+        OS["🛒 Order Service :8082<br/>(Saga Outbox · BFF Aggregator · Virtual Threads)"]
+        PAYS["💳 Payment Service :8085<br/>(PCI-DSS RSA-2048 Cryptography · Idempotency Guard)"]
+        NS["🔔 Notification Service :8084<br/>(Idempotent Kafka Consumer · SMS & Email Alert)"]
+    end
+
+    subgraph DATA_EVENT_MESH ["4️⃣ DISTRIBUTED DATA STORAGE, CACHE & EVENT MESH TIER"]
+        direction TB
+        RD[("⚡ Redis 7.2 Distributed Cache<br/>(RLock Inventory Lock · Rate Limiter Buckets)")]
+        PG[("🐘 PostgreSQL 16 ACID Database<br/>(users · orders · payment_transactions · outbox_events)")]
+        KF["🌊 Apache Kafka 3.8 Event Mesh<br/>(order-events · payment-events Idempotent Topics)"]
+        JG["🔭 Jaeger Tracing :16686<br/>(OpenTelemetry W3C Correlation Trace Spans)"]
+    end
+
+    UI ==>|"1. POST /api/v1/orders (Bearer JWT)"| GW
+    GW ==>|"2. Route /users (Validate Token)"| US
+    GW ==>|"3. Route /products (Lock Inventory)"| PS
+    GW ==>|"4. Route /orders (Create Order PENDING)"| OS
+    GW ==>|"5. Route /payments (RSA-2048 Charge)"| PAYS
+
+    PS -.->|"3a. Check Cache @Cacheable"| RD
+    PS -->|"3b. Acquire RLock lock:product:{sku}"| RD
+    PS -->|"3c. Query SKU Catalog"| PG
+
+    OS -->|"4a. ACID Dual-Commit Order + outbox_events"| PG
+    OS ==>|"4b. Virtual Thread Scheduler Relay"| KF
+
+    PAYS -->|"5a. Verify Idempotency & Save Payment"| PG
+    PAYS ==>|"5b. Outbox Relay to Kafka"| KF
+
+    KF ==>|"6. Consume Event & Dispatch Alert"| NS
+    KF ==>|"7. Consume Payment & Confirm Order"| OS
+
+    OS -.-|"Trace Headers"| JG
+    PAYS -.-|"Trace Headers"| JG
+    NS -.-|"Trace Headers"| JG
 ```
-Client (Browser/Mobile)
-        │
-        ▼ HTTPS
-┌─────────────────────────────────────────────┐
-│          API Gateway  :8080                 │
-│  [JWT Auth · Rate Limiting · Circuit Break] │
-└─────────┬───────────┬────────────┬──────────┘
-          │           │            │
-          ▼           ▼            ▼
-   user-service  order-service  product-service  notification-service
-      :8081         :8082          :8083              :8084
-          │           │            │                    │
-          └─────────────────────────────────────────────┘
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-           PostgreSQL    Redis       Apache Kafka 3.8
-            :5432        :6379       :9092 (KRaft)
-                          (Keycloak)
+
+### 2. Sequence Diagram 1: Secure Order Creation & Saga Choreography Flow
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User
+    
+    box rgb(30, 58, 138) CLIENT
+    participant UI as React UI
+    end
+    
+    box rgb(22, 78, 99) GATEWAY
+    participant GW as Gateway :8080
+    end
+    
+    box rgb(49, 46, 129) MICROSERVICES
+    participant OS as Order :8082
+    participant PS as Product :8083
+    participant NS as Notify :8084
+    end
+    
+    box rgb(6, 78, 59) DATA & MESH
+    participant RD as Redis 7.2
+    participant DB as Postgres 16
+    participant KF as Kafka 3.8
+    end
+
+    User->>+UI: Submit Checkout (SKU, Qty)
+    UI->>+GW: POST /api/v1/orders (Bearer JWT)
+    GW->>GW: Verify RS256 Signature & IP Token Bucket
+    GW->>+OS: Dispatch Route /api/v1/orders
+    OS->>+PS: Query Catalog & Lock Inventory
+    PS->>RD: Acquire RLock("lock:product:{sku}")
+    RD-->>PS: Lock Acquired (Sub-ms lease)
+    PS-->>-OS: Inventory Available & Locked
+    OS->>DB: ACID TX: INSERT Order (PENDING) + outbox_events
+    DB-->>OS: SQL TX Committed Successfully
+    OS-->>-UI: HTTP 201 Created (Order PENDING)
+    UI-->>-User: Render Optimistic Order Confirmation Badge
+    Note over OS,KF: Loom Virtual Thread Scheduler Polls outbox_events
+    OS->>+KF: Produce "order-events" Topic (Idempotent)
+    KF->>+NS: Consume "order-events"
+    NS->>NS: Send SMS / Email Confirmation Receipt
+    NS-->>-KF: Event Acknowledged
 ```
+
+### 3. Sequence Diagram 2: PCI-DSS RSA-2048 Secure Payment Tokenization Flow
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User
+    
+    box rgb(30, 58, 138) CLIENT
+    participant UI as PaymentModal
+    end
+    
+    box rgb(49, 46, 129) MICROSERVICES
+    participant PAY as Payment :8085
+    participant OS as Order :8082
+    end
+    
+    box rgb(6, 78, 59) DATA & MESH
+    participant DB as Postgres 16
+    participant KF as Kafka 3.8
+    end
+
+    User->>+UI: Click "Pay Now" & Select 1 of 6 Instruments
+    UI->>+PAY: GET /api/v1/payments/security/public-key
+    PAY-->>-UI: Return RSA-2048 Merchant Public Key (PEM)
+    UI->>UI: Tokenize & Encrypt PAN (ENC:RSA2048_...)
+    UI->>+PAY: POST /api/v1/payments (Header: Idempotency-Key)
+    PAY->>DB: Verify unique idempotency_key index
+    DB-->>PAY: Key Valid (0% Duplicate Charge Risk)
+    PAY->>DB: ACID TX: UPDATE Payment SUCCESS + outbox_events
+    DB-->>PAY: SQL TX Committed Successfully
+    PAY-->>-UI: HTTP 200 OK (Payment Processed)
+    UI-->>-User: Render Paid & Confirmed UI Badge
+    Note over PAY,KF: Loom Virtual Thread Scheduler Polls outbox_events
+    PAY->>+KF: Produce "payment-events" Topic
+    KF->>+OS: Consume "payment-events"
+    OS->>DB: UPDATE Order Status -> CONFIRMED
+    OS-->>-KF: Event Acknowledged
+```
+
+---
+
+## 📚 Complete Project Working Flow Documentation Guide
+
+For the full interactive documentation with zoom controls, offline search, architectural explanations, and interview prep cheat sheets, open **[docs/java21-microservices-guide.html](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html)** or review **[docs/FULLSTACK_MICROSERVICES_INTERVIEW_ARCHITECTURE_GUIDE.md](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/FULLSTACK_MICROSERVICES_INTERVIEW_ARCHITECTURE_GUIDE.md)**:
+
+| Section | Title | Description |
+| :---: | :--- | :--- |
+| **01** | **[System Architecture](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#architecture)** | End-to-end architecture overview and port mapping matrix |
+| **02** | **[Visual Blueprints](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#systemdesignblueprint)** | Interactive Mermaid architecture flowchart, saga sequence, RSA payment flow & design trade-offs |
+| **03** | **[Project Structure Tree](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#project)** | Full directory structure and module dependency hierarchy |
+| **04** | **[Prerequisites & Tools](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#prereqs)** | JDK 21, Maven 3.9+, Docker 26+, Kubernetes EKS, and Node 20+ requirements |
+| **05** | **[Java 21 & Virtual Threads](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#java21)** | Project Loom virtual threads, Records, Pattern Matching, and Sealed Interfaces |
+| **06** | **[Spring Boot 3.3.2 Config](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#springboot)** | Application properties, profiles, actuators, and resilience configuration |
+| **07** | **[Docker Infrastructure Stack](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#docker)** | Local Docker Compose setup for PostgreSQL 16, Redis 7.2, Kafka 3.8, and Jaeger |
+| **08** | **[Apache Kafka 3.8 Mesh](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#kafka)** | Event-driven outbox messaging, KRaft mode, and idempotent topics |
+| **09** | **[Redis 7.2 Caching & Lock](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#redis)** | Distributed `@Cacheable` caching, Redisson sub-ms locks, and token-bucket rate limiting |
+| **10** | **[API Gateway Edge (:8080)](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#apigateway)** | RS256 JWT security filter, CORS deduplication, and Resilience4j circuit breakers |
+| **11** | **[Domain Microservices Code](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#services)** | Deep-dive walkthrough of `user`, `product`, `order` (Saga), and `notification` services |
+| **12** | **[Payment Service (PCI-DSS)](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#paymentservice)** | RSA-2048 public/private cryptography, 6 payment instruments, and idempotency guard |
+| **13** | **[UI Integration & Testing](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#testing)** | React 19 Vite integration (`OrdersPage.jsx`, `PaymentModal.jsx`) and regression test suites |
+| **14** | **[Kubernetes Architecture](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#kubernetes)** | Production K8s manifests, NGINX Ingress controller, and Horizontal Pod Autoscalers |
+| **15** | **[AWS Cloud Provisioning](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#aws)** | AWS EKS, ECR, RDS Postgres, and IAM security provisioning |
+| **16** | **[CI/CD Production Pipeline](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#deployment)** | Automated GitHub Actions CI/CD pipeline and rolling zero-downtime deployment |
+| **17** | **[Interview Master Cheat Sheet](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#interviewcheatsheet)** | Comprehensive interview review covering SOLID, ACID, CAP, Saga, Outbox, and Keycloak FAQs |
+| **18** | **[RBAC & Integration Test Suite](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/RBAC_INTEGRATION_TEST_SCENARIOS.md)** | Full-stack role-based access control test scenarios for Admin and Regular User roles across all modules |
 
 ### Dynamic Dashboard Visualization
 The frontend React application features a natively coded (CSS/HTML) **Dynamic Architecture Dashboard** on its Login screen, visually representing this entire microservice structure with animated real-time data flows to demonstrate system topology to users immediately upon entry.
@@ -195,6 +374,7 @@ microservices-demo/
 ├── order-service/                ← Orders, Kafka producer (:8082)
 ├── product-service/              ← Product catalog, inventory (:8083)
 ├── notification-service/         ← Kafka consumer, notifications (:8084)
+├── payment-service/              ← Payments, Outbox, RSA-2048 cryptograms (:8085)
 │
 └── k8s/                          ← Kubernetes manifests
     ├── namespace.yml
@@ -251,6 +431,7 @@ cd user-service && mvn spring-boot:run
 cd order-service && mvn spring-boot:run
 cd product-service && mvn spring-boot:run
 cd notification-service && mvn spring-boot:run
+cd payment-service && mvn spring-boot:run
 cd api-gateway && mvn spring-boot:run
 ```
 
@@ -384,17 +565,47 @@ curl -X PUT "http://localhost:8080/api/products/{id}/stock/decrement?qty=1" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
+### Payments & Security (requires JWT)
+
+```bash
+# Get Merchant RSA-2048 Public Key PEM (for client-side card tokenization)
+curl http://localhost:8080/api/v1/payments/security/public-key \
+  -H "Authorization: Bearer $TOKEN"
+
+# Process payment (Credit Card with RSA cryptogram / UPI / NetBanking / Wallet / BNPL / EMI)
+curl -X POST http://localhost:8080/api/v1/payments \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "orderId": 100,
+    "userId": 1,
+    "amount": 99.99,
+    "currency": "USD",
+    "paymentMethod": "CREDIT_CARD",
+    "idempotencyKey": "IDEM-CC-001",
+    "cardLast4": "4242",
+    "cardBrand": "VISA",
+    "gatewayProvider": "STRIPE_SIMULATOR"
+  }'
+
+# Refund payment
+curl -X POST http://localhost:8080/api/v1/payments/{id}/refund \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"reason":"Customer cancellation","amount":99.99}'
+```
+
 ---
 
 ## ☕ Java 21 Features Used
 
 | Feature | Location |
 |---------|----------|
-| **Records** | All DTOs: `OrderRequest`, `UserResponse`, `JwtResponse`, `OrderEvent`, `ProductResponse`, `NotificationMessage` |
-| **Pattern matching switch** | `OrderResponse.from()`, `OrderService.validateTransition()`, `ProductResponse.from()`, `NotificationService.dispatch()`, `OrderEventConsumer.processOrderEvent()` |
-| **Text blocks** | `NotificationService` email templates, `GatewayExceptionHandler` JSON body |
+| **Records** | All DTOs: `OrderRequest`, `UserResponse`, `JwtResponse`, `OrderEvent`, `ProductResponse`, `NotificationMessage`, `PaymentRequest`, `PaymentResponse` |
+| **Pattern matching switch** | `OrderResponse.from()`, `OrderService.validateTransition()`, `ProductResponse.from()`, `NotificationService.dispatch()`, `OrderEventConsumer.processOrderEvent()`, `PaymentInstrument` sealed hierarchy, `SimulatedPaymentGatewayProvider.charge()` |
+| **Text blocks** | `NotificationService` email templates, `GatewayExceptionHandler` JSON body, `PaymentCryptographyService` PEM keys |
 | **Virtual threads** | `spring.threads.virtual.enabled=true` in all services |
-| **Sealed types** | `OrderStatus` lifecycle state machine |
+| **Sealed types & interfaces** | `OrderStatus` lifecycle state machine, `PaymentInstrument` (Card, UPI, NetBanking, Wallet, BNPL, EMI, Mandate), `GatewayExecutionResult` |
 | **Guarded patterns** | `ProductResponse.from()` stock level switch |
 
 ---

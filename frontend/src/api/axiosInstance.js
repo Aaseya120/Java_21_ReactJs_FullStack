@@ -31,8 +31,6 @@ function createInstance(baseURLFn) {
     response => response,
     async error => {
       if (error.code === 'ERR_NETWORK' || [502, 503, 504].includes(error.response?.status)) {
-        clearTokens();
-        window.location.href = '/login';
         return Promise.reject(error);
       }
 
@@ -82,6 +80,7 @@ function createInstance(baseURLFn) {
 
 // Gateway client (all standard requests go through here)
 export const gatewayClient = createInstance(() => getGatewayUrl());
+export default gatewayClient;
 
 // Per-service direct clients (for direct access / health checks)
 import { getConfig } from '../utils/config';
@@ -89,3 +88,5 @@ export const userClient = createInstance(() => getConfig().userServiceUrl);
 export const orderClient = createInstance(() => getConfig().orderServiceUrl);
 export const productClient = createInstance(() => getConfig().productServiceUrl);
 export const notificationClient = createInstance(() => getConfig().notificationServiceUrl);
+export const paymentClient = createInstance(() => getConfig().paymentServiceUrl || 'http://localhost:8085');
+

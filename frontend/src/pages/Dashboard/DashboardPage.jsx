@@ -1,5 +1,4 @@
 // src/pages/Dashboard/DashboardPage.jsx
-import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { healthApi } from '../../api/health.api';
@@ -25,7 +24,7 @@ function StatusDot({ status }) {
 }
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const { data: health, isLoading, refetch } = useQuery({
@@ -39,14 +38,6 @@ export default function DashboardPage() {
   const upCount = services.filter(([, v]) => v.status === 'UP').length;
   const allUp = upCount === services.length;
 
-  useEffect(() => {
-    if (!isLoading && health && upCount === 0) {
-      console.warn('All microservices are down. Clearing stale session and redirecting to login.');
-      logout();
-      navigate('/login');
-    }
-  }, [health, isLoading, upCount, logout, navigate]);
-
   const quickActions = [
     { label: 'Create Product', icon: '📦', path: '/products', color: 'var(--success)' },
     { label: 'Place Order',    icon: '📋', path: '/orders',   color: 'var(--warning)' },
@@ -54,13 +45,20 @@ export default function DashboardPage() {
     { label: 'Aggregator',     icon: '🔗', path: '/aggregator', color: 'var(--primary)' },
   ];
 
+  const greeting = () => {
+    const hr = new Date().getHours();
+    if (hr < 12) return 'Good morning';
+    if (hr < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   return (
     <div className="animate-fade">
       {/* Header */}
       <div className="page-header">
         <div>
-          <h1>Dashboard</h1>
-          <p>Welcome back, <strong style={{ color: 'var(--primary)' }}>{user?.fullName || 'User'}</strong>! Here's your system overview.</p>
+          <h1>{greeting()}, {user?.fullName || 'Developer'}!</h1>
+          <p>Full-Stack Java 21 + React 19 Microservices Architecture Control Panel</p>
         </div>
         <button className="btn btn--secondary" onClick={() => refetch()}>
           ↻ Refresh
@@ -71,14 +69,14 @@ export default function DashboardPage() {
       <div style={{
         display: 'flex', alignItems: 'center', gap: 12,
         padding: '14px 20px', borderRadius: 'var(--radius-lg)',
-        background: allUp ? 'var(--success-light)' : 'var(--warning-light)',
-        border: `1px solid ${allUp ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}`,
+        background: allUp ? 'var(--success-light)' : upCount === 0 ? 'rgba(239, 68, 68, 0.15)' : 'var(--warning-light)',
+        border: `1px solid ${allUp ? 'rgba(16,185,129,0.3)' : upCount === 0 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(245,158,11,0.3)'}`,
         marginBottom: 28,
       }}>
-        <span style={{ fontSize: '1.25rem' }}>{allUp ? '✅' : '⚠️'}</span>
+        <span style={{ fontSize: '1.25rem' }}>{allUp ? '✅' : upCount === 0 ? '🚨' : '⚠️'}</span>
         <div>
-          <strong style={{ color: allUp ? 'var(--success)' : 'var(--warning)' }}>
-            {isLoading ? 'Checking services...' : allUp ? 'All Systems Operational' : `${upCount}/${services.length} Services Online`}
+          <strong style={{ color: allUp ? 'var(--success)' : upCount === 0 ? 'var(--danger)' : 'var(--warning)' }}>
+            {isLoading ? 'Checking services...' : allUp ? 'All Systems Operational' : upCount === 0 ? 'All Microservices Offline — Run start-all.ps1 to start backend services' : `${upCount}/${services.length} Services Online`}
           </strong>
           <span style={{ marginLeft: 12, fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
             Last checked: {new Date().toLocaleTimeString()}

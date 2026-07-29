@@ -90,6 +90,20 @@ spring:
           uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/v1/notifications/**
+        - id: payment-service
+          uri: ${PAYMENT_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/v1/payments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: paymentServiceBreaker
+                fallbackUri: forward:/fallback/payment
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@ipKeyResolver}"
         - id: aggregator
           uri: ${ORDER_SERVICE_URL:http://localhost:8082}
           predicates:
@@ -121,6 +135,8 @@ resilience4j:
         baseConfig: default
       productServiceBreaker:
         baseConfig: default
+      paymentServiceBreaker:
+        baseConfig: default
 
   timelimiter:
     configs:
@@ -132,6 +148,8 @@ resilience4j:
       orderServiceBreaker:
         baseConfig: default
       productServiceBreaker:
+        baseConfig: default
+      paymentServiceBreaker:
         baseConfig: default
 
   retry:

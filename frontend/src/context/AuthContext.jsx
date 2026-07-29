@@ -1,40 +1,13 @@
 // src/context/AuthContext.jsx
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import { saveTokens, clearTokens, saveUser, getUser, getAccessToken, getRefreshToken } from '../utils/token';
 import { authApi } from '../api/auth.api';
-import { healthApi } from '../api/health.api';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => getUser());
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!getAccessToken());
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    let isMounted = true;
-    const checkServicesHealth = async () => {
-      try {
-        const res = await healthApi.checkAll();
-        const services = Object.values(res);
-        const upCount = services.filter(s => s.status === 'UP').length;
-        if (isMounted && upCount === 0) {
-          console.warn('All microservices are offline. Ending stale previous session.');
-          clearTokens();
-          setUser(null);
-          setIsAuthenticated(false);
-        }
-      } catch (e) {
-        if (isMounted) {
-          clearTokens();
-          setUser(null);
-          setIsAuthenticated(false);
-        }
-      }
-    };
-    checkServicesHealth();
-    return () => { isMounted = false; };
-  }, [isAuthenticated]);
 
   const login = useCallback(async (credentials) => {
     const { data } = await authApi.login(credentials);

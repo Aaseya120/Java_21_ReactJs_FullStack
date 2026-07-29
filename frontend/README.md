@@ -24,7 +24,7 @@ To ensure a seamless user experience and robust security, we implemented several
 |-------------------|--------------------------------------|
 | **Stateless Auth** | `AuthContext` manages the JWT token locally (in `localStorage` or memory). All routes check this context to determine access. |
 | **Secure API Calls** | An **Axios Interceptor** automatically intercepts outgoing requests and injects the `Authorization: Bearer <token>` header. |
-| **Global Error Handling** | Interceptors catch `401 Unauthorized` responses to instantly log the user out, and catch `500`/`503`/`504` errors to redirect to graceful failure/fallback UI pages. |
+| **Global Error Handling** | `errorHelper.js` maps network errors (`ERR_NETWORK`) and 5xx (`502`/`503`/`504`) status codes to clear, actionable fallback messages (e.g., `"Backend service is offline or unreachable"`). Preserves user sessions during service outages rather than logging out unexpectedly. |
 | **Smart Caching** | **TanStack Query** caches API responses (like the Product Catalog). If a user navigates away and back, the data loads instantly from cache while re-fetching silently in the background. |
 | **Protected Routes** | Custom `ProtectedRoute` wrapper components evaluate the user's authentication state and roles before rendering the requested page, redirecting to `/login` if unauthorized. |
 | **Direct-to-Cloud Uploads** | Bypasses the backend for large file uploads by requesting an AWS S3 Presigned URL, then streaming the binary file directly to S3 via a pure `axios.put`. |
@@ -49,6 +49,28 @@ sequenceDiagram
     Gateway-->>React: 201 Created
 ```
 
+### PCI-DSS Compliant Payment Checkout Architecture (`payment-service`)
+To ensure enterprise-grade PCI-DSS compliance and support 22 global payment instruments (`CREDIT_CARD`, `UPI`, `NET_BANKING`, `WALLET`, `BNPL`, `EMI`), the React frontend integrates with `payment-service` (:8085) via asymmetric RSA-2048 cryptography:
+
+```mermaid
+sequenceDiagram
+    participant React as React Checkout Form
+    participant Gateway as API Gateway (:8080)
+    participant PaySvc as payment-service (:8085)
+    participant Kafka as Apache Kafka
+
+    React->>Gateway: GET /api/v1/payments/security/public-key
+    Gateway->>PaySvc: GET /security/public-key
+    PaySvc-->>React: 200 OK { "-----BEGIN PUBLIC KEY-----..." }
+    
+    Note over React: Client-Side Card Cryptogram Tokenization (RSA-2048)
+    React->>Gateway: POST /api/v1/payments { orderId, amount, paymentMethod: "CREDIT_CARD", cardToken: "ENC:..." }
+    Gateway->>PaySvc: POST /api/v1/payments
+    PaySvc->>PaySvc: Decrypt token with RSA Private Key & Sign Cryptogram
+    PaySvc->>PaySvc: Save Payment + Outbox Event in DB Transaction
+    PaySvc-->>React: 201 Created { status: "SUCCESS", transactionReference: "CARD-TX-..." }
+    PaySvc-)Kafka: Async Outbox Relay publishes to 'payment-events'
+```
 ---
 
 ## 🎨 UI/UX & Responsive Design
@@ -109,4 +131,4 @@ The application will be running locally at `http://localhost:3000`.
 Because this frontend heavily relies on the microservices backend for authentication and data:
 - Ensure the **API Gateway** is running on `localhost:8080`.
 - Ensure the required microservices (`user-service`, `product-service`, etc.) are up and healthy.
-- If the backend is down, the frontend will automatically detect the failure and trigger global error states or redirect you to the login screen.
+- If the backend is down, the frontend automatically detects the failure and displays a prominent status banner (`🚨 All Microservices Offline — Run start-all.ps1`) without destroying your login session, providing clear, actionable fallback messaging.

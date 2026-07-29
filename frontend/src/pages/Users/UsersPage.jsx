@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { decodeToken } from '../../utils/token';
 import { getAccessToken } from '../../utils/token';
+import { getServiceErrorMessage } from '../../utils/errorHelper';
 
 export default function UsersPage() {
   const { user, logout } = useAuth();
@@ -42,7 +43,7 @@ export default function UsersPage() {
       qc.invalidateQueries(['user', user?.id]);
       setIsEditing(false);
     },
-    onError: (err) => toast.error(err.response?.data?.message || 'Update failed'),
+    onError: (err) => toast.error(getServiceErrorMessage(err, 'Update failed')),
   });
 
   const profile = (profileData?.data?.data || profileData?.data) || profileData;
@@ -198,7 +199,7 @@ export default function UsersPage() {
               background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)',
               color: 'var(--danger)', fontSize: '0.875rem'
             }}>
-              ⚠️ {lookupError?.response?.data?.errorDesc || lookupError?.response?.data?.message || lookupError?.message || 'User not found or lookup failed.'}
+              ⚠️ {getServiceErrorMessage(lookupError, 'User not found or lookup failed.')}
             </div>
           )}
           {!isLookupError && ((lookupData?.data?.data || lookupData?.data) || lookupData) ? (() => {

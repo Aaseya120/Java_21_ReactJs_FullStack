@@ -505,15 +505,21 @@ select.input {
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
 }
 
-/* ── Compact View for Short Screens (e.g. Laptops) ──── */
-@media (max-height: 700px) {
-  .login-brand-panel > div, .login-form-wrapper > div {
-    zoom: 0.95;
-  }
+/* ── Login Page Responsive ──────────────────────────── */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-base);
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
-@media (max-height: 550px) {
-  .login-brand-panel > div, .login-form-wrapper > div {
-    zoom: 0.90;
+@media (min-width: 768px) {
+  .login-container {
+    flex-direction: row;
+    height: 100vh;
+    overflow: hidden;
   }
 }

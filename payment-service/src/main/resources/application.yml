@@ -1,0 +1,63 @@
+server:
+  port: 8085
+  shutdown: graceful
+
+spring:
+  application:
+    name: payment-service
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/engine}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+    table: flyway_schema_history_payment
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
+  cache:
+    type: redis
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: payment-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

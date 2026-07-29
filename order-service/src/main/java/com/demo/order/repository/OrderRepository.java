@@ -25,5 +25,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
 	/** Count active (non-terminal) orders for a user. */
 	long countByUserIdAndStatusNotIn(Long userId, List<OrderStatus> terminalStatuses);
+
+	/** Count total orders for a user (used to generate sequential display ID). */
+	long countByUserId(Long userId);
 }
 

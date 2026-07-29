@@ -35,6 +35,7 @@ public abstract class OrderContractTestBase {
 
         OrderResponse sampleOrder = new OrderResponse(
                 100L,
+                "ORD-1-1",
                 1L,
                 10L,
                 2,

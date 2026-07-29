@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import { aggregatorApi } from '../../api/aggregator.api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
+import { getServiceErrorMessage } from '../../utils/errorHelper';
 import { CardSkeleton } from '../../components/common/Skeleton';
 
 function InfoRow({ label, value, mono, highlight }) {
@@ -47,7 +48,7 @@ export default function AggregatorPage() {
       setResponseTime(Date.now() - startRef.current);
       toast.success('Aggregated data fetched!');
     } catch (err) {
-      const msg = err.response?.data?.errorDesc || err.response?.data?.message || (err.response?.status === 404 ? 'Order not found in aggregator' : err.message) || 'Failed to fetch aggregated data';
+      const msg = getServiceErrorMessage(err, 'Order not found or failed to fetch aggregated data');
       setError(msg);
       toast.error(msg);
     } finally {
