@@ -70,83 +70,60 @@ This project implements the **Database-per-Service** architectural pattern. Each
 
 ## 🏗️ Architecture & Visual Sequence Blueprints
 
-### 1. Top-to-Bottom Vertical System Architecture Flowchart
+### 1. High-Level System Architecture Flowchart
 ```mermaid
-graph TB
-    subgraph CLIENT_LAYER ["1️⃣ CLIENT TIER (React 19 + Vite Dashboard)"]
-        UI["🖥️ OrdersPage.jsx & PaymentModal.jsx<br/>(TanStack Query · Optimistic UI · SSE)"]
+flowchart TB
+    %% 1. Client & Edge Layer
+    UI["🖥️ React 19 + Vite Frontend"]
+    GW["🌐 API Gateway :8080<br/>RS256 JWT Auth · Rate Limiting · Circuit Breaker"]
+
+    %% 2. Microservices Domain Layer
+    subgraph Services ["3️⃣ Microservices Domain Tier (Java 21 · Spring Boot 3.3)"]
+        direction LR
+        US["👤 User Service<br/>:8081"]
+        PS["📦 Product Service<br/>:8083"]
+        OS["🛒 Order Service<br/>:8082"]
+        PAYS["💳 Payment Service<br/>:8085"]
+        NS["🔔 Notification Service<br/>:8084"]
     end
 
-    subgraph EDGE_GATEWAY ["2️⃣ INGRESS & SECURITY GATEWAY TIER (:8080)"]
-        GW["🌐 Spring Cloud Gateway :8080<br/>(🔒 RS256 JWT Auth · ⚡ Resilience4j Circuit Breaker · 🛡️ Redis Rate Limiter)"]
+    %% 3. Data & Messaging Layer
+    subgraph DataMesh ["4️⃣ Distributed Database, Cache & Event Mesh Tier"]
+        direction LR
+        RD[("⚡ Redis 7.2<br/>Cache & Lock")]
+        PG[("🐘 PostgreSQL 16<br/>DB per Service")]
+        KF["🌊 Apache Kafka 3.8<br/>Saga Event Bus"]
+        JG["🔭 Jaeger :16686<br/>Distributed Tracing"]
     end
 
-    subgraph DOMAIN_SERVICES ["3️⃣ MICROSERVICES DOMAIN TIER (Java 21 · Spring Boot 3.3.2)"]
-        direction TB
-        US["👤 User Service :8081<br/>(JWT Provider · RBAC Claims)"]
-        PS["📦 Product Service :8083<br/>(SKU Catalog · @Cacheable · Redisson Inventory Lock)"]
-        OS["🛒 Order Service :8082<br/>(Saga Outbox · BFF Aggregator · Virtual Threads)"]
-        PAYS["💳 Payment Service :8085<br/>(PCI-DSS RSA-2048 Cryptography · Idempotency Guard)"]
-        NS["🔔 Notification Service :8084<br/>(Idempotent Kafka Consumer · SMS & Email Alert)"]
-    end
+    %% Flow Connections
+    UI ==>|"HTTP / Bearer JWT"| GW
+    GW -->|"1. Validate Token"| US
+    GW -->|"2. Catalog / Lock"| PS
+    GW -->|"3. Create Order"| OS
+    GW -->|"4. Process Payment"| PAYS
 
-    subgraph DATA_EVENT_MESH ["4️⃣ DISTRIBUTED DATA STORAGE, CACHE & EVENT MESH TIER"]
-        direction TB
-        RD[("⚡ Redis 7.2 Distributed Cache<br/>(RLock Inventory Lock · Rate Limiter Buckets)")]
-        PG[("🐘 PostgreSQL 16 ACID Database<br/>(users · orders · payment_transactions · outbox_events)")]
-        KF["🌊 Apache Kafka 3.8 Event Mesh<br/>(order-events · payment-events Idempotent Topics)"]
-        JG["🔭 Jaeger Tracing :16686<br/>(OpenTelemetry W3C Correlation Trace Spans)"]
-    end
-
-    UI ==>|"1. POST /api/v1/orders (Bearer JWT)"| GW
-    GW ==>|"2. Route /users (Validate Token)"| US
-    GW ==>|"3. Route /products (Lock Inventory)"| PS
-    GW ==>|"4. Route /orders (Create Order PENDING)"| OS
-    GW ==>|"5. Route /payments (RSA-2048 Charge)"| PAYS
-
-    PS -.->|"3a. Check Cache @Cacheable"| RD
-    PS -->|"3b. Acquire RLock lock:product:{sku}"| RD
-    PS -->|"3c. Query SKU Catalog"| PG
-
-    OS -->|"4a. ACID Dual-Commit Order + outbox_events"| PG
-    OS ==>|"4b. Virtual Thread Scheduler Relay"| KF
-
-    PAYS -->|"5a. Verify Idempotency & Save Payment"| PG
-    PAYS ==>|"5b. Outbox Relay to Kafka"| KF
-
-    KF ==>|"6. Consume Event & Dispatch Alert"| NS
-    KF ==>|"7. Consume Payment & Confirm Order"| OS
-
-    OS -.-|"Trace Headers"| JG
-    PAYS -.-|"Trace Headers"| JG
-    NS -.-|"Trace Headers"| JG
+    PS -.->|"Cache / RLock"| RD
+    US & PS & OS & PAYS -->|"ACID TX & Outbox"| PG
+    OS & PAYS ==>|"Publish Events"| KF
+    KF ==>|"Consume Alerts"| NS
+    KF ==>|"Confirm Orders"| OS
+    US & PS & OS & PAYS & NS -.-|"W3C Traces"| JG
 ```
 
 ### 2. Sequence Diagram 1: Secure Order Creation & Saga Choreography Flow
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as User
-    
-    box rgb(30, 58, 138) CLIENT
+    actor User
     participant UI as React UI
-    end
-    
-    box rgb(22, 78, 99) GATEWAY
     participant GW as Gateway :8080
-    end
-    
-    box rgb(49, 46, 129) MICROSERVICES
     participant OS as Order :8082
     participant PS as Product :8083
     participant NS as Notify :8084
-    end
-    
-    box rgb(6, 78, 59) DATA & MESH
     participant RD as Redis 7.2
     participant DB as Postgres 16
     participant KF as Kafka 3.8
-    end
 
     User->>+UI: Submit Checkout (SKU, Qty)
     UI->>+GW: POST /api/v1/orders (Bearer JWT)
@@ -171,21 +148,12 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as User
-    
-    box rgb(30, 58, 138) CLIENT
+    actor User
     participant UI as PaymentModal
-    end
-    
-    box rgb(49, 46, 129) MICROSERVICES
     participant PAY as Payment :8085
     participant OS as Order :8082
-    end
-    
-    box rgb(6, 78, 59) DATA & MESH
     participant DB as Postgres 16
     participant KF as Kafka 3.8
-    end
 
     User->>+UI: Click "Pay Now" & Select 1 of 6 Instruments
     UI->>+PAY: GET /api/v1/payments/security/public-key
