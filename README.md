@@ -1,6 +1,6 @@
 # Java 21 · Spring Boot 3.3 · Microservices Full-Stack Project
 
-A production-ready, full-stack microservices project demonstrating a modern React frontend and a Java 21 / Spring Boot 3.3 backend with Spring Cloud, Apache Kafka (KRaft mode), Redis, and PostgreSQL.
+A production-ready microservices project with a React frontend and a Java 21 / Spring Boot 3.3 backend, using Spring Cloud, Apache Kafka (KRaft mode), Redis, and PostgreSQL.
 
 ---
 
@@ -23,62 +23,62 @@ A production-ready, full-stack microservices project demonstrating a modern Reac
 | **Messaging** | Apache Kafka |
 | **Database** | PostgreSQL 16 |
 | **Cache** | Redis 7 |
-| **Containers** | Docker (Multi-stage builds) |
-| **Orchestration**| Kubernetes |
-| **K8s Packaging**| Helm (Bitnami Charts) |
+| **Containers** | Docker (multi-stage builds) |
+| **Orchestration** | Kubernetes |
+| **K8s Packaging** | Helm (Bitnami charts) |
 
-### Backend Microservices & Ports
+### Microservices & Ports
 | Service | Port | Description |
 |---------|------|-------------|
-| **API Gateway** | `8080` | Single entry point, RS256 JWT auth, CORS, Rate limiting, Circuit breakers |
-| **User Service** | `8081` | Authentication, Registration, JWT issuance, RBAC claims |
-| **Order Service** | `8082` | Order lifecycle, Saga Outbox pattern, BFF Aggregator (`/api/v1/aggregator/**`) |
-| **Product Service** | `8083` | SKU Catalog, `@Cacheable`, Redisson `RLock` inventory locks |
-| **Notification Service** | `8084` | Idempotent Kafka event consumer, SMS/Email alerts, SSE streams |
-| **Payment Service** | `8085` | PCI-DSS RSA-2048 tokenization, Idempotency keys (`X-Idempotency-Key`), 6 payment instruments |
+| **API Gateway** | `8080` | Entry point; JWT auth (RS256), CORS, rate limiting, circuit breakers |
+| **User Service** | `8081` | Authentication, registration, JWT issuance, RBAC claims |
+| **Order Service** | `8082` | Order lifecycle, Saga/Outbox pattern, aggregator endpoints |
+| **Product Service** | `8083` | Product catalog, caching, Redisson locks for inventory |
+| **Notification Service** | `8084` | Kafka event consumer; sends SMS/email, streams via SSE |
+| **Payment Service** | `8085` | PCI-DSS RSA-2048 tokenization, idempotency keys, 6 payment methods |
 
-### 🗄️ Database-per-Service & Table Mapping Matrix (16 Tables Total)
+### Database-per-Service (16 Tables Total)
 
-This project implements the **Database-per-Service** architectural pattern. Each stateful microservice owns its own isolated database schema to guarantee loose coupling, independent scalability, and ACID transaction boundaries without shared database dependencies.
+Each stateful microservice owns its own database schema. This keeps services loosely coupled, independently scalable, and free of shared-database dependencies.
 
-| Service | Table Name | Java Entity | Architectural Purpose |
+| Service | Table Name | Java Entity | Purpose |
 | :--- | :--- | :--- | :--- |
-| **User Service** | `users` | `User.java` | Stores user profiles, credentials, roles, and status for Role-Based Access Control (RBAC). |
-| | `refresh_tokens` | `RefreshToken.java` | Stores JWT refresh tokens for secure session management and token revocation. |
-| | `outbox_events` | `OutboxEvent.java` | Implements the **Transactional Outbox Pattern** to reliably emit domain events (e.g., `UserCreatedEvent`). |
-| | `audit_logs` | `AuditLog.java` | Records domain audit trails and administrative security actions. |
-| | `log_rest` | `LogRest.java` | Logs HTTP REST request and response payloads for tracing and debugging. |
-| **Product Service** | `products` | `Product.java` | Stores product catalog items, SKU codes, pricing, and available inventory stock. |
-| | `outbox_events` | `OutboxEvent.java` | Implements the Transactional Outbox Pattern to emit product and inventory change events reliably. |
-| | `audit_logs` | `AuditLog.java` | Records audit history for inventory and product catalog updates. |
-| | `log_rest` | `LogRest.java` | Logs HTTP REST API traffic for observability. |
-| **Order Service** | `orders` | `Order.java` | Stores order transactions, user/product IDs, quantities, order notes, and status (`PENDING`, `COMPLETED`, etc.). |
-| | `outbox_events` | `OutboxEvent.java` | Implements the Transactional Outbox Pattern to publish order lifecycle events (e.g., `OrderCreatedEvent`). |
-| | `audit_logs` | `AuditLog.java` | Tracks auditing history for order processing. |
-| | `log_rest` | `LogRest.java` | Logs API requests and responses for troubleshooting order endpoints. |
-| **Payment Service** | `payments` | `Payment.java` | Stores payment transactions, amounts, payment methods, and payment processing status. |
-| | `payment_outbox` | `PaymentOutboxEvent.java` | Dedicated Transactional Outbox table for payment event publishing. |
-| | `payment_audit_log`| `PaymentAuditLog.java` | Dedicated audit trail for sensitive PCI-DSS payment operations. |
-| **Notification Service** | *None (Stateless)* | *N/A* | Stateless Kafka event consumer; triggers email/SMS notifications without needing relational database persistence. |
-| **API Gateway** | *None (Stateless)* | *N/A* | Stateless edge routing layer; handles RS256 JWT validation, CORS, rate limiting, and circuit breakers. |
+| **User Service** | `users` | `User.java` | User profiles, credentials, roles for RBAC |
+| | `refresh_tokens` | `RefreshToken.java` | JWT refresh tokens for session management |
+| | `outbox_events` | `OutboxEvent.java` | Reliably emits domain events (e.g. `UserCreatedEvent`) |
+| | `audit_logs` | `AuditLog.java` | Security and admin action audit trail |
+| | `log_rest` | `LogRest.java` | Logs HTTP request/response payloads |
+| **Product Service** | `products` | `Product.java` | Catalog items, SKUs, pricing, stock |
+| | `outbox_events` | `OutboxEvent.java` | Emits inventory/product change events |
+| | `audit_logs` | `AuditLog.java` | Audit history for catalog updates |
+| | `log_rest` | `LogRest.java` | API traffic logging |
+| **Order Service** | `orders` | `Order.java` | Order transactions and status |
+| | `outbox_events` | `OutboxEvent.java` | Publishes order lifecycle events |
+| | `audit_logs` | `AuditLog.java` | Order processing audit trail |
+| | `log_rest` | `LogRest.java` | API request/response logging |
+| **Payment Service** | `payments` | `Payment.java` | Payment transactions and status |
+| | `payment_outbox` | `PaymentOutboxEvent.java` | Dedicated outbox for payment events |
+| | `payment_audit_log` | `PaymentAuditLog.java` | Audit trail for PCI-DSS payment operations |
+| **Notification Service** | *None (stateless)* | *N/A* | Stateless Kafka consumer; sends email/SMS |
+| **API Gateway** | *None (stateless)* | *N/A* | Stateless routing layer |
 
-#### Why are there recurring tables (`outbox_events`, `audit_logs`, `log_rest`) across services?
-- **Transactional Outbox Pattern (`outbox_events`, `payment_outbox`)**: Prevents distributed race conditions. Events are written to an outbox table within the same ACID database transaction as the primary entity (`orders`, `users`, etc.), and a background Virtual Thread publisher relays them to Apache Kafka.
-- **Shared Domain Audit & Observability (`audit_logs`, `log_rest`)**: Entities defined in `common-module` are mapped into each service's individual schema to maintain compliance and HTTP request tracing per microservice.
+**Why do `outbox_events`, `audit_logs`, and `log_rest` repeat across services?**
+- **Outbox Pattern** (`outbox_events`, `payment_outbox`): events are written in the same transaction as the main entity, then relayed to Kafka by a background publisher — this avoids distributed race conditions.
+- **Shared audit/logging tables** (`audit_logs`, `log_rest`): defined once in `common-module` and mapped into each service's schema for consistent compliance and request tracing.
 
 ---
 
-## 🏗️ Architecture & Visual Sequence Blueprints
+## 🏗️ Architecture & Sequence Diagrams
 
-### Visual System Design Blueprint (End-to-End Architecture)
+### System Design Blueprint
 ![Full Stack Microservices System Design Blueprint](docs/images/system-architecture-blueprint.jpg?v=20260729_0849)
 
 > [!TIP]
-> **How to Zoom, Pan, and Move Diagrams with Your Cursor**:
-> - **On GitHub.com**: Click directly on the **System Design Blueprint image above** or any diagram below to open GitHub's native **Interactive Image Fullscreen Viewer**, where you can pan, drag, and move the diagram around with your mouse cursor and scroll wheel.
-> - **Interactive HTML Guide**: Open **[docs/java21-microservices-guide.html](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html)** in any web browser to use our dedicated **Interactive Chart Controls** (`➕ Zoom In`, `➖ Zoom Out`, `🔄 Reset (100%)`, `⛶ Fullscreen`) with built-in **mouse-drag cursor panning (`grab`/`grabbing`)** and **mouse-wheel zooming** for BOTH the blueprint image and all interactive Mermaid diagrams!
+> **Zoom & pan the diagrams**:
+> - On GitHub.com, click any diagram to open the native fullscreen viewer (pan/zoom with mouse).
+> - Or open **[docs/java21-microservices-guide.html](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html)** for zoom controls and drag-panning on both the blueprint and Mermaid diagrams.
 
-### 1. Sequence Diagram 1: Secure Order Creation & Saga Choreography Flow
+### 1. Order Creation & Saga Flow
 ```mermaid
 sequenceDiagram
     autonumber
@@ -117,7 +117,7 @@ sequenceDiagram
     NS-->>-KF: Event Acknowledged (Offset Committed)
 ```
 
-### 2. Sequence Diagram 2: PCI-DSS RSA-2048 Secure Payment Tokenization Flow
+### 2. Payment Tokenization Flow (PCI-DSS, RSA-2048)
 ```mermaid
 sequenceDiagram
     autonumber
@@ -152,241 +152,134 @@ sequenceDiagram
 
 ---
 
-## 📚 Complete Project Working Flow Documentation Guide
+## 📚 Full Documentation Guide
 
-For the full interactive documentation with zoom controls, offline search, architectural explanations, and interview prep cheat sheets, open **[docs/java21-microservices-guide.html](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html)** or review **[docs/FULLSTACK_MICROSERVICES_INTERVIEW_ARCHITECTURE_GUIDE.md](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/FULLSTACK_MICROSERVICES_INTERVIEW_ARCHITECTURE_GUIDE.md)**:
+For interactive docs with zoom controls, search, and an interview prep cheat sheet, see **[docs/java21-microservices-guide.html](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html)** or **[docs/FULLSTACK_MICROSERVICES_INTERVIEW_ARCHITECTURE_GUIDE.md](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/FULLSTACK_MICROSERVICES_INTERVIEW_ARCHITECTURE_GUIDE.md)**. It covers: system architecture, visual blueprints, project structure, prerequisites, Java 21/Virtual Threads, Spring Boot config, Docker infra, Kafka, Redis, API Gateway, each microservice, payment security, UI integration/testing, Kubernetes, AWS provisioning, CI/CD, an interview cheat sheet, and RBAC test scenarios.
 
-| Section | Title | Description |
-| :---: | :--- | :--- |
-| **01** | **[System Architecture](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#architecture)** | End-to-end architecture overview and port mapping matrix |
-| **02** | **[Visual Blueprints](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#systemdesignblueprint)** | Interactive Mermaid architecture flowchart, saga sequence, RSA payment flow & design trade-offs |
-| **03** | **[Project Structure Tree](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#project)** | Full directory structure and module dependency hierarchy |
-| **04** | **[Prerequisites & Tools](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#prereqs)** | JDK 21, Maven 3.9+, Docker 26+, Kubernetes EKS, and Node 20+ requirements |
-| **05** | **[Java 21 & Virtual Threads](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#java21)** | Project Loom virtual threads, Records, Pattern Matching, and Sealed Interfaces |
-| **06** | **[Spring Boot 3.3.2 Config](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#springboot)** | Application properties, profiles, actuators, and resilience configuration |
-| **07** | **[Docker Infrastructure Stack](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#docker)** | Local Docker Compose setup for PostgreSQL 16, Redis 7.2, Kafka 3.8, and Jaeger |
-| **08** | **[Apache Kafka 3.8 Mesh](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#kafka)** | Event-driven outbox messaging, KRaft mode, and idempotent topics |
-| **09** | **[Redis 7.2 Caching & Lock](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#redis)** | Distributed `@Cacheable` caching, Redisson sub-ms locks, and token-bucket rate limiting |
-| **10** | **[API Gateway Edge (:8080)](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#apigateway)** | RS256 JWT security filter, CORS deduplication, and Resilience4j circuit breakers |
-| **11** | **[Domain Microservices Code](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#services)** | Deep-dive walkthrough of `user`, `product`, `order` (Saga), and `notification` services |
-| **12** | **[Payment Service (PCI-DSS)](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#paymentservice)** | RSA-2048 public/private cryptography, 6 payment instruments, and idempotency guard |
-| **13** | **[UI Integration & Testing](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#testing)** | React 19 Vite integration (`OrdersPage.jsx`, `PaymentModal.jsx`) and regression test suites |
-| **14** | **[Kubernetes Architecture](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#kubernetes)** | Production K8s manifests, NGINX Ingress controller, and Horizontal Pod Autoscalers |
-| **15** | **[AWS Cloud Provisioning](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#aws)** | AWS EKS, ECR, RDS Postgres, and IAM security provisioning |
-| **16** | **[CI/CD Production Pipeline](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#deployment)** | Automated GitHub Actions CI/CD pipeline and rolling zero-downtime deployment |
-| **17** | **[Interview Master Cheat Sheet](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html#interviewcheatsheet)** | Comprehensive interview review covering SOLID, ACID, CAP, Saga, Outbox, and Keycloak FAQs |
-| **18** | **[RBAC & Integration Test Suite](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/RBAC_INTEGRATION_TEST_SCENARIOS.md)** | Full-stack role-based access control test scenarios for Admin and Regular User roles across all modules |
-
-### Dynamic Dashboard Visualization
-The frontend React application features a natively coded (CSS/HTML) **Dynamic Architecture Dashboard** on its Login screen, visually representing this entire microservice structure with animated real-time data flows to demonstrate system topology to users immediately upon entry.
+The React frontend's login screen also includes a **Dynamic Architecture Dashboard** — an animated, native CSS/HTML visualization of the whole system topology.
 
 ---
 
-## 🌟 Benefits of the Tech Stack
+## 🌟 Why This Stack
 
-- **Java 21 & Spring Boot 3.3**: Brings Virtual Threads (Project Loom) for massive throughput and high concurrency with minimal resource overhead. Pattern matching and Records reduce boilerplate and improve code readability.
-- **React 18 & Vite 5**: Offers lightning-fast Hot Module Replacement (HMR) and optimized builds. React 18's concurrent rendering improves perceived performance.
-- **Apache Kafka (KRaft)**: Acts as the backbone for event-driven asynchronous communication, decoupling microservices and ensuring reliable message delivery without the Zookeeper overhead.
-- **PostgreSQL 16**: Provides robust, ACID-compliant relational data storage with advanced JSONB capabilities.
-- **Redis 7**: Ensures high-speed caching and session management, reducing database load and latency.
-- **Spring Cloud Gateway**: Serves as a single entry point, handling routing, cross-cutting concerns like security (JWT validation), rate limiting, and CORS.
-
----
-
-## 🛡️ Industry Best Practices
-
-### Scalability
-- **Stateless Services**: All microservices are entirely stateless; session and state are managed externally (Redis/PostgreSQL). This allows horizontal pod autoscaling.
-- **Event-Driven Architecture**: Heavy or non-blocking operations (like sending notifications) are offloaded to Kafka, ensuring the main thread returns quickly to the user.
-- **Virtual Threads**: Enabled in Spring Boot 3, allowing each service to handle tens of thousands of concurrent requests without thread-pool exhaustion.
-
-## 🔒 Security Implementation
-
-Security in this architecture follows a **Zero-Trust** model at the network boundary.
-
-### 1. API Gateway as a Shield
-- **Centralized Authentication**: The `api-gateway` uses a Global Filter to intercept every incoming request. It extracts the JWT, verifies the signature, and rejects invalid tokens before they ever reach a backend service.
-- **Distributed Rate Limiting**: Uses **Redis** (`RequestRateLimiter`) to enforce strict rate limits per IP address, preventing DDoS attacks and API abuse.
-- **OAuth2 & Keycloak**: Includes an optional profile to run as an OAuth2 Resource Server, integrating seamlessly with external Identity Providers like Keycloak.
-- **Header Propagation**: Once a token is validated, the Gateway extracts the `userId` and `roles` and appends them as trusted HTTP headers (`X-User-Id`) to the downstream request. Backend services implicitly trust these headers since they are hidden behind the Gateway.
-
-### Reliability
-- **Circuit Breakers & Retries**: Implemented across inter-service communication to prevent cascading failures.
-- **Health Checks & Actuators**: Spring Boot Actuator exposes `/actuator/health` and `/actuator/metrics`, allowing orchestrators like Kubernetes to automatically restart unhealthy instances.
-- **Idempotency**: Kafka consumers are designed to be idempotent to handle 'at-least-once' delivery guarantees without data duplication.
-
-### Maintainability
-- **Clean Architecture**: Separation of concerns using Controller, Service, and Repository layers. DTOs (using Java Records) isolate the domain model from external API changes.
-- **Automated Migrations**: Flyway tracks and manages database schema changes through versioned scripts, preventing drift across environments.
-- **Centralized Configuration**: Environment variables and config maps drive behavior, keeping the code environment-agnostic (12-Factor App methodology).
+- **Java 21 & Spring Boot 3.3**: Virtual Threads for high concurrency with low overhead; Records and pattern matching cut boilerplate.
+- **React 18 & Vite 5**: Fast Hot Module Replacement and optimized builds; React 18 concurrent rendering improves perceived speed.
+- **Apache Kafka (KRaft)**: Event backbone that decouples services and delivers messages reliably, without Zookeeper.
+- **PostgreSQL 16**: ACID-compliant storage with JSONB support.
+- **Redis 7**: Fast caching and session management, reducing DB load.
+- **Spring Cloud Gateway**: Single entry point for routing, security, rate limiting, and CORS.
 
 ---
 
-## 💡 Guidelines for Codebase Excellence
+## 🛡️ Best Practices Applied
 
-To keep this project at the pinnacle of industry standards, follow these guidelines:
-1. **Embrace Immutability**: Use Java Records for all DTOs and events. Avoid setter methods in entities where possible; favor constructor-based initialization and builder patterns.
-2. **Keep Bounded Contexts Strict**: Services should never share a database. If `order-service` needs user data, it must query `user-service` via API or react to Kafka events.
-3. **Comprehensive Testing**: Maintain high test coverage. Use **Testcontainers** for integration tests to validate against real PostgreSQL/Kafka instances instead of mock databases.
-4. **API Versioning**: When introducing breaking changes, version your endpoints (e.g., `/api/v1/orders` to `/api/v2/orders`) to ensure backward compatibility for clients.
-5. **Observability First**: Use distributed tracing (like Micrometer Tracing with Zipkin or Jaeger) and centralized logging (ELK stack or Loki) to track requests across service boundaries.
-6. **Continuous Dependency Updates**: Regularly update Maven and npm dependencies to patch security vulnerabilities and leverage performance improvements.
+**Scalability**
+- All services are stateless — session/state lives in Redis/PostgreSQL — enabling horizontal autoscaling.
+- Heavy or non-blocking work (e.g. notifications) is offloaded to Kafka.
+- Virtual Threads let each service handle very high concurrent load without exhausting thread pools.
 
----
+**Reliability**
+- Circuit breakers and retries prevent cascading failures between services.
+- Spring Boot Actuator health/metrics endpoints let Kubernetes auto-restart unhealthy pods.
+- Kafka consumers are idempotent to safely handle at-least-once delivery.
 
-## 🧩 High-Level Design (HLD) & Design Patterns
-
-### 1. Enterprise Architecture Patterns
-| Challenge / Concept | How it was achieved in this project |
-|---------------------|-------------------------------------|
-| **API Gateway Pattern** | `api-gateway` acts as a single entry point, encapsulating routing, JWT validation, and CORS. |
-| **Distributed Transaction** | Used **Saga Pattern** + **Outbox Pattern**. Both the `order-service` and `product-service` write Saga events to local Outbox tables inside a single `@Transactional` block to prevent the Dual-Write problem. |
-| **Fault Tolerance** | Used **Circuit Breaker**, **Retry**, and **Fallback** (Resilience4j) to fail fast on remote service outages. |
-| **Bulkhead Pattern** | Limited concurrent requests/threads to isolate failures and prevent cascading thread exhaustion. |
-| **Publish-Subscribe** | Used **Apache Kafka** for asynchronous, event-driven choreographies (e.g., Notifications). |
-| **Distributed Locking**| Used **Redisson (`RLock`)** in the `product-service` to safely handle concurrent inventory decrements across multiple pods. |
-| **Scalability** | Used **Java 21 Virtual Threads**, Redis caching, and Kubernetes HPA for massive horizontal scale. |
-| **Reliability (Zero Data Loss)** | Implemented **Redis Idempotency** in consumers to guarantee exactly-once processing, and **Dead Letter Queues (DLQ)** by throwing `RuntimeExceptions` back to Kafka for automated retries. |
-| **Availability** | Achieved via Kubernetes ReplicaSets, API Gateway fallbacks, and stateless design. |
-| **Readability** | Ensured via Java Records (no boilerplate), MapStruct, and clean separation of concerns. |
-| **Maintainability** | Enforced strictly decoupled bounded contexts, Flyway migrations, and centralized logging. |
-| **Load Balancing** | Handled seamlessly by Kubernetes Services distributing traffic across multiple pod instances. |
-| **Routing** | Managed dynamically by **Spring Cloud Gateway** using URL path predicates. |
-| **Service Discovery** | Server-side discovery utilizing native Kubernetes DNS. |
-| **SOLID Principles** | Applied strictly (e.g., Single Responsibility in `@Service` classes, Dependency Inversion via Spring IoC). |
-| **Isolation** | Database isolation managed via `@Transactional`; Network isolation via Kubernetes internal network. |
-| **Caching** | Used **Redis** to offload heavy read queries and manage distributed rate-limiting. |
-| **ACID & Transactions**| Enforced locally within bounded contexts via PostgreSQL and Spring's declarative `@Transactional`. |
-| **Connection Pooling** | Tuned **HikariCP** (`maximum-pool-size=50`) explicitly to prevent connection starvation when using Virtual Threads for high-throughput blocking I/O. |
-| **Spring Data JPA** | Used for ORM; leveraging entity relationships, automatic query generation, and lazy loading. |
-| **Spring Security** | Implemented Zero-Trust via **API Gateway**, utilizing JWTs/OAuth2 and downstream role propagation. |
-| **Internationalization (i18n)** | Global Exception Handlers utilize `MessageSource` and Resource Bundles to dynamically localize error messages based on the `Accept-Language` HTTP header. |
-| **Generics & DRY** | Standardized `ApiResponse<T>` wrapper eliminates duplicate response mapping across all 5 microservices. |
-| **Reactive Programming** | **Spring Cloud Gateway (WebFlux)** leverages `Mono` and `Flux` to handle tens of thousands of concurrent connections without thread blocking, while backend services stick to Virtual Threads. |
-
-### 2. Code-Level (GoF) Design Patterns
-- **Dependency Injection (IoC):** The core of Spring Boot. Services, Controllers, and Repositories are decoupled and injected at runtime.
-- **Proxy Pattern:** Heavily utilized by Spring AOP for our **Audit Logging** and by `@Transactional` to manage DB commits/rollbacks transparently.
-- **Data Transfer Object (DTO):** Strictly enforced using **Java 21 Records** to transfer immutable data between layers without exposing DB Entities.
-- **Factory / Mapper Pattern:** Utilized via **MapStruct**, which generates factory-like mapper classes to convert Entities to DTOs efficiently.
-- **Facade Pattern:** Our `@Service` classes act as facades, hiding complex interactions with Repositories, Kafka Templates, and remote clients from the Controllers.
-- **Singleton Pattern:** By default, all Spring Beans (Controllers, Services) are instantiated as thread-safe Singletons per JVM context.
+**Maintainability**
+- Clean layering (Controller/Service/Repository); DTOs use Java Records to isolate the domain model.
+- Flyway manages versioned schema migrations.
+- Configuration is externalized via env vars/config maps (12-Factor App style).
 
 ---
 
-## 🏷️ Complete Master Reference: All Annotations Used Across All Modules
+## 🔒 Security
 
-This section serves as an exhaustive technical reference and interview guide covering **all 60+ Java, Spring Boot 3, JPA, Kafka, Security, Lombok, and Observability annotations** utilized across every module (`common-module`, `user-service`, `product-service`, `order-service`, `notification-service`, `payment-service`, and `api-gateway`).
+Security follows a **Zero-Trust** model at the network boundary.
 
-### 1. Stereotypes & Core Dependency Injection (Spring IoC)
-| Annotation | Module(s) Used | Description & Architectural Purpose |
-| :--- | :--- | :--- |
-| **`@SpringBootApplication`** | All 6 microservices | Marks the application main class; combines `@Configuration`, `@EnableAutoConfiguration`, and `@ComponentScan`. |
-| **`@Component`** | All modules | Generic stereotype marking a Java class as a Spring-managed singleton bean (e.g., `JwtAuthFilter`, `IdempotencyGuard`). |
-| **`@Service`** | `user`, `order`, `product`, `payment`, `notification` | Specialized stereotype marking business logic layer classes (`AuthServiceImpl`, `SagaOrchestratorService`). |
-| **`@Repository`** | All domain services | Specialized stereotype marking database DAO layer classes; enables automatic JPA exception translation. |
-| **`@RestController`** | All domain services | Composite stereotype (`@Controller` + `@ResponseBody`) marking REST controllers returning JSON payload. |
-| **`@Configuration`** | `common`, `gateway`, all services | Indicates a class declares `@Bean` methods to configure containers, security filters, or infrastructure. |
-| **`@Bean`** | `common`, all services | Declares a method whose return value is registered as a managed bean in Spring's ApplicationContext. |
-| **`@Primary`** | `common-module` (`CacheConfig`) | Gives preference to a specific bean when multiple candidates qualify for autowiring (e.g., primary 15-min Redis TTL cache bean vs. secondary short-lived cache). |
-| **`@Qualifier`** | `common-module` (`CacheConfig`) | Stereotype qualifier used to disambiguate beans of the same type by explicit name (`@Qualifier("defaultCacheConfig")`, `@Qualifier("shortLivedCacheConfig")`). |
-| **`@Autowired`** | All services | Requests automatic dependency injection by type (used on constructors, fields, or setter methods). |
-| **`@Value`** | `user`, `gateway`, `payment` | Injects configuration property values from `application.yml` or environment variables (e.g., `@Value("${jwt.secret}")`). |
-| **`@ConfigurationProperties`** | `order`, `payment`, `common` | Strongly types hierarchical YAML configuration into Java Records or classes (e.g., `AggregatorProperties`). |
-| **`@ConfigurationPropertiesScan`** | All service main classes | Instructs Spring Boot to scan for and register classes annotated with `@ConfigurationProperties`. |
-| **`@Order`** | `gateway`, `common` | Defines priority execution order for Spring beans, filters, and AOP advice. |
+1. **API Gateway as a shield** — a global filter validates every JWT before a request reaches any backend service; Redis-backed rate limiting blocks abuse/DDoS; an optional OAuth2/Keycloak profile is supported; validated user ID and roles are passed downstream as trusted headers (`X-User-Id`).
+2. **Stateless JWT auth** — `user-service` issues signed JWTs, enabling infinite horizontal scaling with no session replication.
+3. **Password hashing** — passwords are salted and hashed with BCrypt (work factor 12), never stored in plaintext.
+4. **Network isolation** — only the API Gateway is publicly exposed; services, databases, caches, and Kafka stay on private networks.
+5. **CORS** — restricted at the gateway to trusted origins only.
 
-### 2. Spring Web MVC, WebFlux & REST Routing
-| Annotation | Module(s) Used | Description & Architectural Purpose |
-| :--- | :--- | :--- |
-| **`@RequestMapping`** | All domain services | Sets the base URI path and HTTP method mapping for REST controllers (e.g., `@RequestMapping("/api/v1/orders")`). |
-| **`@GetMapping`**, **`@PostMapping`**, **`@PutMapping`**, **`@DeleteMapping`**, **`@PatchMapping`** | All domain services | Specialized HTTP verb mapping annotations for RESTful CRUD endpoints. |
-| **`@RequestParam`** | `product`, `order` | Binds HTTP query parameters to controller method arguments (e.g., paging parameters `?page=0&size=20`). |
-| **`@PathVariable`** | All domain services | Binds URI path variables to controller arguments (e.g., `/api/v1/orders/{orderId}`). |
-| **`@RequestBody`** | All domain services | Binds HTTP POST/PUT JSON request body payloads to Java DTO Records. |
-| **`@RequestHeader`** | All domain services | Extracts HTTP headers injected by API Gateway (e.g., `@RequestHeader("X-User-Id") Long userId`). |
-| **`@ResponseStatus`** | All controllers & exception handlers | Explicitly sets the HTTP response status code (e.g., `HttpStatus.CREATED`, `HttpStatus.NO_CONTENT`). |
-| **`@CrossOrigin`** | Controllers | Configures CORS policy allowances on specific REST endpoints. |
+**Public endpoints (no JWT required):**
+```
+POST /api/auth/register   ← Register a new user
+POST /api/auth/login      ← Login and get JWT
+GET  /actuator/health     ← Health check
+```
 
-### 3. JPA, Hibernate & Relational Database Persistence
-| Annotation | Module(s) Used | Description & Architectural Purpose |
-| :--- | :--- | :--- |
-| **`@Entity`** | `user`, `product`, `order`, `payment` | Marks a Java class as a JPA entity managed by Hibernate ORM. |
-| **`@Table`** | All entities | Specifies database table name and multi-column indexes (`@Index(name = "idx_email", columnList = "email")`). |
-| **`@Id`** | All entities | Designates the primary key field of an entity. |
-| **`@GeneratedValue`** | All entities | Defines the auto-increment identity generation strategy (`GenerationType.IDENTITY`). |
-| **`@Column`** | All entities | Configures DDL column constraints (nullable, unique, length, updatable). |
-| **`@Enumerated`** | `order`, `payment`, `user` | Instructs Hibernate to store enum values as human-readable strings (`EnumType.STRING`). |
-| **`@CreationTimestamp`**, **`@UpdateTimestamp`** | All entities | Automatic Hibernate audit timestamps for entity lifecycle tracking (`created_at`, `updated_at`). |
-| **`@Version`** | `product`, `order` | Optimistic locking version field to prevent concurrent lost-update anomalies. |
-| **`@OneToMany`**, **`@ManyToOne`** | `order` (`Order` / `OrderItem`) | Mapped relational associations between parent and child database tables. |
-| **`@JoinColumn`** | `order` | Defines the foreign key column name in relationship mappings. |
+---
 
-### 4. Transactions, Distributed Caching & Resiliency (Resilience4j)
-| Annotation | Module(s) Used | Description & Architectural Purpose |
-| :--- | :--- | :--- |
-| **`@Transactional`** | All service layers | Enforces ACID transaction boundaries; automatically commits or rolls back on unchecked runtime exceptions. |
-| **`@EnableCaching`** | `common-module` | Enables declarative Spring Caching backed by Redis. |
-| **`@Cacheable`** | `product-service` | Checks Redis cache before method execution and stores result (`@Cacheable(value = "products", key = "#id")`). |
-| **`@CachePut`** | `product-service` | Always executes method and updates cached entry with the new result. |
-| **`@CacheEvict`** | `product-service` | Invalidates Redis cache entries upon catalog updates or deletions. |
-| **`@CircuitBreaker`** | `order-service` | Resilience4j annotation that trips an open circuit when downstream failures exceed threshold. |
-| **`@Retry`** | `order-service`, `payment-service` | Automatically retries failed API calls with exponential backoff before fallback. |
-| **`@TimeLimiter`** | `order-service` | Enforces execution timeouts on asynchronous or future-based remote calls. |
+## 💡 Codebase Guidelines
 
-### 5. Apache Kafka Messaging & Event-Driven Architecture
-| Annotation | Module(s) Used | Description & Architectural Purpose |
-| :--- | :--- | :--- |
-| **`@KafkaListener`** | `notification`, `payment`, `order` | Declares consumer methods listening to Kafka topics (`order-created`, `payment-events`). |
-| **`@Payload`** | Kafka consumers | Binds the deserialized JSON message payload from a Kafka `ConsumerRecord`. |
-| **`@Header`** | Kafka consumers | Extracts Kafka metadata headers (`KafkaHeaders.RECEIVED_TOPIC`, OpenTelemetry trace IDs). |
-| **`@SendTo`** | Kafka producers/consumers | Automatically routes listener method return values to a secondary Kafka topic. |
-| **`@EventListener`**, **`@TransactionalEventListener`** | `order`, `payment` | Listens to application events within the same JVM (used for Transactional Outbox pattern relaying). |
+1. **Favor immutability** — use Records for DTOs/events; prefer constructors/builders over setters.
+2. **Keep bounded contexts strict** — services never share a database; cross-service data comes via API calls or Kafka events.
+3. **Test thoroughly** — use Testcontainers for integration tests against real Postgres/Kafka.
+4. **Version your APIs** — e.g. `/api/v1/orders` → `/api/v2/orders` for breaking changes.
+5. **Observability first** — use distributed tracing (Jaeger/Zipkin) and centralized logging (ELK/Loki).
+6. **Keep dependencies current** — update Maven/npm packages regularly for security and performance.
 
-### 6. Spring Security, JWT & Perimeter Security
-| Annotation | Module(s) Used | Description & Architectural Purpose |
-| :--- | :--- | :--- |
-| **`@EnableWebSecurity`** | `user-service`, `api-gateway` | Enables Spring Security filter chain and zero-trust web security configuration. |
-| **`@EnableMethodSecurity`** | `user-service` | Enables method-level authorization checks (`@PreAuthorize`). |
-| **`@PreAuthorize`** | Controller endpoints | Evaluates SpEL expressions before execution (e.g., `@PreAuthorize("hasRole('ADMIN')")`). |
-| **`@Secured`**, **`@RolesAllowed`** | Security configs | JSR-250 and Spring Security role-based authorization annotations. |
-| **`@AuthenticationPrincipal`** | Controllers | Injects the currently authenticated user principal into handler methods. |
+---
 
-### 7. Lombok Boilerplate Reduction & Immutability
-| Annotation | Module(s) Used | Description & Architectural Purpose |
-| :--- | :--- | :--- |
-| **`@Getter`**, **`@Setter`** | All entity & DTO classes | Generates getters and setters at compile-time without cluttering source code. |
-| **`@NoArgsConstructor`**, **`@AllArgsConstructor`**, **`@RequiredArgsConstructor`** | All modules | Generates zero-arg, all-arg, and `final`-field constructors for DI and JPA instantiation. |
-| **`@Builder`**, **`@Builder.Default`** | All entities & records | Generates Builder pattern and preserves default field initialization values. |
-| **`@Slf4j`** | All modules | Generates an SLF4J logger instance (`log`) for structured audit and error logging. |
-| **`@EqualsAndHashCode`** | Entities (`@EqualsAndHashCode.Include`) | Generates `equals()` and `hashCode()` implementations based exclusively on `@Id` fields. |
-| **`@Data`** | DTOs / Configs | Composite Lombok annotation bundling `@Getter`, `@Setter`, `@ToString`, and `@EqualsAndHashCode`. |
+## 🧩 Design Patterns Used
 
-### 8. Bean Validation (Jakarta / JSR-380)
-| Annotation | Module(s) Used | Description & Architectural Purpose |
-| :--- | :--- | :--- |
-| **`@Valid`** | Controllers | Triggers recursive validation on incoming `@RequestBody` DTO records. |
-| **`@Validated`** | Services / Controllers | Enables method-level validation and Jakarta validation group evaluation. |
-| **`@NotNull`**, **`@NotBlank`**, **`@NotEmpty`** | DTO Records | Validates nullability, whitespace, and collection size on request payloads. |
-| **`@Min`**, **`@Max`**, **`@Positive`**, **`@PositiveOrZero`** | `product`, `order`, `payment` | Validates numerical boundaries on prices, quantities, and transaction amounts. |
-| **`@Email`**, **`@Pattern`**, **`@Size`** | `user`, `order` | Validates email syntax, regex expressions, and character lengths. |
+| Pattern / Concept | How it's applied |
+|---|---|
+| **API Gateway** | Single entry point handling routing, JWT validation, CORS |
+| **Saga + Outbox** | `order-service` and `product-service` write events to an outbox table in the same transaction, avoiding dual-write issues |
+| **Fault Tolerance** | Circuit breaker, retry, and fallback via Resilience4j |
+| **Bulkhead** | Limits concurrent requests/threads to isolate failures |
+| **Pub-Sub** | Kafka drives async, event-based flows (e.g. notifications) |
+| **Distributed Locking** | Redisson `RLock` safely handles concurrent inventory changes |
+| **Scalability** | Virtual Threads, Redis caching, Kubernetes HPA |
+| **Zero Data Loss** | Redis-based idempotency plus DLQ-style retries on Kafka |
+| **Availability** | Kubernetes ReplicaSets, gateway fallbacks, stateless design |
+| **Readability/Maintainability** | Records, MapStruct, decoupled bounded contexts, Flyway |
+| **Load Balancing / Routing** | Kubernetes Services + Spring Cloud Gateway path predicates |
+| **Service Discovery** | Native Kubernetes DNS |
+| **SOLID** | Applied throughout (e.g. single-responsibility services, DI via Spring IoC) |
+| **Caching** | Redis offloads reads and powers rate limiting |
+| **Connection Pooling** | HikariCP tuned (`maximum-pool-size=50`) for Virtual Thread workloads |
+| **i18n** | Global exception handlers localize error messages via `Accept-Language` |
+| **DRY** | Shared `ApiResponse<T>` wrapper across all services |
+| **Reactive** | Gateway (WebFlux) uses `Mono`/`Flux`; backend services use Virtual Threads |
 
-### 9. AOP, Observability & Tracing (OpenTelemetry)
-| Annotation | Module(s) Used | Description & Architectural Purpose |
-| :--- | :--- | :--- |
-| **`@Aspect`** | `common-module` (`AuditLoggingAspect`) | Marks a class as an AspectJ aspect for cross-cutting logging and audit concerns. |
-| **`@Around`**, **`@Before`**, **`@AfterThrowing`** | `common-module` | Defines pointcut advice around service method executions. |
-| **`@WithSpan`** | All services | Creates an explicit OpenTelemetry trace span around method execution for Jaeger tracing. |
-| **`@SpanAttribute`** | All services | Attaches method parameters as searchable key-value tags to OpenTelemetry trace spans. |
+**Code-level (GoF) patterns:** Dependency Injection (Spring IoC), Proxy (AOP audit logging, `@Transactional`), DTO (Java Records), Factory/Mapper (MapStruct), Facade (`@Service` classes), Singleton (Spring beans).
 
-### 10. Automated Testing & Mocks (JUnit 5 / Mockito)
-| Annotation | Module(s) Used | Description & Architectural Purpose |
-| :--- | :--- | :--- |
-| **`@SpringBootTest`** | All test suites | Bootstraps full ApplicationContext for end-to-end integration testing with Testcontainers. |
-| **`@WebMvcTest`** | Controller tests | Slices context to test MVC controllers with MockMvc without loading database layers. |
-| **`@DataJpaTest`** | Repository tests | Slices context to test JPA repositories with embedded or Testcontainers Postgres. |
-| **`@MockBean`** | Test suites | Injects a Mockito mock bean into Spring's ApplicationContext. |
-| **`@Test`**, **`@BeforeEach`**, **`@AfterEach`**, **`@DisplayName`** | All test suites | Standard JUnit 5 Jupiter lifecycle and descriptive testing annotations. |
+---
+
+## 🏷️ Annotation Reference
+
+A quick reference to the 60+ Spring/JPA/Kafka/Security/Lombok annotations used across all modules.
+
+**Dependency Injection & Stereotypes**
+`@SpringBootApplication`, `@Component`, `@Service`, `@Repository`, `@RestController`, `@Configuration`, `@Bean`, `@Primary`, `@Qualifier`, `@Autowired`, `@Value`, `@ConfigurationProperties`, `@ConfigurationPropertiesScan`, `@Order`
+
+**Web / REST**
+`@RequestMapping`, `@GetMapping`/`@PostMapping`/`@PutMapping`/`@DeleteMapping`/`@PatchMapping`, `@RequestParam`, `@PathVariable`, `@RequestBody`, `@RequestHeader`, `@ResponseStatus`, `@CrossOrigin`
+
+**JPA / Hibernate**
+`@Entity`, `@Table`, `@Id`, `@GeneratedValue`, `@Column`, `@Enumerated`, `@CreationTimestamp`/`@UpdateTimestamp`, `@Version` (optimistic locking), `@OneToMany`/`@ManyToOne`, `@JoinColumn`
+
+**Transactions, Caching & Resilience**
+`@Transactional`, `@EnableCaching`, `@Cacheable`, `@CachePut`, `@CacheEvict`, `@CircuitBreaker`, `@Retry`, `@TimeLimiter`
+
+**Kafka**
+`@KafkaListener`, `@Payload`, `@Header`, `@SendTo`, `@EventListener`/`@TransactionalEventListener`
+
+**Security**
+`@EnableWebSecurity`, `@EnableMethodSecurity`, `@PreAuthorize`, `@Secured`/`@RolesAllowed`, `@AuthenticationPrincipal`
+
+**Lombok**
+`@Getter`/`@Setter`, `@NoArgsConstructor`/`@AllArgsConstructor`/`@RequiredArgsConstructor`, `@Builder`/`@Builder.Default`, `@Slf4j`, `@EqualsAndHashCode`, `@Data`
+
+**Validation (Jakarta)**
+`@Valid`, `@Validated`, `@NotNull`/`@NotBlank`/`@NotEmpty`, `@Min`/`@Max`/`@Positive`/`@PositiveOrZero`, `@Email`/`@Pattern`/`@Size`
+
+**AOP & Tracing**
+`@Aspect`, `@Around`/`@Before`/`@AfterThrowing`, `@WithSpan`, `@SpanAttribute`
+
+**Testing**
+`@SpringBootTest`, `@WebMvcTest`, `@DataJpaTest`, `@MockBean`, `@Test`/`@BeforeEach`/`@AfterEach`/`@DisplayName`
 
 ---
 
@@ -429,33 +322,29 @@ microservices-demo/
 
 ## 🚀 Quick Start — Local Development
 
-### Option 1: IDE + Infra Docker (Recommended)
+### Option 1: IDE + Infra Docker (recommended)
 
 ```bash
 # 1. Clone the repository
 git clone <repo-url>
 cd microservices-demo
 
-# 2. Start infrastructure only (PostgreSQL, Redis, Kafka KRaft, Kafka UI — NO Zookeeper)
+# 2. Start infrastructure only (PostgreSQL, Redis, Kafka KRaft, Kafka UI — no Zookeeper)
 docker compose -f docker-compose-infra.yml up -d
 
 # 3. Build all modules
 mvn clean package -DskipTests
 ```
 
-#### 4. Start Backend Services
-
-**For Windows Users (Recommended):**
-We provide utility PowerShell scripts in the root directory to manage the microservices:
+**Start backend services — Windows (PowerShell scripts provided):**
 ```powershell
-.\start-all.ps1    # Starts all services sequentially in new windows and waits for health checks
-.\stop-all.ps1     # Stops all microservices running on their respective ports
-.\restart-all.ps1  # Stops and then restarts all services
-.\start-down.ps1   # Scans for services that are down and starts only those
+.\start-all.ps1    # Starts all services and waits for health checks
+.\stop-all.ps1     # Stops all microservices
+.\restart-all.ps1  # Stops and restarts all services
+.\start-down.ps1   # Starts only services that are currently down
 ```
 
-**Manual Startup (Linux/Mac/Windows):**
-Start each service in a separate terminal window:
+**Start backend services — manual (any OS), one terminal per service:**
 ```bash
 cd user-service && mvn spring-boot:run
 cd order-service && mvn spring-boot:run
@@ -465,25 +354,20 @@ cd payment-service && mvn spring-boot:run
 cd api-gateway && mvn spring-boot:run
 ```
 
-#### 5. Start Frontend Application
-
-The React frontend application is located in the `frontend` directory.
-
+**Start the frontend:**
 ```bash
 cd ../frontend
 npm install
 npm run dev
 ```
-Access the application in your browser at `http://localhost:3000`.
+Access the app at `http://localhost:3000`.
 
 ### Option 2: Full Docker Compose
 
 ```bash
-# Build all images and start everything
 mvn clean package -DskipTests
 docker compose up --build -d
 
-# Check logs
 docker compose logs -f api-gateway
 docker compose logs -f user-service
 ```
@@ -501,48 +385,13 @@ All services connect to a single PostgreSQL instance:
 | Username | `postgres` |
 | Password | `postgres` |
 
-**Schema migrations are handled by Flyway** — tables are created automatically on startup.
-
----
-
-## 🔐 Security Architecture & Implementation
-
-We achieve robust, scalable security by following a "defense-in-depth" philosophy coupled with centralized authentication:
-
-1. **Centralized Authentication (API Gateway)**
-   - The `api-gateway` acts as a single point of entry for all incoming traffic.
-   - It utilizes a Global Authentication Filter that intercepts every request (except public routes) to validate the presence and integrity of a JWT Bearer token.
-   - Unauthenticated or malformed requests are instantly rejected with a `401 Unauthorized`, ensuring malicious traffic never reaches the backend microservices.
-
-2. **Stateless JWT Authorization**
-   - The `user-service` is responsible for issuing cryptographically signed JSON Web Tokens (JWTs) using a secure `JWT_SECRET`.
-   - Because tokens are stateless, we achieve infinite horizontal scalability without needing sticky sessions or distributed session replication.
-   - The Gateway parses the JWT, extracts claims (like `userId`), and securely propagates them via HTTP headers to downstream services.
-
-3. **Data Protection & Hashing**
-   - Passwords are never stored in plaintext. They are salted and hashed using the strong **BCrypt** algorithm (strength/work factor of 12) during registration.
-   - This prevents brute-force and rainbow table attacks even in the event of a database compromise.
-
-4. **Network Isolation (Docker/Kubernetes)**
-   - Only the API Gateway is exposed to the public web (Port 8080 / 443).
-   - Downstream microservices, PostgreSQL databases, Redis caches, and Kafka brokers are bound to private internal networks. They cannot be accessed directly from the internet.
-
-5. **Cross-Origin Resource Sharing (CORS)**
-   - Configured globally at the API Gateway level to only allow requests from trusted origins (like our React frontend on `localhost:3000`), mitigating cross-site request forgery (CSRF) attacks.
-
-### Public Endpoints (no JWT required)
-```
-POST /api/auth/register   ← Register a new user
-POST /api/auth/login      ← Login and get JWT
-GET  /actuator/health     ← Health check
-```
+Flyway handles schema migrations automatically on startup.
 
 ---
 
 ## 📋 API Reference
 
 ### Authentication
-
 ```bash
 # Register
 curl -X POST http://localhost:8080/api/auth/register \
@@ -557,7 +406,6 @@ curl -X POST http://localhost:8080/api/auth/login \
 ```
 
 ### Orders (requires JWT)
-
 ```bash
 TOKEN="eyJ..." # from login response
 
@@ -582,7 +430,6 @@ curl http://localhost:8080/api/orders/user/{userId} \
 ```
 
 ### Products
-
 ```bash
 # Get all products (paginated)
 curl "http://localhost:8080/api/products?page=0&size=10"
@@ -596,13 +443,12 @@ curl -X PUT "http://localhost:8080/api/products/{id}/stock/decrement?qty=1" \
 ```
 
 ### Payments & Security (requires JWT)
-
 ```bash
-# Get Merchant RSA-2048 Public Key PEM (for client-side card tokenization)
+# Get merchant RSA-2048 public key (for client-side card tokenization)
 curl http://localhost:8080/api/v1/payments/security/public-key \
   -H "Authorization: Bearer $TOKEN"
 
-# Process payment (Credit Card with RSA cryptogram / UPI / NetBanking / Wallet / BNPL / EMI)
+# Process payment (Credit Card / UPI / NetBanking / Wallet / BNPL / EMI)
 curl -X POST http://localhost:8080/api/v1/payments \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -629,24 +475,24 @@ curl -X POST http://localhost:8080/api/v1/payments/{id}/refund \
 
 ## ☕ Java 21 Features Used
 
-| Feature | Location |
+| Feature | Where |
 |---------|----------|
-| **Records** | All DTOs: `OrderRequest`, `UserResponse`, `JwtResponse`, `OrderEvent`, `ProductResponse`, `NotificationMessage`, `PaymentRequest`, `PaymentResponse` |
-| **Pattern matching switch** | `OrderResponse.from()`, `OrderService.validateTransition()`, `ProductResponse.from()`, `NotificationService.dispatch()`, `OrderEventConsumer.processOrderEvent()`, `PaymentInstrument` sealed hierarchy, `SimulatedPaymentGatewayProvider.charge()` |
-| **Text blocks** | `NotificationService` email templates, `GatewayExceptionHandler` JSON body, `PaymentCryptographyService` PEM keys |
-| **Virtual threads** | `spring.threads.virtual.enabled=true` in all services |
-| **Sealed types & interfaces** | `OrderStatus` lifecycle state machine, `PaymentInstrument` (Card, UPI, NetBanking, Wallet, BNPL, EMI, Mandate), `GatewayExecutionResult` |
-| **Guarded patterns** | `ProductResponse.from()` stock level switch |
+| **Records** | All DTOs (`OrderRequest`, `UserResponse`, `JwtResponse`, `PaymentRequest`, etc.) |
+| **Pattern matching switch** | `OrderResponse.from()`, `OrderService.validateTransition()`, `PaymentInstrument` sealed hierarchy, and more |
+| **Text blocks** | Email templates, error JSON bodies, PEM key formatting |
+| **Virtual threads** | Enabled (`spring.threads.virtual.enabled=true`) in all services |
+| **Sealed types & interfaces** | `OrderStatus` state machine, `PaymentInstrument` (Card, UPI, NetBanking, Wallet, BNPL, EMI, Mandate) |
+| **Guarded patterns** | Stock-level switch in `ProductResponse.from()` |
 
 ---
 
 ## 🐳 Docker
 
-Each service has a multi-stage Dockerfile:
-1. **Stage 1 (builder)**: `eclipse-temurin:21-jdk-alpine` + Maven build
-2. **Stage 2 (runtime)**: `eclipse-temurin:21-jre-alpine` with non-root user
+Each service uses a multi-stage Dockerfile:
+1. **Builder stage**: `eclipse-temurin:21-jdk-alpine` + Maven build
+2. **Runtime stage**: `eclipse-temurin:21-jre-alpine`, non-root user
 
-**Kafka**: Uses `apache/kafka:3.8.0` in **KRaft mode** — no Zookeeper required.  
+**Kafka** runs in KRaft mode (`apache/kafka:3.8.0`) — no Zookeeper needed.
 **JVM flags**: `-XX:+UseZGC -XX:+ZGenerational` (low-latency GC for Java 21)
 
 ---
@@ -658,7 +504,7 @@ Each service has a multi-stage Dockerfile:
 kubectl apply -f k8s/namespace.yml
 
 # Create ConfigMap and Secrets
-# Note: Ensure you edit k8s/secrets.yml to provide your base64 encoded MAIL_PASS before applying
+# Note: edit k8s/secrets.yml to add your base64-encoded MAIL_PASS before applying
 kubectl apply -f k8s/configmap.yml
 kubectl apply -f k8s/secrets.yml
 
@@ -689,27 +535,25 @@ kubectl get services -n microservices
 
 ## ☁️ AWS Production Architecture Mapping
 
-While the Kubernetes manifests above run the entire stack (including databases and message brokers) inside the cluster for development/testing, a true enterprise **AWS Production Environment** should offload stateful services to managed AWS offerings.
+For a production deployment, offload stateful services to managed AWS offerings:
 
-To deploy this project to AWS securely and reliably, map the components as follows:
-
-| Local / K8s Helm Chart | Managed AWS Service | Benefits |
+| Local / K8s Component | Managed AWS Service | Benefit |
 |------------------------|---------------------|----------|
-| **Kubernetes (Compute)** | **Amazon EKS** (Elastic Kubernetes Service) | Manages the control plane. Use Fargate or managed EC2 node groups for the Spring Boot microservices. |
-| **PostgreSQL** | **Amazon RDS for PostgreSQL** | Automated backups, Multi-AZ high availability, and simplified scaling outside the K8s cluster. |
-| **Redis** | **Amazon ElastiCache for Redis** | Fully managed, sub-millisecond latency for the API Gateway rate limiter and product cache. |
-| **Apache Kafka** | **Amazon MSK** (Managed Streaming for Apache Kafka) | Serverless or provisioned Kafka clusters without the operational overhead of managing KRaft/Zookeeper nodes. |
-| **K8s Secrets** | **AWS Secrets Manager** | Instead of static `secrets.yml`, use the AWS Secrets and Configuration Provider (ASCP) to mount secrets dynamically into EKS pods. |
-| **Docker Registry** | **Amazon ECR** (Elastic Container Registry) | Store the multi-stage Docker images (`your-ecr-repo/user-service:latest`). |
-| **API Gateway LoadBalancer**| **AWS ALB** (Application Load Balancer) | Map the K8s `LoadBalancer` service to an AWS ALB using the AWS Load Balancer Controller for WAF integration and SSL termination. |
+| **Kubernetes** | **Amazon EKS** | Managed control plane; run services on Fargate or managed EC2 node groups |
+| **PostgreSQL** | **Amazon RDS for PostgreSQL** | Automated backups, Multi-AZ HA, easier scaling |
+| **Redis** | **Amazon ElastiCache** | Managed, sub-millisecond latency for rate limiting/caching |
+| **Apache Kafka** | **Amazon MSK** | Managed Kafka without running KRaft/Zookeeper yourself |
+| **K8s Secrets** | **AWS Secrets Manager** | Mount secrets dynamically into EKS pods (via ASCP) instead of static YAML |
+| **Docker Registry** | **Amazon ECR** | Stores the multi-stage Docker images |
+| **Gateway LoadBalancer** | **AWS ALB** | Maps the K8s LoadBalancer service to an ALB for WAF/SSL |
 
-**AWS Deployment Strategy:**
-1. Provision VPC, RDS, ElastiCache, and MSK using Terraform or AWS CDK.
-2. Update the `k8s/configmap.yml` to point `DB_URL`, `REDIS_HOST`, and `KAFKA_BROKERS` to the respective AWS internal endpoints.
-3. Apply the stateless microservices (`k8s/api-gateway.yml` and `k8s/microservices.yml`) to EKS.
+**Deployment steps:**
+1. Provision VPC, RDS, ElastiCache, and MSK (Terraform or AWS CDK).
+2. Point `k8s/configmap.yml` (`DB_URL`, `REDIS_HOST`, `KAFKA_BROKERS`) at the AWS endpoints.
+3. Apply the stateless microservice manifests (`k8s/api-gateway.yml`, `k8s/microservices.yml`) to EKS.
 
-### S3 Direct Upload Architecture (Hexagonal)
-The `product-service` utilizes the **Ports & Adapters (Hexagonal)** architecture to seamlessly integrate AWS S3 Presigned URLs for file uploads without forcing local developers to have AWS credentials.
+### S3 Direct Upload (Hexagonal Architecture)
+`product-service` uses Ports & Adapters to support AWS S3 presigned URL uploads, so local developers don't need AWS credentials.
 
 ```mermaid
 sequenceDiagram
@@ -733,8 +577,8 @@ sequenceDiagram
     P-->>C: 201 Created
 ```
 
-### Distributed Locking Architecture (Redisson + AOP)
-To prevent race conditions in highly concurrent scenarios (e.g., two users purchasing the last item simultaneously), the `product-service` utilizes Redis Distributed Locks via Redisson. We abstracted this into a custom `@DistributedLock` annotation and a Spring AOP Aspect, resulting in flawlessly synchronized, boilerplate-free business logic.
+### Distributed Locking (Redisson + AOP)
+To prevent race conditions (e.g. two users buying the last item at once), `product-service` uses Redis distributed locks via Redisson, wrapped in a custom `@DistributedLock` annotation and Spring AOP aspect:
 
 ```java
 @Transactional
@@ -749,21 +593,18 @@ public void deductStock(Long id, int quantity) {
 
 ## 🔗 Quick Access URLs
 
-### 📊 Observability & Infrastructure Dashboards
-- **Grafana (Metrics Dashboard)**: [http://localhost:3001](http://localhost:3001) *(Default Login: `admin` / `admin`)*
-- **Prometheus (Metrics Scraper)**: [http://localhost:9090](http://localhost:9090)
-- **Jaeger UI (Distributed Tracing)**: [http://localhost:16686](http://localhost:16686)
-- **Kafka UI (Topic & Message Browser)**: [http://localhost:9093](http://localhost:9093)
+**Observability**
+- Grafana: [http://localhost:3001](http://localhost:3001) *(login: `admin` / `admin`)*
+- Prometheus: [http://localhost:9090](http://localhost:9090)
+- Jaeger UI: [http://localhost:16686](http://localhost:16686)
+- Kafka UI: [http://localhost:9093](http://localhost:9093)
 
-### 🌐 Application & Gateway
-- **React Frontend App**: [http://localhost:3000](http://localhost:3000)
-- **API Gateway (Main Entrypoint)**: [http://localhost:8080](http://localhost:8080)
+**Application**
+- React Frontend: [http://localhost:3000](http://localhost:3000)
+- API Gateway: [http://localhost:8080](http://localhost:8080)
 
-### ⚙️ Direct Microservice Ports (Bypassing Gateway)
-- **User Service**: `http://localhost:8081`
-- **Order Service**: `http://localhost:8082`
-- **Product Service**: `http://localhost:8083`
-- **Notification Service**: `http://localhost:8084`
+**Direct microservice ports (bypassing gateway)**
+- User: `8081` · Order: `8082` · Product: `8083` · Notification: `8084`
 
 ---
 
@@ -784,32 +625,12 @@ cd user-service && mvn test
 
 ## 📊 Observability & Monitoring
 
-This project embraces a comprehensive observability strategy, ensuring every aspect of the system's behavior is traceable, measurable, and resilient.
-
-### 1. Distributed Tracing (Micrometer & OpenTelemetry)
-- **Dependencies**: `micrometer-tracing-bridge-otel` and `opentelemetry-exporter-otlp` (configured in `common-module`).
-- **Purpose**: Tracks a single user request as it traverses through the API Gateway, into various microservices, and across Kafka events. A unique `traceId` is attached to every log statement, making cross-service debugging seamless.
-
-### 2. Application Metrics & Health Checks
-- **Spring Boot Actuator**: Included globally via `spring-boot-starter-actuator`.
-- **Health Checks**: Available at `http://localhost:8080/actuator/health` (Gateway) and port-specific endpoints for individual services. Kubernetes uses these endpoints for liveness and readiness probes.
-- **Metrics**: Exposed at `/actuator/metrics` for deep JVM and application-level insights.
-
-### 3. API Documentation & Observability
-- **OpenAPI / Swagger UI**: Integrated using `springdoc-openapi-starter-webmvc-ui`.
-- **Purpose**: Provides a live, interactive UI to observe API contracts, schemas, and test endpoints directly without external tools.
-
-### 4. Chaos Engineering
-- **Spring Boot Chaos Monkey**: Included via `chaos-monkey-spring-boot`.
-- **Purpose**: Proactively injects latency, exceptions, and unexpected behaviors into the application during testing to validate the resilience of Circuit Breakers and fallback mechanisms.
-
-### 5. Audit Logging (Spring AOP)
-- **Aspect-Oriented Programming**: Uses `spring-boot-starter-aop`.
-- **Purpose**: Centralized Audit Aspects intercept specific method executions to automatically log critical business operations (like Order creation or User login) without cluttering the core business logic.
-
-### 6. Infrastructure Dashboards
-- **Eureka Dashboard**: Accessible at `http://localhost:8761` (if enabled in non-K8s environments) to monitor service registry health.
-- **Kafka UI**: Accessible at `http://localhost:9093` to observe topics, consumer groups, and message flows in real-time.
+- **Distributed Tracing**: Micrometer + OpenTelemetry tag every log with a `traceId`, following a request across services and Kafka events.
+- **Metrics & Health**: Spring Boot Actuator exposes `/actuator/health` and `/actuator/metrics`; Kubernetes uses these for liveness/readiness probes.
+- **API Docs**: Swagger UI (via springdoc-openapi) provides a live, interactive API explorer.
+- **Chaos Engineering**: Chaos Monkey for Spring Boot injects latency/errors to test circuit breakers and fallbacks.
+- **Audit Logging**: A Spring AOP aspect logs key business operations (e.g. order creation, login) without cluttering business logic.
+- **Dashboards**: Eureka Dashboard (`localhost:8761`, non-K8s only) for service registry health; Kafka UI (`localhost:9093`) for topics and consumer groups.
 
 ---
 
@@ -823,7 +644,7 @@ This project embraces a comprehensive observability strategy, ensuring every asp
 | `REDIS_HOST` | `localhost` | Redis hostname |
 | `KAFKA_BROKERS` | `localhost:9092` | Kafka bootstrap servers |
 | `JWT_SECRET` | dev default | 64-byte hex JWT signing key |
-| `MAIL_PASS` | (empty) | SMTP Password for Notification Service (Injected via K8s Secrets) |
+| `MAIL_PASS` | (empty) | SMTP password for Notification Service (injected via K8s Secrets) |
 
 ---
 
