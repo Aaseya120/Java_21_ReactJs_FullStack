@@ -70,69 +70,15 @@ This project implements the **Database-per-Service** architectural pattern. Each
 
 ## 🏗️ Architecture & Visual Sequence Blueprints
 
+### Visual System Design Blueprint (End-to-End Architecture)
+![Full Stack Microservices System Design Blueprint](docs/images/system-architecture-blueprint.jpg)
+
 > [!TIP]
-> **How to Zoom and Pan Diagrams with Your Cursor**:
-> - **On GitHub.com**: Click anywhere on a diagram below to open GitHub's native **Interactive Fullscreen Viewer**, where you can pan and move the diagram around with your mouse cursor and scroll wheel.
-> - **Interactive HTML Guide**: Open **[docs/java21-microservices-guide.html](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html)** in any web browser to use our dedicated architecture explorer with built-in **mouse-drag cursor panning**, **mouse-wheel zoom**, and fullscreen controls.
+> **How to Zoom, Pan, and Move Diagrams with Your Cursor**:
+> - **On GitHub.com**: Click directly on the **System Design Blueprint image above** or any diagram below to open GitHub's native **Interactive Image Fullscreen Viewer**, where you can pan, drag, and move the diagram around with your mouse cursor and scroll wheel.
+> - **Interactive HTML Guide**: Open **[docs/java21-microservices-guide.html](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html)** in any web browser to use our dedicated **Interactive Chart Controls** (`➕ Zoom In`, `➖ Zoom Out`, `🔄 Reset (100%)`, `⛶ Fullscreen`) with built-in **mouse-drag cursor panning (`grab`/`grabbing`)** and **mouse-wheel zooming** for BOTH the blueprint image and all interactive Mermaid diagrams!
 
-### 1. System Architecture Process Flow Diagram
-```mermaid
-flowchart LR
-    %% ==========================================
-    %% LEFT COLUMN: INGRESS & CATALOG PROCESSES
-    %% ==========================================
-    subgraph INGRESS ["1️⃣ INGRESS & CATALOG TIER"]
-        direction TB
-        UI(["🖥️ React 19 + Vite Dashboard"])
-        GW(["🌐 API Gateway :8080<br/>RS256 Auth · Rate Limiter"])
-        US(["👤 User Service :8081<br/>RBAC Claims · JWT"])
-        PS(["📦 Product Service :8083<br/>SKU Catalog · RLock"])
-
-        UI ==> GW
-        GW --> US
-        GW --> PS
-    end
-
-    %% ==========================================
-    %% MIDDLE COLUMN: SAGA & PAYMENT PROCESSES
-    %% ==========================================
-    subgraph ORCHESTRATION ["2️⃣ SAGA & TRANSACTION ORCHESTRATION"]
-        direction TB
-        OS(["🛒 Order Service :8082<br/>Saga State Machine"])
-        PAYS(["💳 Payment Service :8085<br/>PCI-DSS RSA-2048"])
-        NS(["🔔 Notification Service :8084<br/>Idempotent Alerts"])
-
-        GW ==> OS
-        GW ==> PAYS
-        OS <--> PAYS
-    end
-
-    %% ==========================================
-    %% RIGHT COLUMN: DISTRIBUTED DATA & MESH
-    %% ==========================================
-    subgraph MESH ["3️⃣ DISTRIBUTED DATA & EVENT MESH"]
-        direction TB
-        subgraph DB_CACHE ["Storage & Caching Layer"]
-            PG[("🐘 PostgreSQL 16<br/>Database-per-Service")]
-            RD[("⚡ Redis 7.2<br/>Distributed Cache")]
-        end
-
-        subgraph ASYNC_MESH ["Event Bus & Tracing Layer"]
-            KF["🌊 Apache Kafka 3.8<br/>KRaft Event Mesh"]
-            JG["🔭 Jaeger :16686<br/>OpenTelemetry Spans"]
-        end
-    end
-
-    %% --- CROSS-COLUMN CONNECTORS ---
-    PS -.-> RD
-    US & PS & OS & PAYS --> PG
-    OS & PAYS ==> KF
-    KF ==> NS
-    KF ==> OS
-    US & PS & OS & PAYS & NS -.- JG
-```
-
-### 2. Sequence Diagram 1: Secure Order Creation & Saga Choreography Flow
+### 1. Sequence Diagram 1: Secure Order Creation & Saga Choreography Flow
 ```mermaid
 sequenceDiagram
     autonumber
@@ -171,7 +117,7 @@ sequenceDiagram
     NS-->>-KF: Event Acknowledged (Offset Committed)
 ```
 
-### 3. Sequence Diagram 2: PCI-DSS RSA-2048 Secure Payment Tokenization Flow
+### 2. Sequence Diagram 2: PCI-DSS RSA-2048 Secure Payment Tokenization Flow
 ```mermaid
 sequenceDiagram
     autonumber
@@ -328,34 +274,119 @@ To keep this project at the pinnacle of industry standards, follow these guideli
 
 ---
 
-## 🏷️ Key Annotations & Core Components
+## 🏷️ Complete Master Reference: All Annotations Used Across All Modules
 
-To navigate this codebase effectively, you should understand the primary Spring Boot 3 annotations and components we utilized:
+This section serves as an exhaustive technical reference and interview guide covering **all 60+ Java, Spring Boot 3, JPA, Kafka, Security, Lombok, and Observability annotations** utilized across every module (`common-module`, `user-service`, `product-service`, `order-service`, `notification-service`, `payment-service`, and `api-gateway`).
 
-### Inter-Service Communication
-- **`RestClient`**: The modern, fluent Spring Boot 3 alternative to `RestTemplate`. We use this specifically (e.g., in `AggregatorController`) to make asynchronous, non-blocking HTTP calls to downstream services to aggregate data efficiently.
+### 1. Stereotypes & Core Dependency Injection (Spring IoC)
+| Annotation | Module(s) Used | Description & Architectural Purpose |
+| :--- | :--- | :--- |
+| **`@SpringBootApplication`** | All 6 microservices | Marks the application main class; combines `@Configuration`, `@EnableAutoConfiguration`, and `@ComponentScan`. |
+| **`@Component`** | All modules | Generic stereotype marking a Java class as a Spring-managed singleton bean (e.g., `JwtAuthFilter`, `IdempotencyGuard`). |
+| **`@Service`** | `user`, `order`, `product`, `payment`, `notification` | Specialized stereotype marking business logic layer classes (`AuthServiceImpl`, `SagaOrchestratorService`). |
+| **`@Repository`** | All domain services | Specialized stereotype marking database DAO layer classes; enables automatic JPA exception translation. |
+| **`@RestController`** | All domain services | Composite stereotype (`@Controller` + `@ResponseBody`) marking REST controllers returning JSON payload. |
+| **`@Configuration`** | `common`, `gateway`, all services | Indicates a class declares `@Bean` methods to configure containers, security filters, or infrastructure. |
+| **`@Bean`** | `common`, all services | Declares a method whose return value is registered as a managed bean in Spring's ApplicationContext. |
+| **`@Primary`** | `common-module` (`CacheConfig`) | Gives preference to a specific bean when multiple candidates qualify for autowiring (e.g., primary 15-min Redis TTL cache bean vs. secondary short-lived cache). |
+| **`@Qualifier`** | `common-module` (`CacheConfig`) | Stereotype qualifier used to disambiguate beans of the same type by explicit name (`@Qualifier("defaultCacheConfig")`, `@Qualifier("shortLivedCacheConfig")`). |
+| **`@Autowired`** | All services | Requests automatic dependency injection by type (used on constructors, fields, or setter methods). |
+| **`@Value`** | `user`, `gateway`, `payment` | Injects configuration property values from `application.yml` or environment variables (e.g., `@Value("${jwt.secret}")`). |
+| **`@ConfigurationProperties`** | `order`, `payment`, `common` | Strongly types hierarchical YAML configuration into Java Records or classes (e.g., `AggregatorProperties`). |
+| **`@ConfigurationPropertiesScan`** | All service main classes | Instructs Spring Boot to scan for and register classes annotated with `@ConfigurationProperties`. |
+| **`@Order`** | `gateway`, `common` | Defines priority execution order for Spring beans, filters, and AOP advice. |
 
-### Resiliency & Fault Tolerance (Resilience4j)
-- **`@CircuitBreaker`**: Prevents cascading failures by opening the circuit when a threshold of remote calls fail.
-- **`@Retry`**: Automatically retries failed synchronous API calls a specified number of times before giving up.
-- **`@TimeLimiter`**: Enforces strict timeout limits on asynchronous/future calls to ensure threads are not blocked indefinitely.
+### 2. Spring Web MVC, WebFlux & REST Routing
+| Annotation | Module(s) Used | Description & Architectural Purpose |
+| :--- | :--- | :--- |
+| **`@RequestMapping`** | All domain services | Sets the base URI path and HTTP method mapping for REST controllers (e.g., `@RequestMapping("/api/v1/orders")`). |
+| **`@GetMapping`**, **`@PostMapping`**, **`@PutMapping`**, **`@DeleteMapping`**, **`@PatchMapping`** | All domain services | Specialized HTTP verb mapping annotations for RESTful CRUD endpoints. |
+| **`@RequestParam`** | `product`, `order` | Binds HTTP query parameters to controller method arguments (e.g., paging parameters `?page=0&size=20`). |
+| **`@PathVariable`** | All domain services | Binds URI path variables to controller arguments (e.g., `/api/v1/orders/{orderId}`). |
+| **`@RequestBody`** | All domain services | Binds HTTP POST/PUT JSON request body payloads to Java DTO Records. |
+| **`@RequestHeader`** | All domain services | Extracts HTTP headers injected by API Gateway (e.g., `@RequestHeader("X-User-Id") Long userId`). |
+| **`@ResponseStatus`** | All controllers & exception handlers | Explicitly sets the HTTP response status code (e.g., `HttpStatus.CREATED`, `HttpStatus.NO_CONTENT`). |
+| **`@CrossOrigin`** | Controllers | Configures CORS policy allowances on specific REST endpoints. |
 
-### Asynchronous Messaging & Zero Data Loss
-- **`@KafkaListener`**: Placed on methods in our consumer services to asynchronously ingest messages from Kafka topics (e.g., `order-events`).
-- **Distributed Idempotency Guard**: Consumers utilize `RedissonClient` to set atomic lock keys (`idempotency:saga:order:{id}`) ensuring that if a pod crashes mid-execution, a message is never processed twice.
-- **Dead Letter Queues (DLQ)**: By strictly throwing `RuntimeException` for unexpected errors, we trigger Spring Kafka's retry mechanics and automatic `.DLT` routing for poison pills, guaranteeing zero data loss.
+### 3. JPA, Hibernate & Relational Database Persistence
+| Annotation | Module(s) Used | Description & Architectural Purpose |
+| :--- | :--- | :--- |
+| **`@Entity`** | `user`, `product`, `order`, `payment` | Marks a Java class as a JPA entity managed by Hibernate ORM. |
+| **`@Table`** | All entities | Specifies database table name and multi-column indexes (`@Index(name = "idx_email", columnList = "email")`). |
+| **`@Id`** | All entities | Designates the primary key field of an entity. |
+| **`@GeneratedValue`** | All entities | Defines the auto-increment identity generation strategy (`GenerationType.IDENTITY`). |
+| **`@Column`** | All entities | Configures DDL column constraints (nullable, unique, length, updatable). |
+| **`@Enumerated`** | `order`, `payment`, `user` | Instructs Hibernate to store enum values as human-readable strings (`EnumType.STRING`). |
+| **`@CreationTimestamp`**, **`@UpdateTimestamp`** | All entities | Automatic Hibernate audit timestamps for entity lifecycle tracking (`created_at`, `updated_at`). |
+| **`@Version`** | `product`, `order` | Optimistic locking version field to prevent concurrent lost-update anomalies. |
+| **`@OneToMany`**, **`@ManyToOne`** | `order` (`Order` / `OrderItem`) | Mapped relational associations between parent and child database tables. |
+| **`@JoinColumn`** | `order` | Defines the foreign key column name in relationship mappings. |
 
-### Data & Transactions
-- **`@Transactional`**: Applied at the service layer to ensure local database operations (like saving an Order and inserting into an Outbox table) either fully succeed or completely rollback.
+### 4. Transactions, Distributed Caching & Resiliency (Resilience4j)
+| Annotation | Module(s) Used | Description & Architectural Purpose |
+| :--- | :--- | :--- |
+| **`@Transactional`** | All service layers | Enforces ACID transaction boundaries; automatically commits or rolls back on unchecked runtime exceptions. |
+| **`@EnableCaching`** | `common-module` | Enables declarative Spring Caching backed by Redis. |
+| **`@Cacheable`** | `product-service` | Checks Redis cache before method execution and stores result (`@Cacheable(value = "products", key = "#id")`). |
+| **`@CachePut`** | `product-service` | Always executes method and updates cached entry with the new result. |
+| **`@CacheEvict`** | `product-service` | Invalidates Redis cache entries upon catalog updates or deletions. |
+| **`@CircuitBreaker`** | `order-service` | Resilience4j annotation that trips an open circuit when downstream failures exceed threshold. |
+| **`@Retry`** | `order-service`, `payment-service` | Automatically retries failed API calls with exponential backoff before fallback. |
+| **`@TimeLimiter`** | `order-service` | Enforces execution timeouts on asynchronous or future-based remote calls. |
 
-### Aspect-Oriented Programming (AOP)
-- **`@Aspect` & `@Around`**: Used to define our centralized audit logging. It intercepts methods to track business operations without cluttering the core logic.
+### 5. Apache Kafka Messaging & Event-Driven Architecture
+| Annotation | Module(s) Used | Description & Architectural Purpose |
+| :--- | :--- | :--- |
+| **`@KafkaListener`** | `notification`, `payment`, `order` | Declares consumer methods listening to Kafka topics (`order-created`, `payment-events`). |
+| **`@Payload`** | Kafka consumers | Binds the deserialized JSON message payload from a Kafka `ConsumerRecord`. |
+| **`@Header`** | Kafka consumers | Extracts Kafka metadata headers (`KafkaHeaders.RECEIVED_TOPIC`, OpenTelemetry trace IDs). |
+| **`@SendTo`** | Kafka producers/consumers | Automatically routes listener method return values to a secondary Kafka topic. |
+| **`@EventListener`**, **`@TransactionalEventListener`** | `order`, `payment` | Listens to application events within the same JVM (used for Transactional Outbox pattern relaying). |
 
-### Global Exception Handling
-- **`@RestControllerAdvice` & `@ExceptionHandler`**: Intercepts exceptions (like `UserNotFoundException` or `RestClientResponseException`) thrown anywhere in the application and converts them into standardized JSON error responses.
+### 6. Spring Security, JWT & Perimeter Security
+| Annotation | Module(s) Used | Description & Architectural Purpose |
+| :--- | :--- | :--- |
+| **`@EnableWebSecurity`** | `user-service`, `api-gateway` | Enables Spring Security filter chain and zero-trust web security configuration. |
+| **`@EnableMethodSecurity`** | `user-service` | Enables method-level authorization checks (`@PreAuthorize`). |
+| **`@PreAuthorize`** | Controller endpoints | Evaluates SpEL expressions before execution (e.g., `@PreAuthorize("hasRole('ADMIN')")`). |
+| **`@Secured`**, **`@RolesAllowed`** | Security configs | JSR-250 and Spring Security role-based authorization annotations. |
+| **`@AuthenticationPrincipal`** | Controllers | Injects the currently authenticated user principal into handler methods. |
 
-### Code Generation
-- **`@Mapper`**: A MapStruct annotation that automatically generates high-performance Factory classes at compile-time to map database Entities to immutable DTO Records.
+### 7. Lombok Boilerplate Reduction & Immutability
+| Annotation | Module(s) Used | Description & Architectural Purpose |
+| :--- | :--- | :--- |
+| **`@Getter`**, **`@Setter`** | All entity & DTO classes | Generates getters and setters at compile-time without cluttering source code. |
+| **`@NoArgsConstructor`**, **`@AllArgsConstructor`**, **`@RequiredArgsConstructor`** | All modules | Generates zero-arg, all-arg, and `final`-field constructors for DI and JPA instantiation. |
+| **`@Builder`**, **`@Builder.Default`** | All entities & records | Generates Builder pattern and preserves default field initialization values. |
+| **`@Slf4j`** | All modules | Generates an SLF4J logger instance (`log`) for structured audit and error logging. |
+| **`@EqualsAndHashCode`** | Entities (`@EqualsAndHashCode.Include`) | Generates `equals()` and `hashCode()` implementations based exclusively on `@Id` fields. |
+| **`@Data`** | DTOs / Configs | Composite Lombok annotation bundling `@Getter`, `@Setter`, `@ToString`, and `@EqualsAndHashCode`. |
+
+### 8. Bean Validation (Jakarta / JSR-380)
+| Annotation | Module(s) Used | Description & Architectural Purpose |
+| :--- | :--- | :--- |
+| **`@Valid`** | Controllers | Triggers recursive validation on incoming `@RequestBody` DTO records. |
+| **`@Validated`** | Services / Controllers | Enables method-level validation and Jakarta validation group evaluation. |
+| **`@NotNull`**, **`@NotBlank`**, **`@NotEmpty`** | DTO Records | Validates nullability, whitespace, and collection size on request payloads. |
+| **`@Min`**, **`@Max`**, **`@Positive`**, **`@PositiveOrZero`** | `product`, `order`, `payment` | Validates numerical boundaries on prices, quantities, and transaction amounts. |
+| **`@Email`**, **`@Pattern`**, **`@Size`** | `user`, `order` | Validates email syntax, regex expressions, and character lengths. |
+
+### 9. AOP, Observability & Tracing (OpenTelemetry)
+| Annotation | Module(s) Used | Description & Architectural Purpose |
+| :--- | :--- | :--- |
+| **`@Aspect`** | `common-module` (`AuditLoggingAspect`) | Marks a class as an AspectJ aspect for cross-cutting logging and audit concerns. |
+| **`@Around`**, **`@Before`**, **`@AfterThrowing`** | `common-module` | Defines pointcut advice around service method executions. |
+| **`@WithSpan`** | All services | Creates an explicit OpenTelemetry trace span around method execution for Jaeger tracing. |
+| **`@SpanAttribute`** | All services | Attaches method parameters as searchable key-value tags to OpenTelemetry trace spans. |
+
+### 10. Automated Testing & Mocks (JUnit 5 / Mockito)
+| Annotation | Module(s) Used | Description & Architectural Purpose |
+| :--- | :--- | :--- |
+| **`@SpringBootTest`** | All test suites | Bootstraps full ApplicationContext for end-to-end integration testing with Testcontainers. |
+| **`@WebMvcTest`** | Controller tests | Slices context to test MVC controllers with MockMvc without loading database layers. |
+| **`@DataJpaTest`** | Repository tests | Slices context to test JPA repositories with embedded or Testcontainers Postgres. |
+| **`@MockBean`** | Test suites | Injects a Mockito mock bean into Spring's ApplicationContext. |
+| **`@Test`**, **`@BeforeEach`**, **`@AfterEach`**, **`@DisplayName`** | All test suites | Standard JUnit 5 Jupiter lifecycle and descriptive testing annotations. |
 
 ---
 

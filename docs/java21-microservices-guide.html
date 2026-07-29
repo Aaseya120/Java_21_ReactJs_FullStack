@@ -496,40 +496,40 @@ tr:hover td { background: rgba(56, 189, 248, 0.05); }
   </div>
 
   <div class="nav-section">
-    <div class="nav-section-label">Getting Started</div>
-    <div class="nav-item active" onclick="scrollToSection('prereqs')"><span class="dot" style="background:#f59e0b"></span>Prerequisites</div>
-    <div class="nav-item" onclick="scrollToSection('architecture')"><span class="dot" style="background:#00d4ff"></span>Architecture Overview</div>
-    <div class="nav-item" onclick="scrollToSection('java21')"><span class="dot" style="background:#f97316"></span>Java 21 Setup</div>
+    <div class="nav-section-label">01-03: Architecture & Structure</div>
+    <div class="nav-item active" onclick="scrollToSection('architecture')"><span class="dot" style="background:#00d4ff"></span>01. Architecture Overview</div>
+    <div class="nav-item" onclick="scrollToSection('systemdesignblueprint')"><span class="dot" style="background:#34d399"></span>02. System Design Blueprint</div>
+    <div class="nav-item" onclick="scrollToSection('project')"><span class="dot" style="background:#a78bfa"></span>03. Full Stack Project Structure</div>
   </div>
 
   <div class="nav-section">
-    <div class="nav-section-label">Core Services</div>
-    <div class="nav-item" onclick="scrollToSection('springboot')"><span class="dot" style="background:#86efac"></span>Spring Boot</div>
-    <div class="nav-item" onclick="scrollToSection('docker')"><span class="dot" style="background:#38bdf8"></span>Docker</div>
-    <div class="nav-item" onclick="scrollToSection('kafka')"><span class="dot" style="background:#c084fc"></span>Apache Kafka</div>
-    <div class="nav-item" onclick="scrollToSection('redis')"><span class="dot" style="background:#ef4444"></span>Redis</div>
+    <div class="nav-section-label">04-06: Core Foundation</div>
+    <div class="nav-item" onclick="scrollToSection('prereqs')"><span class="dot" style="background:#f59e0b"></span>04. Prerequisites</div>
+    <div class="nav-item" onclick="scrollToSection('java21')"><span class="dot" style="background:#f97316"></span>05. Java 21 Setup</div>
+    <div class="nav-item" onclick="scrollToSection('springboot')"><span class="dot" style="background:#86efac"></span>06. Spring Boot 3.3</div>
   </div>
 
   <div class="nav-section">
-    <div class="nav-section-label">Infrastructure</div>
-    <div class="nav-item" onclick="scrollToSection('kubernetes')"><span class="dot" style="background:#60a5fa"></span>Kubernetes</div>
-    <div class="nav-item" onclick="scrollToSection('apigateway')"><span class="dot" style="background:#fbbf24"></span>API Gateway</div>
-    <div class="nav-item" onclick="scrollToSection('aws')"><span class="dot" style="background:#fb923c"></span>AWS Setup</div>
+    <div class="nav-section-label">07-10: Messaging, Cache & Gateway</div>
+    <div class="nav-item" onclick="scrollToSection('docker')"><span class="dot" style="background:#38bdf8"></span>07. Docker Setup</div>
+    <div class="nav-item" onclick="scrollToSection('kafka')"><span class="dot" style="background:#c084fc"></span>08. Apache Kafka 3.7</div>
+    <div class="nav-item" onclick="scrollToSection('redis')"><span class="dot" style="background:#ef4444"></span>09. Redis 7.2 Caching</div>
+    <div class="nav-item" onclick="scrollToSection('apigateway')"><span class="dot" style="background:#fbbf24"></span>10. Spring Cloud Gateway</div>
   </div>
 
   <div class="nav-section">
-    <div class="nav-section-label">End-to-End Project</div>
-    <div class="nav-item" onclick="scrollToSection('project')"><span class="dot" style="background:#34d399"></span>Project Structure</div>
-    <div class="nav-item" onclick="scrollToSection('services')"><span class="dot" style="background:#a78bfa"></span>Microservices Code</div>
-    <div class="nav-item" onclick="scrollToSection('paymentservice')"><span class="dot" style="background:#10b981"></span>Payment Service (PCI-DSS)</div>
-    <div class="nav-item" onclick="scrollToSection('deployment')"><span class="dot" style="background:#f472b6"></span>Deployment</div>
-    <div class="nav-item" onclick="scrollToSection('testing')"><span class="dot" style="background:#94a3b8"></span>Testing</div>
+    <div class="nav-section-label">11-13: Microservices Code & Testing</div>
+    <div class="nav-item" onclick="scrollToSection('services')"><span class="dot" style="background:#a78bfa"></span>11. Microservices Code</div>
+    <div class="nav-item" onclick="scrollToSection('paymentservice')"><span class="dot" style="background:#10b981"></span>12. Payment Service (PCI-DSS)</div>
+    <div class="nav-item" onclick="scrollToSection('testing')"><span class="dot" style="background:#94a3b8"></span>13. Testing & Verification</div>
   </div>
 
   <div class="nav-section">
-    <div class="nav-section-label">Interview Master Review</div>
-    <div class="nav-item" onclick="scrollToSection('interviewcheatsheet')"><span class="dot" style="background:#00d4ff"></span>Full Stack Cheat Sheet</div>
-    <div class="nav-item" onclick="scrollToSection('systemdesignblueprint')"><span class="dot" style="background:#34d399"></span>Architecture & Sequence Diagrams</div>
+    <div class="nav-section-label">14-17: Cloud Infrastructure & Review</div>
+    <div class="nav-item" onclick="scrollToSection('kubernetes')"><span class="dot" style="background:#60a5fa"></span>14. Kubernetes 1.30</div>
+    <div class="nav-item" onclick="scrollToSection('aws')"><span class="dot" style="background:#fb923c"></span>15. AWS EKS / ECR Cloud Setup</div>
+    <div class="nav-item" onclick="scrollToSection('deployment')"><span class="dot" style="background:#f472b6"></span>16. Production CI/CD Deployment</div>
+    <div class="nav-item" onclick="scrollToSection('interviewcheatsheet')"><span class="dot" style="background:#00d4ff"></span>17. Interview Master Cheat Sheet</div>
   </div>
 </nav>
 
@@ -613,60 +613,50 @@ tr:hover td { background: rgba(56, 189, 248, 0.05); }
   </div>
 
   <div class="card" style="margin-top:1.5rem">
-    <div class="card-title">Technology Stack & Architectural Review Guide: Why & How We Used Each Technology <span class="badge badge-config">Interview Guide</span></div>
+    <div class="card-title">Technology Stack Review Guide: How We Used Each Technology <span class="badge badge-config">Reference Guide</span></div>
     <div style="overflow-x:auto;margin-top:10px">
       <table>
         <thead>
           <tr>
-            <th style="width:22%">Technology / Pattern</th>
-            <th style="width:38%">Why It Was Chosen (The Architectural Rationale)</th>
-            <th style="width:40%">How It Is Implemented & Achieved in Codebase</th>
+            <th style="width:30%">Technology / Pattern</th>
+            <th style="width:70%">How It Is Implemented & Achieved in Codebase</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td><strong>Java 21 Virtual Threads (Loom)</strong></td>
-            <td>Eliminates OS thread exhaustion during high-concurrency database and REST calls without the debugging complexity of Reactive (WebFlux/RxJava) code.</td>
             <td>Configured via <code>spring.threads.virtual.enabled=true</code> in <code>application.yml</code> across all microservices; used in <code>PaymentOutboxRelayScheduler</code> virtual thread executors.</td>
           </tr>
           <tr>
             <td><strong>Java 21 Sealed Interfaces & Records</strong></td>
-            <td>Enforces compile-time exhaustive domain modeling so that unhandled payment types or illegal state transitions fail at build time.</td>
             <td><code>public sealed interface PaymentInstrument permits CardInstrument, UpiInstrument...</code> paired with pattern matching <code>switch (instrument)</code> in <code>PaymentService.java</code>.</td>
           </tr>
           <tr>
             <td><strong>Spring Cloud Gateway (:8080)</strong></td>
-            <td>Centralizes cross-cutting concerns: JWT token authentication, route matching, rate limiting, and fallback circuit breaking.</td>
             <td><code>JwtAuthenticationFilter</code> verifying RS256/HMAC tokens + Resilience4j circuit breakers in <code>application.yml</code> routing traffic to ports :8081–:8085.</td>
           </tr>
           <tr>
             <td><strong>Transactional Outbox (Postgres + Kafka)</strong></td>
-            <td>Solves the distributed dual-write problem between relational ACID commits and Kafka event publishing, guaranteeing <em>exactly-once</em> event processing.</td>
             <td>Each service commits domain state and an <code>outbox_events</code> row in the same SQL transaction. A background scheduler polls unpublished rows and publishes to Kafka.</td>
           </tr>
           <tr>
             <td><strong>Distributed Locking (Redis 7.2 + Redisson)</strong></td>
-            <td>Prevents inventory overselling and race conditions when multiple concurrent orders attempt to decrement stock for the same SKU.</td>
             <td><code>RLock lock = redissonClient.getLock("lock:product:" + productId)</code> with explicit TTL lease timing in <code>ProductService.java</code>.</td>
           </tr>
           <tr>
             <td><strong>PCI-DSS RSA-2048 Cryptography</strong></td>
-            <td>Guarantees raw PAN card numbers, CVVs, and sensitive bank tokens never touch application logs, databases, or network traces in plaintext.</td>
             <td><code>PaymentCryptographyService</code> generates RSA-2048 key pairs, encrypts checkout tokens (<code>ENC:RSA2048_...</code>), and signs webhooks using <code>SHA256withRSA</code>.</td>
           </tr>
           <tr>
             <td><strong>Idempotency Guard (<code>idempotency_key</code>)</strong></td>
-            <td>Protects customers from duplicate charges or double order creation during network retries, double-clicks, or browser refreshes.</td>
             <td>Unique database index on <code>payment_transactions(idempotency_key)</code> + programmatic check returning cached success state in <code>PaymentService.java</code>.</td>
           </tr>
           <tr>
             <td><strong>React 19 + Vite Frontend Dashboard</strong></td>
-            <td>Provides a responsive, production-ready admin and customer portal with TanStack Query caching and zero-flicker UI updates.</td>
             <td>Integrated <code>PaymentModal.jsx</code> supporting 6 PCI-DSS payment instruments with client-side RSA tokenization simulation into <code>OrdersPage.jsx</code>.</td>
           </tr>
           <tr>
             <td><strong>Hybrid Docker / Local JVM Deployment</strong></td>
-            <td>Optimizes local dev speed by running heavy I/O infrastructure in Docker while keeping Java services in fast native JVMs for rapid debugging.</td>
             <td><code>docker-compose-infra.yml</code> runs PostgreSQL, Redis, Kafka, Jaeger, Prometheus, and Grafana; microservices run externally pointing to <code>localhost</code>.</td>
           </tr>
         </tbody>
@@ -788,170 +778,18 @@ tr:hover td { background: rgba(56, 189, 248, 0.05); }
   <div class="card">
     <div class="card-title">1. Full Stack Microservices System Design Visual Architecture Blueprint <span class="badge badge-code">Visual Architecture</span></div>
     
-    <!-- Visual CSS Architecture Blueprint -->
-    <div class="vis-arch-container">
-      <div class="vis-layer" style="border-color: rgba(56, 189, 248, 0.3);">
-        <div class="vis-layer-title" style="color: #38bdf8;">🖥️ CLIENT TIER (React 19 + Vite Dashboard)</div>
-        <div class="vis-grid">
-          <div class="vis-card">
-            <div class="vis-card-header"><span class="vis-card-title">OrdersPage.jsx</span><span class="vis-badge">UI State</span></div>
-            <div class="vis-card-desc">TanStack Query auto-caching, optimistic order confirmation, real-time SSE refresh.</div>
-          </div>
-          <div class="vis-card">
-            <div class="vis-card-header"><span class="vis-card-title">PaymentModal.jsx</span><span class="vis-badge">PCI-DSS UI</span></div>
-            <div class="vis-card-desc">Client-side RSA-2048 Public Key tokenization simulation for 6 payment instruments.</div>
-          </div>
-          <div class="vis-card">
-            <div class="vis-card-header"><span class="vis-card-title">payment.api.js</span><span class="vis-badge">HTTP Client</span></div>
-            <div class="vis-card-desc">Axios interceptor injecting JWT bearer tokens and unique <code>Idempotency-Key</code> headers.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="vis-arrow-row">
-        <span>▼</span><span>HTTPS / REST JSON / Server-Sent Events (SSE)</span><span>▼</span>
-      </div>
-
-      <div class="vis-layer" style="border-color: rgba(0, 212, 255, 0.4); background: rgba(0, 212, 255, 0.05);">
-        <div class="vis-layer-title" style="color: #00d4ff;">🌐 INGRESS & SECURITY EDGE GATEWAY (Spring Cloud Gateway :8080)</div>
-        <div class="vis-card" style="border-color: rgba(0, 212, 255, 0.3);">
-          <div class="vis-card-header"><span class="vis-card-title">Single Entry Point Router (:8080)</span><span class="vis-badge">Edge Gateway</span></div>
-          <div class="vis-pill-group">
-            <span class="vis-pill" style="border-color: #38bdf8; color: #38bdf8;">🔒 JwtAuthenticationFilter (RS256 / HMAC)</span>
-            <span class="vis-pill" style="border-color: #f59e0b; color: #f59e0b;">⚡ Resilience4j Circuit Breaker (50% Fail Threshold)</span>
-            <span class="vis-pill" style="border-color: #ef4444; color: #ef4444;">🛡️ Redis Token Bucket Rate Limiter (10 req/s)</span>
-            <span class="vis-pill" style="border-color: #10b981; color: #10b981;">🌐 CORS & SSL Termination</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="vis-arrow-row">
-        <span>▼</span><span>Load Balanced Internal Route Dispatching (:8081 – :8085)</span><span>▼</span>
-      </div>
-
-      <div class="vis-layer" style="border-color: rgba(168, 85, 247, 0.3);">
-        <div class="vis-layer-title" style="color: #c084fc;">☕ DOMAIN MICROSERVICES TIER (Java 21 · Spring Boot 3.3.2 · Virtual Threads)</div>
-        <div class="vis-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
-          <div class="vis-card">
-            <div class="vis-card-header"><span class="vis-card-title">User Service</span><span class="vis-badge">:8081</span></div>
-            <div class="vis-card-desc">JWT Token Provider, User Profile CRUD, RBAC Role Claims (ROLE_USER, ROLE_ADMIN).</div>
-          </div>
-          <div class="vis-card">
-            <div class="vis-card-header"><span class="vis-card-title">Order Service</span><span class="vis-badge">:8082</span></div>
-            <div class="vis-card-desc">Order Creation, Saga Outbox State, OrderAggregator BFF, Loom Virtual Threads.</div>
-          </div>
-          <div class="vis-card">
-            <div class="vis-card-header"><span class="vis-card-title">Product Service</span><span class="vis-badge">:8083</span></div>
-            <div class="vis-card-desc">Catalog Querying, Redis <code>@Cacheable</code>, Redisson <code>RLock("lock:product:{sku}")</code>.</div>
-          </div>
-          <div class="vis-card">
-            <div class="vis-card-header"><span class="vis-card-title">Payment Service</span><span class="vis-badge">:8085</span></div>
-            <div class="vis-card-desc">PCI-DSS RSA-2048 Cryptography, <code>SHA256withRSA</code> Signatures, Idempotency Guard.</div>
-          </div>
-          <div class="vis-card">
-            <div class="vis-card-header"><span class="vis-card-title">Notification</span><span class="vis-badge">:8084</span></div>
-            <div class="vis-card-desc">Idempotent Kafka Event Consumer, SMS & Email Receipt Alert Generation.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="vis-arrow-row">
-        <span>▼</span><span>ACID DB Commits / Virtual Thread Outbox Polling / Idempotent Pub-Sub Event Streaming</span><span>▼</span>
-      </div>
-
-      <div class="vis-layer" style="border-color: rgba(16, 185, 129, 0.3);">
-        <div class="vis-layer-title" style="color: #10b981;">📦 DISTRIBUTED DATA, CACHE & EVENT MESH TIER</div>
-        <div class="vis-grid">
-          <div class="vis-card">
-            <div class="vis-card-header"><span class="vis-card-title">PostgreSQL 16</span><span class="vis-badge">ACID DB</span></div>
-            <div class="vis-card-desc">Transactional storage: <code>users</code>, <code>orders</code>, <code>payment_transactions</code>, <code>outbox_events</code>.</div>
-          </div>
-          <div class="vis-card">
-            <div class="vis-card-header"><span class="vis-card-title">Redis 7.2 Cache</span><span class="vis-badge">Cache / Lock</span></div>
-            <div class="vis-card-desc">Sub-millisecond catalog reads & Redisson Distributed Inventory Locks.</div>
-          </div>
-          <div class="vis-card">
-            <div class="vis-card-header"><span class="vis-card-title">Apache Kafka 3.8</span><span class="vis-badge">Event Mesh</span></div>
-            <div class="vis-card-desc">Idempotent Topics: <code>order-events</code> (Saga) & <code>payment-events</code> (Outbox relay).</div>
-          </div>
-          <div class="vis-card">
-            <div class="vis-card-header"><span class="vis-card-title">Jaeger Tracing</span><span class="vis-badge">:16686</span></div>
-            <div class="vis-card-desc">OpenTelemetry W3C correlation trace spans across HTTP & Kafka boundaries.</div>
-          </div>
-        </div>
-      </div>
+    <!-- End-to-End System Design Visual Blueprint Image (100% Interactive Pan/Zoom/Fullscreen) -->
+    <div class="card-title" style="margin-top:10px; font-size: 0.92rem; color: #38bdf8;">Visual System Design Blueprint (End-to-End Architecture Image)</div>
+    <div class="zoom-toolbar" style="margin-top:10px;">
+      <span class="zoom-toolbar-label">💡 Interactive Image Controls (Click & Drag to Pan, Mouse Wheel to Zoom, or Use Buttons)</span>
+      <button onclick="zoomMermaid(this, 1.25)" class="zoom-btn">➕ Zoom In</button>
+      <button onclick="zoomMermaid(this, 0.8)" class="zoom-btn">➖ Zoom Out</button>
+      <button onclick="zoomMermaid(this, 'reset')" class="zoom-btn">🔄 Reset (100%)</button>
+      <button onclick="toggleMermaidFullscreen(this)" class="zoom-btn">⛶ Fullscreen</button>
     </div>
-
-    <div class="card-title" style="margin-top:25px;">Interactive Mermaid Graphical Flowchart Diagram <span class="badge badge-config">Interactive Chart</span></div>
-    <div class="zoom-toolbar">
-  <span class="zoom-toolbar-label">💡 Interactive Chart Controls (Click to Zoom In/Out, Reset, or Fullscreen)</span>
-  <button onclick="zoomMermaid(this, 1.25)" class="zoom-btn">➕ Zoom In</button>
-  <button onclick="zoomMermaid(this, 0.8)" class="zoom-btn">➖ Zoom Out</button>
-  <button onclick="zoomMermaid(this, 'reset')" class="zoom-btn">🔄 Reset (100%)</button>
-  <button onclick="toggleMermaidFullscreen(this)" class="zoom-btn">⛶ Fullscreen</button>
-</div>
-<div class="mermaid-wrap" data-scale="1">
-      <div class="mermaid">
-graph TB
-    subgraph CLIENT_LAYER ["1️⃣ CLIENT TIER (React 19 + Vite Dashboard)"]
-        UI["🖥️ OrdersPage.jsx & PaymentModal.jsx<br/>(TanStack Query · Optimistic UI · SSE)"]
-    end
-
-    subgraph EDGE_GATEWAY ["2️⃣ INGRESS & SECURITY GATEWAY TIER (:8080)"]
-        GW["🌐 Spring Cloud Gateway :8080<br/>(🔒 RS256 JWT Auth · ⚡ Resilience4j Circuit Breaker · 🛡️ Redis Rate Limiter)"]
-    end
-
-    subgraph DOMAIN_SERVICES ["3️⃣ MICROSERVICES DOMAIN TIER (Java 21 · Spring Boot 3.3.2)"]
-        direction TB
-        US["👤 User Service :8081<br/>(JWT Provider · RBAC Claims)"]
-        PS["📦 Product Service :8083<br/>(SKU Catalog · @Cacheable · Redisson Inventory Lock)"]
-        OS["🛒 Order Service :8082<br/>(Saga Outbox · BFF Aggregator · Virtual Threads)"]
-        PAYS["💳 Payment Service :8085<br/>(PCI-DSS RSA-2048 Cryptography · Idempotency Guard)"]
-        NS["🔔 Notification Service :8084<br/>(Idempotent Kafka Consumer · SMS & Email Alert)"]
-    end
-
-    subgraph DATA_EVENT_MESH ["4️⃣ DISTRIBUTED DATA STORAGE, CACHE & EVENT MESH TIER"]
-        direction TB
-        RD[("⚡ Redis 7.2 Distributed Cache<br/>(RLock Inventory Lock · Rate Limiter Buckets)")]
-        PG[("🐘 PostgreSQL 16 ACID Database<br/>(users · orders · payment_transactions · outbox_events)")]
-        KF["🌊 Apache Kafka 3.8 Event Mesh<br/>(order-events · payment-events Idempotent Topics)"]
-        JG["🔭 Jaeger Tracing :16686<br/>(OpenTelemetry W3C Correlation Trace Spans)"]
-    end
-
-    UI ==>|"1. POST /api/v1/orders (Bearer JWT)"| GW
-    GW ==>|"2. Route /users (Validate Token)"| US
-    GW ==>|"3. Route /products (Lock Inventory)"| PS
-    GW ==>|"4. Route /orders (Create Order PENDING)"| OS
-    GW ==>|"5. Route /payments (RSA-2048 Charge)"| PAYS
-
-    PS -.->|"3a. Check Cache @Cacheable"| RD
-    PS -->|"3b. Acquire RLock lock:product:{sku}"| RD
-    PS -->|"3c. Query SKU Catalog"| PG
-
-    OS -->|"4a. ACID Dual-Commit Order + outbox_events"| PG
-    OS ==>|"4b. Virtual Thread Scheduler Relay"| KF
-
-    PAYS -->|"5a. Verify Idempotency & Save Payment"| PG
-    PAYS ==>|"5b. Outbox Relay to Kafka"| KF
-
-    KF ==>|"6. Consume Event & Dispatch Alert"| NS
-    KF ==>|"7. Consume Payment & Confirm Order"| OS
-
-    OS -.-|"Trace Headers"| JG
-    PAYS -.-|"Trace Headers"| JG
-    NS -.-|"Trace Headers"| JG
-
-    classDef clientStyle fill:#1e3a8a,stroke:#60a5fa,stroke-width:2px,color:#ffffff,font-weight:bold;
-    classDef edgeStyle fill:#164e63,stroke:#22d3ee,stroke-width:2px,color:#ffffff,font-weight:bold;
-    classDef serviceStyle fill:#312e81,stroke:#a855f7,stroke-width:2px,color:#ffffff,font-weight:bold;
-    classDef dataStyle fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ffffff,font-weight:bold;
-    classDef eventStyle fill:#78350f,stroke:#fbbf24,stroke-width:2px,color:#ffffff,font-weight:bold;
-
-    class UI clientStyle;
-    class GW edgeStyle;
-    class US,OS,PS,PAYS,NS serviceStyle;
-    class PG,RD dataStyle;
-    class KF,JG eventStyle;
+    <div class="mermaid-wrap" data-scale="1" data-x="0" data-y="0" style="background: #ffffff; margin-bottom: 10px; border-color: rgba(0, 212, 255, 0.4); border-radius: 0 0 12px 12px; box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);">
+      <div class="zoom-target" style="text-align: center; padding: 15px; display: flex; justify-content: center; align-items: center; background: #ffffff;">
+        <img src="images/system-architecture-blueprint.jpg" alt="Full Stack Microservices System Design Blueprint" style="max-width: 100%; height: auto; border-radius: 6px; pointer-events: none; user-select: none; image-rendering: -webkit-optimize-contrast; image-rendering: high-quality;">
       </div>
     </div>
   </div>
@@ -960,54 +798,14 @@ graph TB
   <div class="card" style="margin-top:1.5rem">
     <div class="card-title">2. Sequence Diagram 1: Secure Order Creation & Saga Choreography Flow <span class="badge badge-config">Sequence Flow</span></div>
     
-    <!-- Visual Step-by-Step Sequence Flow Grid (100% Visible Offline/Online) -->
-    <div class="vis-arch-container" style="border-color: rgba(56, 189, 248, 0.3);">
-      <div class="vis-layer-title" style="color: #38bdf8;">🔄 STEP-BY-STEP ORDER CREATION & SAGA OUTBOX EXECUTION PATH</div>
-      <div class="vis-grid">
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 1: POST /orders</span><span class="vis-badge">React 19 UI</span></div>
-          <div class="vis-card-desc">User submits checkout payload via <code>OrdersPage.jsx</code> with RS256 JWT Bearer token.</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 2: Security Filter</span><span class="vis-badge">Gateway :8080</span></div>
-          <div class="vis-card-desc"><code>JwtAuthenticationFilter</code> validates RS256 signature; Redis Rate Limiter checks IP bucket.</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 3: Redisson Lock</span><span class="vis-badge">Product :8083</span></div>
-          <div class="vis-card-desc"><code>order-service</code> queries SKU catalog and acquires Redis lock <code>RLock("lock:product:{sku}")</code>.</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 4: ACID Commit</span><span class="vis-badge">Postgres 16</span></div>
-          <div class="vis-card-desc">Dual-commit in single SQL TX: <code>INSERT INTO orders (PENDING)</code> + <code>outbox_events</code>.</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 5: Virtual Thread</span><span class="vis-badge">Loom Scheduler</span></div>
-          <div class="vis-card-desc"><code>OrderOutboxRelayScheduler</code> polls unpublished outbox rows on Java 21 Virtual Threads.</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 6: Kafka Publish</span><span class="vis-badge">Kafka 3.8</span></div>
-          <div class="vis-card-desc">Produces idempotent event to topic <code>"order-events"</code> with W3C OpenTelemetry trace headers.</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 7: Alert Trigger</span><span class="vis-badge">Notification :8084</span></div>
-          <div class="vis-card-desc">Idempotent consumer reads event from Kafka and dispatches customer SMS/Email confirmation.</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 8: UI Feedback</span><span class="vis-badge">HTTP 201</span></div>
-          <div class="vis-card-desc">Client receives immediate <code>201 Created (PENDING)</code> response without waiting for SMS alerts.</div>
-        </div>
-      </div>
+    <div class="zoom-toolbar" style="margin-top:15px;">
+      <span class="zoom-toolbar-label">💡 Interactive Chart Controls (Click & Drag to Pan, Mouse Wheel to Zoom, or Use Buttons)</span>
+      <button onclick="zoomMermaid(this, 1.25)" class="zoom-btn">➕ Zoom In</button>
+      <button onclick="zoomMermaid(this, 0.8)" class="zoom-btn">➖ Zoom Out</button>
+      <button onclick="zoomMermaid(this, 'reset')" class="zoom-btn">🔄 Reset (100%)</button>
+      <button onclick="toggleMermaidFullscreen(this)" class="zoom-btn">⛶ Fullscreen</button>
     </div>
-
-    <div class="card-title" style="margin-top:20px;">Interactive Mermaid Sequence Diagram (Order & Saga Outbox) <span class="badge badge-config">Interactive Chart</span></div>
-    <div class="zoom-toolbar">
-  <span class="zoom-toolbar-label">💡 Interactive Chart Controls (Click to Zoom In/Out, Reset, or Fullscreen)</span>
-  <button onclick="zoomMermaid(this, 1.25)" class="zoom-btn">➕ Zoom In</button>
-  <button onclick="zoomMermaid(this, 0.8)" class="zoom-btn">➖ Zoom Out</button>
-  <button onclick="zoomMermaid(this, 'reset')" class="zoom-btn">🔄 Reset (100%)</button>
-  <button onclick="toggleMermaidFullscreen(this)" class="zoom-btn">⛶ Fullscreen</button>
-</div>
-<div class="mermaid-wrap" data-scale="1">
+    <div class="mermaid-wrap" data-scale="1" data-x="0" data-y="0">
       <div class="mermaid">
 sequenceDiagram
     autonumber
@@ -1058,54 +856,14 @@ sequenceDiagram
   <div class="card" style="margin-top:1.5rem">
     <div class="card-title">3. Sequence Diagram 2: PCI-DSS RSA-2048 Secure Payment & Idempotency Execution Flow <span class="badge badge-warn">PCI-DSS Flow</span></div>
     
-    <!-- Visual Step-by-Step Sequence Flow Grid (100% Visible Offline/Online) -->
-    <div class="vis-arch-container" style="border-color: rgba(16, 185, 129, 0.3);">
-      <div class="vis-layer-title" style="color: #10b981;">🔒 STEP-BY-STEP PCI-DSS CRYPTOGRAPHY & IDEMPOTENT PAYMENT PATH</div>
-      <div class="vis-grid">
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 1: Instrument Select</span><span class="vis-badge">PaymentModal.jsx</span></div>
-          <div class="vis-card-desc">User chooses 1 of 6 sealed instruments (Visa, MasterCard, Amex, Rupay, UPI, NetBanking).</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 2: RSA Public Key</span><span class="vis-badge">GET /public-key</span></div>
-          <div class="vis-card-desc">Client fetches RSA-2048 Merchant Public Key (X.509 PEM format) from <code>payment-service</code>.</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 3: Client Encrypt</span><span class="vis-badge">ENC:RSA2048_</span></div>
-          <div class="vis-card-desc">React encrypts card token client-side so PAN/CVV never touch logs or network in plaintext.</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 4: Idempotency Check</span><span class="vis-badge">Payment :8085</span></div>
-          <div class="vis-card-desc">Verifies HTTP header <code>Idempotency-Key</code> against unique Postgres index (0% duplicate risk).</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 5: Decrypt & Charge</span><span class="vis-badge">RSA Private Key</span></div>
-          <div class="vis-card-desc">Decrypts token, executes charge, and ACID dual-commits <code>SUCCESS</code> status + outbox event.</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 6: Outbox Relay</span><span class="vis-badge">Virtual Thread</span></div>
-          <div class="vis-card-desc"><code>PaymentOutboxRelayScheduler</code> polls and publishes <code>"payment-events"</code> to Kafka 3.8.</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 7: Order Confirm</span><span class="vis-badge">Order :8082</span></div>
-          <div class="vis-card-desc"><code>order-service</code> consumes payment event and transitions Order from <code>PENDING</code> ➔ <code>CONFIRMED</code>.</div>
-        </div>
-        <div class="vis-card">
-          <div class="vis-card-header"><span class="vis-card-title">Step 8: Customer Receipt</span><span class="vis-badge">Notification :8084</span></div>
-          <div class="vis-card-desc"><code>notification-service</code> consumes payment event and sends receipt with SHA-256 webhook digest.</div>
-        </div>
-      </div>
+    <div class="zoom-toolbar" style="margin-top:15px;">
+      <span class="zoom-toolbar-label">💡 Interactive Chart Controls (Click & Drag to Pan, Mouse Wheel to Zoom, or Use Buttons)</span>
+      <button onclick="zoomMermaid(this, 1.25)" class="zoom-btn">➕ Zoom In</button>
+      <button onclick="zoomMermaid(this, 0.8)" class="zoom-btn">➖ Zoom Out</button>
+      <button onclick="zoomMermaid(this, 'reset')" class="zoom-btn">🔄 Reset (100%)</button>
+      <button onclick="toggleMermaidFullscreen(this)" class="zoom-btn">⛶ Fullscreen</button>
     </div>
-
-    <div class="card-title" style="margin-top:20px;">Interactive Mermaid Sequence Diagram (RSA-2048 Payment & Idempotency) <span class="badge badge-config">Interactive Chart</span></div>
-    <div class="zoom-toolbar">
-  <span class="zoom-toolbar-label">💡 Interactive Chart Controls (Click to Zoom In/Out, Reset, or Fullscreen)</span>
-  <button onclick="zoomMermaid(this, 1.25)" class="zoom-btn">➕ Zoom In</button>
-  <button onclick="zoomMermaid(this, 0.8)" class="zoom-btn">➖ Zoom Out</button>
-  <button onclick="zoomMermaid(this, 'reset')" class="zoom-btn">🔄 Reset (100%)</button>
-  <button onclick="toggleMermaidFullscreen(this)" class="zoom-btn">⛶ Fullscreen</button>
-</div>
-<div class="mermaid-wrap" data-scale="1">
+    <div class="mermaid-wrap" data-scale="1" data-x="0" data-y="0">
       <div class="mermaid">
 sequenceDiagram
     autonumber
@@ -2593,10 +2351,10 @@ window.addEventListener('scroll', () => {
 </script>
 
 <script>
-  // Complete Interactive Pan & Zoom Engine for Mermaid Diagrams
+  // Complete Interactive Pan & Zoom Engine for Diagrams & Images
   function initPanZoom() {
     document.querySelectorAll('.mermaid-wrap').forEach(wrap => {
-      const mermaidDiv = wrap.querySelector('.mermaid') || wrap;
+      const targetDiv = wrap.querySelector('.mermaid, .zoom-target') || wrap;
       let isDragging = false;
       let startX = 0, startY = 0;
       let transX = parseFloat(wrap.getAttribute('data-x')) || 0;
@@ -2607,8 +2365,8 @@ window.addEventListener('scroll', () => {
       wrap.style.userSelect = 'none';
 
       function applyTransform() {
-        mermaidDiv.style.transform = `translate(${transX}px, ${transY}px) scale(${scale})`;
-        mermaidDiv.style.transformOrigin = 'center center';
+        targetDiv.style.transform = `translate(${transX}px, ${transY}px) scale(${scale})`;
+        targetDiv.style.transformOrigin = 'center center';
         wrap.setAttribute('data-x', transX);
         wrap.setAttribute('data-y', transY);
         wrap.setAttribute('data-scale', scale);
@@ -2656,8 +2414,8 @@ window.addEventListener('scroll', () => {
 
   function zoomMermaid(btn, factor) {
     const wrap = btn.closest('.zoom-toolbar').nextElementSibling;
-    const mermaidDiv = wrap.querySelector('.mermaid') || wrap;
-    if (!mermaidDiv) return;
+    const targetDiv = wrap.querySelector('.mermaid, .zoom-target') || wrap;
+    if (!targetDiv) return;
     let scale = parseFloat(wrap.getAttribute('data-scale')) || 1.0;
     let transX = parseFloat(wrap.getAttribute('data-x')) || 0;
     let transY = parseFloat(wrap.getAttribute('data-y')) || 0;
@@ -2674,7 +2432,7 @@ window.addEventListener('scroll', () => {
     wrap.setAttribute('data-scale', scale);
     wrap.setAttribute('data-x', transX);
     wrap.setAttribute('data-y', transY);
-    mermaidDiv.style.transform = `translate(${transX}px, ${transY}px) scale(${scale})`;
+    targetDiv.style.transform = `translate(${transX}px, ${transY}px) scale(${scale})`;
   }
 
   function toggleMermaidFullscreen(btn) {

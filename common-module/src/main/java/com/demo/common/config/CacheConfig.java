@@ -17,6 +17,8 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 public class CacheConfig {
 
 	@Bean
+	@org.springframework.context.annotation.Primary
+	@org.springframework.beans.factory.annotation.Qualifier("defaultCacheConfig")
 	public RedisCacheConfiguration cacheConfiguration() {
 		com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator ptv = com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator.builder()
 				.allowIfBaseType(Object.class)
@@ -32,5 +34,11 @@ public class CacheConfig {
 		return RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(15)).serializeValuesWith(
 				RedisSerializationContext.SerializationPair.fromSerializer(serializer))
 				.disableCachingNullValues();
+	}
+
+	@Bean
+	@org.springframework.beans.factory.annotation.Qualifier("shortLivedCacheConfig")
+	public RedisCacheConfiguration shortLivedCacheConfig() {
+		return cacheConfiguration().entryTtl(Duration.ofMinutes(1));
 	}
 }
