@@ -70,54 +70,61 @@ This project implements the **Database-per-Service** architectural pattern. Each
 
 ## 🏗️ Architecture & Visual Sequence Blueprints
 
-### 1. Hexagonal (Ports & Adapters) System Architecture Flowchart
+### 1. System Architecture Process Flow Diagram
 ```mermaid
-graph LR
-    %% Driving Adapters (Left / Ingress)
-    subgraph Driving ["🔌 Driving Adapters & Edge Ingress"]
-        UI["🖥️ React 19 UI"]
-        GW["🌐 API Gateway :8080"]
+flowchart LR
+    %% ==========================================
+    %% LEFT COLUMN: INGRESS & CATALOG PROCESSES
+    %% ==========================================
+    subgraph INGRESS ["1️⃣ INGRESS & CATALOG TIER"]
+        direction TB
+        UI(["🖥️ React 19 + Vite Dashboard"])
+        GW(["🌐 API Gateway :8080<br/>RS256 Auth · Rate Limiter"])
+        US(["👤 User Service :8081<br/>RBAC Claims · JWT"])
+        PS(["📦 Product Service :8083<br/>SKU Catalog · RLock"])
+
+        UI ==> GW
+        GW --> US
+        GW --> PS
     end
 
-    %% Hexagonal Domain Core (Center)
-    subgraph Core ["⬡ Hexagonal Domain Microservices Core"]
-        US["👤 User Service<br/>RBAC & Auth"]
-        PS["📦 Product Service<br/>SKU Catalog"]
-        OS["🛒 Order Service<br/>Saga Orchestrator"]
-        PAYS["💳 Payment Service<br/>RSA-2048 PCI-DSS"]
-        NS["🔔 Notify Service<br/>Alerts & SSE"]
+    %% ==========================================
+    %% MIDDLE COLUMN: SAGA & PAYMENT PROCESSES
+    %% ==========================================
+    subgraph ORCHESTRATION ["2️⃣ SAGA & TRANSACTION ORCHESTRATION"]
+        direction TB
+        OS(["🛒 Order Service :8082<br/>Saga State Machine"])
+        PAYS(["💳 Payment Service :8085<br/>PCI-DSS RSA-2048"])
+        NS(["🔔 Notification Service :8084<br/>Idempotent Alerts"])
+
+        GW ==> OS
+        GW ==> PAYS
+        OS <--> PAYS
     end
 
-    %% Driven Adapters (Right / Egress)
-    subgraph Driven ["🔌 Driven Adapters (Data, Cache & Event Mesh)"]
-        RD[("⚡ Redis 7.2<br/>Distributed Cache")]
-        PG[("🐘 PostgreSQL 16<br/>Database-per-Service")]
-        KF["🌊 Apache Kafka 3.8<br/>Event Bus"]
-        JG["🔭 Jaeger :16686<br/>Tracing Spans"]
+    %% ==========================================
+    %% RIGHT COLUMN: DISTRIBUTED DATA & MESH
+    %% ==========================================
+    subgraph MESH ["3️⃣ DISTRIBUTED DATA & EVENT MESH"]
+        direction TB
+        subgraph DB_CACHE ["Storage & Caching Layer"]
+            PG[("🐘 PostgreSQL 16<br/>Database-per-Service")]
+            RD[("⚡ Redis 7.2<br/>Distributed Cache")]
+        end
+
+        subgraph ASYNC_MESH ["Event Bus & Tracing Layer"]
+            KF["🌊 Apache Kafka 3.8<br/>KRaft Event Mesh"]
+            JG["🔭 Jaeger :16686<br/>OpenTelemetry Spans"]
+        end
     end
 
-    %% Flow: Driving -> Core
-    UI ==>|"HTTP / Bearer JWT"| GW
-    GW -->|"1. /users"| US
-    GW -->|"2. /products"| PS
-    GW -->|"3. /orders"| OS
-    GW -->|"4. /payments"| PAYS
-
-    %% Flow: Core -> Driven
-    PS -.->|"RLock & Cache"| RD
-    US & PS & OS & PAYS -->|"ACID TX"| PG
-    OS & PAYS ==>|"Outbox Events"| KF
-    KF ==>|"Consume Alerts"| NS
-    KF ==>|"Confirm Orders"| OS
-    US & PS & OS & PAYS & NS -.-|"W3C Trace"| JG
-
-    %% Styling for High-Contrast Hexagonal Visibility
-    classDef driving fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px,color:#ffffff;
-    classDef core fill:#312e81,stroke:#6366f1,stroke-width:2px,color:#ffffff;
-    classDef driven fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ffffff;
-    class UI,GW driving;
-    class US,PS,OS,PAYS,NS core;
-    class RD,PG,KF,JG driven;
+    %% --- CROSS-COLUMN CONNECTORS ---
+    PS -.-> RD
+    US & PS & OS & PAYS --> PG
+    OS & PAYS ==> KF
+    KF ==> NS
+    KF ==> OS
+    US & PS & OS & PAYS & NS -.- JG
 ```
 
 ### 2. Sequence Diagram 1: Secure Order Creation & Saga Choreography Flow
