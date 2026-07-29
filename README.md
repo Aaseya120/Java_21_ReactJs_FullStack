@@ -70,54 +70,61 @@ This project implements the **Database-per-Service** architectural pattern. Each
 
 ## 🏗️ Architecture & Visual Sequence Blueprints
 
-### 1. Hexagonal (Ports & Adapters) System Architecture Flowchart
+### 1. Industry Best-Standard System Architecture Blueprint
 ```mermaid
-graph LR
-    %% Driving Adapters (Left / Ingress)
-    subgraph Driving ["🔌 Driving Adapters & Edge Ingress"]
-        UI["🖥️ React 19 UI"]
-        GW["🌐 API Gateway :8080"]
+flowchart TB
+    %% ==========================================
+    %% 1. CLIENT & EDGE GATEWAY TIER
+    %% ==========================================
+    subgraph EDGE ["1️⃣ CLIENT & SECURITY EDGE LAYER"]
+        direction LR
+        CLIENT["🖥️ React 19 + Vite UI<br/>(TanStack Query · SSE · Optimistic UI)"]
+        GW["🌐 Spring Cloud API Gateway :8080<br/>(RS256 JWT Auth · Rate Limiter · Circuit Breaker)"]
+        CLIENT ==>|"HTTPS / Bearer Token"| GW
     end
 
-    %% Hexagonal Domain Core (Center)
-    subgraph Core ["⬡ Hexagonal Domain Microservices Core"]
-        US["👤 User Service<br/>RBAC & Auth"]
-        PS["📦 Product Service<br/>SKU Catalog"]
-        OS["🛒 Order Service<br/>Saga Orchestrator"]
-        PAYS["💳 Payment Service<br/>RSA-2048 PCI-DSS"]
-        NS["🔔 Notify Service<br/>Alerts & SSE"]
+    %% ==========================================
+    %% 2. MICROSERVICES DOMAIN TIER
+    %% ==========================================
+    subgraph SERVICES ["2️⃣ MICROSERVICES DOMAIN TIER (Java 21 · Spring Boot 3.3)"]
+        direction LR
+        US["👤 User Service<br/>:8081<br/>[RBAC · JWT]"]
+        PS["📦 Product Service<br/>:8083<br/>[@Cacheable · RLock]"]
+        OS["🛒 Order Service<br/>:8082<br/>[Saga · Outbox]"]
+        PAYS["💳 Payment Service<br/>:8085<br/>[RSA-2048 PCI-DSS]"]
+        NS["🔔 Notification Service<br/>:8084<br/>[Idempotent Consumer]"]
     end
 
-    %% Driven Adapters (Right / Egress)
-    subgraph Driven ["🔌 Driven Adapters (Data, Cache & Event Mesh)"]
-        RD[("⚡ Redis 7.2<br/>Distributed Cache")]
-        PG[("🐘 PostgreSQL 16<br/>Database-per-Service")]
-        KF["🌊 Apache Kafka 3.8<br/>Event Bus"]
-        JG["🔭 Jaeger :16686<br/>Tracing Spans"]
+    %% ==========================================
+    %% 3. DATA, CACHE & EVENT MESH TIER
+    %% ==========================================
+    subgraph MESH ["3️⃣ DISTRIBUTED DATABASE, CACHE & EVENT MESH TIER"]
+        direction LR
+        RD[("⚡ Redis 7.2<br/>Distributed Cache<br/>& Redisson Lock")]
+        PG[("🐘 PostgreSQL 16<br/>ACID Database<br/>(16 Schemas/Tables)")]
+        KF["🌊 Apache Kafka 3.8<br/>Saga Event Mesh<br/>(KRaft Mode)"]
+        JG["🔭 Jaeger :16686<br/>OpenTelemetry<br/>W3C Trace Spans"]
     end
 
-    %% Flow: Driving -> Core
-    UI ==>|"HTTP / Bearer JWT"| GW
-    GW -->|"1. /users"| US
-    GW -->|"2. /products"| PS
-    GW -->|"3. /orders"| OS
-    GW -->|"4. /payments"| PAYS
+    %% --- INGRESS ROUTING ---
+    GW ==>|"1. /users"| US
+    GW ==>|"2. /products"| PS
+    GW ==>|"3. /orders"| OS
+    GW ==>|"4. /payments"| PAYS
 
-    %% Flow: Core -> Driven
-    PS -.->|"RLock & Cache"| RD
-    US & PS & OS & PAYS -->|"ACID TX"| PG
-    OS & PAYS ==>|"Outbox Events"| KF
-    KF ==>|"Consume Alerts"| NS
-    KF ==>|"Confirm Orders"| OS
-    US & PS & OS & PAYS & NS -.-|"W3C Trace"| JG
+    %% --- CACHE & INVENTORY LOCKING ---
+    PS -.->|"Cache / Sub-ms RLock"| RD
 
-    %% Styling for High-Contrast Hexagonal Visibility
-    classDef driving fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px,color:#ffffff;
-    classDef core fill:#312e81,stroke:#6366f1,stroke-width:2px,color:#ffffff;
-    classDef driven fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ffffff;
-    class UI,GW driving;
-    class US,PS,OS,PAYS,NS core;
-    class RD,PG,KF,JG driven;
+    %% --- DATABASE PER SERVICE ---
+    US & PS & OS & PAYS -->|"ACID Transactions"| PG
+
+    %% --- ASYNCHRONOUS EVENT MESH ---
+    OS & PAYS ==>|"Loom Outbox Event Relay"| KF
+    KF ==>|"order-events / payment-events"| NS
+    KF ==>|"payment-events (Confirm Order)"| OS
+
+    %% --- OBSERVABILITY ---
+    US & PS & OS & PAYS & NS -.-|"Distributed Trace Headers"| JG
 ```
 
 ### 2. Sequence Diagram 1: Secure Order Creation & Saga Choreography Flow
