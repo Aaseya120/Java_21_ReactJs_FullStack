@@ -2593,21 +2593,88 @@ window.addEventListener('scroll', () => {
 </script>
 
 <script>
+  // Complete Interactive Pan & Zoom Engine for Mermaid Diagrams
+  function initPanZoom() {
+    document.querySelectorAll('.mermaid-wrap').forEach(wrap => {
+      const mermaidDiv = wrap.querySelector('.mermaid') || wrap;
+      let isDragging = false;
+      let startX = 0, startY = 0;
+      let transX = parseFloat(wrap.getAttribute('data-x')) || 0;
+      let transY = parseFloat(wrap.getAttribute('data-y')) || 0;
+      let scale = parseFloat(wrap.getAttribute('data-scale')) || 1.0;
+
+      wrap.style.cursor = 'grab';
+      wrap.style.userSelect = 'none';
+
+      function applyTransform() {
+        mermaidDiv.style.transform = `translate(${transX}px, ${transY}px) scale(${scale})`;
+        mermaidDiv.style.transformOrigin = 'center center';
+        wrap.setAttribute('data-x', transX);
+        wrap.setAttribute('data-y', transY);
+        wrap.setAttribute('data-scale', scale);
+      }
+
+      wrap.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.zoom-toolbar')) return;
+        isDragging = true;
+        wrap.style.cursor = 'grabbing';
+        startX = e.clientX - transX;
+        startY = e.clientY - transY;
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        transX = e.clientX - startX;
+        transY = e.clientY - startY;
+        applyTransform();
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          wrap.style.cursor = 'grab';
+        }
+      });
+
+      // Mouse wheel zoom
+      wrap.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.15 : -0.15;
+        scale = Math.max(0.4, Math.min(4.0, scale + delta));
+        if (scale !== 1.0) {
+          wrap.classList.add('zoomed-mode');
+        }
+        applyTransform();
+      }, { passive: false });
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(initPanZoom, 800);
+  });
+
   function zoomMermaid(btn, factor) {
     const wrap = btn.closest('.zoom-toolbar').nextElementSibling;
     const mermaidDiv = wrap.querySelector('.mermaid') || wrap;
     if (!mermaidDiv) return;
     let scale = parseFloat(wrap.getAttribute('data-scale')) || 1.0;
+    let transX = parseFloat(wrap.getAttribute('data-x')) || 0;
+    let transY = parseFloat(wrap.getAttribute('data-y')) || 0;
+
     if (factor === 'reset') {
       scale = 1.0;
+      transX = 0;
+      transY = 0;
       wrap.classList.remove('zoomed-mode');
     } else {
       scale = Math.max(0.4, Math.min(4.0, scale * factor));
       wrap.classList.add('zoomed-mode');
     }
     wrap.setAttribute('data-scale', scale);
-    mermaidDiv.style.transform = 'scale(' + scale + ')';
-    mermaidDiv.style.width = (100 * scale) + '%';
+    wrap.setAttribute('data-x', transX);
+    wrap.setAttribute('data-y', transY);
+    mermaidDiv.style.transform = `translate(${transX}px, ${transY}px) scale(${scale})`;
   }
 
   function toggleMermaidFullscreen(btn) {
@@ -2623,7 +2690,6 @@ window.addEventListener('scroll', () => {
     }
   }
 
-  // Allow ESC key to exit fullscreen
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       document.querySelectorAll('.mermaid-wrap.fullscreen-mode').forEach(el => {

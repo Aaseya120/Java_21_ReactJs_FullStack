@@ -70,6 +70,11 @@ This project implements the **Database-per-Service** architectural pattern. Each
 
 ## 🏗️ Architecture & Visual Sequence Blueprints
 
+> [!TIP]
+> **How to Zoom and Pan Diagrams with Your Cursor**:
+> - **On GitHub.com**: Click anywhere on a diagram below to open GitHub's native **Interactive Fullscreen Viewer**, where you can pan and move the diagram around with your mouse cursor and scroll wheel.
+> - **Interactive HTML Guide**: Open **[docs/java21-microservices-guide.html](file:///d:/Projects/microservices1/Java_21_ReactJs_FullStack/docs/java21-microservices-guide.html)** in any web browser to use our dedicated architecture explorer with built-in **mouse-drag cursor panning**, **mouse-wheel zoom**, and fullscreen controls.
+
 ### 1. System Architecture Process Flow Diagram
 ```mermaid
 flowchart LR
