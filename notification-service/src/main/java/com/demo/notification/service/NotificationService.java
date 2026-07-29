@@ -46,14 +46,27 @@ public class NotificationService {
 
 	// ── Channel implementations ──────────────────────────────
 
+	private final ReactiveNotificationController reactiveNotificationController;
+	private final org.springframework.mail.javamail.JavaMailSender mailSender;
+
 	private void sendEmail(NotificationMessage message) {
-		// In production: inject JavaMailSender and send HTML email
 		log.info("""
 				[EMAIL] To: {}
 				Subject: {}
 				Body: {}
 				""", message.recipientEmail(), message.subject(), message.body());
-		// mailSender.send(buildEmail(message));
+		
+		try {
+			org.springframework.mail.SimpleMailMessage mailMessage = new org.springframework.mail.SimpleMailMessage();
+			mailMessage.setTo(message.recipientEmail());
+			mailMessage.setSubject(message.subject());
+			mailMessage.setText(message.body());
+			mailMessage.setFrom("bandi00545@gmail.com"); // Usually should match MAIL_USER
+			mailSender.send(mailMessage);
+			log.info("Email sent successfully to {}", message.recipientEmail());
+		} catch (Exception e) {
+			log.error("Failed to send email to {}", message.recipientEmail(), e);
+		}
 	}
 
 	private void sendSms(NotificationMessage message) {
@@ -67,8 +80,6 @@ public class NotificationService {
 		log.info("[PUSH] To: {}, Title: {}", message.recipientId(), message.subject());
 
 	}
-
-	private final ReactiveNotificationController reactiveNotificationController;
 
 	private void storeInAppNotification(NotificationMessage message) {
 		// In production: persist to notifications table and expose via WebSocket
@@ -108,6 +119,15 @@ public class NotificationService {
 
 				Your order #%s has been cancelled.
 				If you did not request this cancellation, please contact support.
+				""".formatted(orderId);
+				
+		case "ORDER_REFUNDED" -> """
+				Dear customer,
+
+				Good news! A refund has been issued for your order #%s.
+				The amount has been credited back to your original payment method or wallet according to our policies.
+
+				If you have any questions, please contact our support team.
 				""".formatted(orderId);
 
 		default -> "Order #%s update: %s".formatted(orderId, eventType);

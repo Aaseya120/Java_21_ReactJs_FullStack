@@ -134,7 +134,14 @@ public class OrderController {
 	 */
 	@PutMapping(ApiConstants.OrderApi.STATUS)
 	public ResponseEntity<ApiResponse<OrderResponse>> updateStatus(@PathVariable Long id,
-			@RequestParam OrderStatus status) {
+			@RequestParam OrderStatus status,
+			@RequestHeader(value = "X-Auth-Role", required = false) String authRole) {
+		
+		if (!"ADMIN".equalsIgnoreCase(authRole)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN)
+					.body(ApiResponse.error("FORBIDDEN", "Only Administrators can update order status"));
+		}
+		
 		return ResponseEntity.ok(ApiResponse.success(orderService.updateOrderStatus(id, status)));
 	}
 
@@ -142,8 +149,72 @@ public class OrderController {
 	 * DELETE /api/orders/{id} — Cancel an order.
 	 */
 	@DeleteMapping(ApiConstants.OrderApi.ID)
-	public ResponseEntity<ApiResponse<OrderResponse>> cancelOrder(@PathVariable Long id) {
+	public ResponseEntity<ApiResponse<OrderResponse>> cancelOrder(@PathVariable Long id,
+			@RequestHeader(value = "X-Auth-UserId", required = false) String authUserId,
+			@RequestHeader(value = "X-Auth-Role", required = false) String authRole) {
+		
+		if (!"ADMIN".equalsIgnoreCase(authRole)) {
+			// Normal user cancellation rules
+			OrderResponse order = orderService.getOrderById(id);
+			
+			// 1. Ownership check
+			try {
+				Long loggedInId = Long.valueOf(authUserId);
+				if (!loggedInId.equals(order.userId())) {
+					return ResponseEntity.status(HttpStatus.FORBIDDEN)
+							.body(ApiResponse.error("FORBIDDEN", "Not authorized to cancel orders of other users"));
+				}
+			} catch (NumberFormatException e) {
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+						.body(ApiResponse.error("UNAUTHORIZED", "Invalid user ID"));
+			}
+			
+			// 2. Business logic check: Can only cancel early stages
+			if (order.status() != OrderStatus.PENDING && 
+				order.status() != OrderStatus.CONFIRMED && 
+				order.status() != OrderStatus.PROCESSING) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body(ApiResponse.error("BAD_REQUEST", "Order has already been shipped and cannot be directly cancelled by the user."));
+			}
+		}
+		
 		return ResponseEntity.ok(ApiResponse.success(orderService.cancelOrder(id)));
+	}
+
+	/**
+	 * POST /api/orders/{id}/refund — Issue a refund for a delivered order.
+	 */
+	@PostMapping("/{id}/refund")
+	public ResponseEntity<ApiResponse<OrderResponse>> refundOrder(@PathVariable Long id,
+			@Valid @RequestBody com.demo.order.dto.RefundRequest request,
+			@RequestHeader(value = "X-Auth-UserId", required = false) String authUserId,
+			@RequestHeader(value = "X-Auth-Role", required = false) String authRole) {
+		
+		// If it's a customer requesting, they must own the order
+		if (!"ADMIN".equalsIgnoreCase(authRole)) {
+			OrderResponse order = orderService.getOrderById(id);
+			try {
+				Long loggedInId = Long.valueOf(authUserId);
+				if (!loggedInId.equals(order.userId())) {
+					return ResponseEntity.status(HttpStatus.FORBIDDEN)
+							.body(ApiResponse.error("FORBIDDEN", "Not authorized to request refunds for other users"));
+				}
+				
+				// Validate 7-day grace period for customers
+				java.time.OffsetDateTime deliveredAt = order.updatedAt() != null ? order.updatedAt() : order.createdAt();
+				java.time.OffsetDateTime now = java.time.OffsetDateTime.now();
+				if (deliveredAt != null && deliveredAt.plus(Duration.ofDays(7)).isBefore(now)) {
+					return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+							.body(ApiResponse.error("BAD_REQUEST", "The 7-day return/refund grace period has expired for this order."));
+				}
+			} catch (NumberFormatException e) {
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+						.body(ApiResponse.error("UNAUTHORIZED", "Invalid user ID"));
+			}
+		}
+
+		OrderResponse refundedOrder = orderService.refundOrder(id, request);
+		return ResponseEntity.ok(ApiResponse.success(refundedOrder));
 	}
 }
 

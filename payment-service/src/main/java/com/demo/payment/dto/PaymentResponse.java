@@ -10,7 +10,7 @@ import com.demo.payment.entity.PaymentStatus;
  * Payment response DTO — Java 21 record including instrument metadata.
  */
 public record PaymentResponse(
-		Long id,
+		String id,
 		Long orderId,
 		Long userId,
 		BigDecimal amount,
@@ -31,7 +31,7 @@ public record PaymentResponse(
 		OffsetDateTime updatedAt
 ) {
 	// Compatibility constructor for existing basic calls
-	public PaymentResponse(Long id, Long orderId, Long userId, BigDecimal amount, String currency,
+	public PaymentResponse(String id, Long orderId, Long userId, BigDecimal amount, String currency,
 			PaymentStatus status, String statusDescription, PaymentMethod paymentMethod,
 			String transactionReference, String idempotencyKey, String errorMessage,
 			OffsetDateTime createdAt, OffsetDateTime updatedAt) {

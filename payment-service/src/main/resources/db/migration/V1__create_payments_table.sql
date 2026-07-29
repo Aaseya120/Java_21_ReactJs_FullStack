@@ -9,7 +9,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TABLE IF NOT EXISTS payments (
-    id                    BIGSERIAL PRIMARY KEY,
+    id                    VARCHAR(36) PRIMARY KEY,
     order_id              BIGINT NOT NULL,
     user_id               BIGINT NOT NULL,
     amount                NUMERIC(12, 2) NOT NULL CHECK (amount > 0),

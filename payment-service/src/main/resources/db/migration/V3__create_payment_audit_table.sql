@@ -2,7 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS payment_audit_logs (
     id              BIGSERIAL PRIMARY KEY,
-    payment_id      BIGINT NOT NULL,
+    payment_id      VARCHAR(36) NOT NULL,
     previous_status VARCHAR(50),
     new_status      VARCHAR(50) NOT NULL,
     reason          VARCHAR(255),

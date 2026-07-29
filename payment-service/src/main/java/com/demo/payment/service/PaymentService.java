@@ -102,7 +102,7 @@ public class PaymentService {
 
 	@Cacheable(value = "payments", key = "#id")
 	@Transactional(readOnly = true)
-	public PaymentResponse getPaymentById(Long id) {
+	public PaymentResponse getPaymentById(String id) {
 		log.info("Fetching payment from DB: {}", id);
 		Payment payment = paymentRepository.findById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Payment not found with id: " + id));
@@ -125,7 +125,7 @@ public class PaymentService {
 
 	@Transactional
 	@CachePut(value = "payments", key = "#paymentId")
-	public PaymentResponse refundPayment(Long paymentId, RefundRequest request) {
+	public PaymentResponse refundPayment(String paymentId, RefundRequest request) {
 		log.info("Refunding payment {} for reason: {}", paymentId, request.reason());
 		Payment payment = paymentRepository.findById(paymentId)
 				.orElseThrow(() -> new IllegalArgumentException("Payment not found with id: " + paymentId));
@@ -150,7 +150,7 @@ public class PaymentService {
 		return paymentMapper.toResponse(payment);
 	}
 
-	private void recordAuditLog(Long paymentId, PaymentStatus oldStatus, PaymentStatus newStatus, String reason) {
+	private void recordAuditLog(String paymentId, PaymentStatus oldStatus, PaymentStatus newStatus, String reason) {
 		PaymentAuditLog auditLog = PaymentAuditLog.builder()
 				.paymentId(paymentId)
 				.previousStatus(oldStatus)
@@ -164,7 +164,7 @@ public class PaymentService {
 		try {
 			String payload = objectMapper.writeValueAsString(paymentMapper.toResponse(payment));
 			PaymentOutboxEvent event = PaymentOutboxEvent.builder()
-					.aggregateId(String.valueOf(payment.getId()))
+					.aggregateId(payment.getId())
 					.aggregateType("PAYMENT")
 					.eventType(eventType)
 					.payload(payload)

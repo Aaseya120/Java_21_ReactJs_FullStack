@@ -1,4 +1,4 @@
-$ports = 8080, 8081, 8082, 8083, 8084
+$ports = 8080, 8081, 8082, 8083, 8084, 8085
 
 Write-Host "Stopping all microservices..." -ForegroundColor Cyan
 

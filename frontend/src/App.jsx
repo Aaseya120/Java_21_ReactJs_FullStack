@@ -15,6 +15,7 @@ const HealthPage = React.lazy(() => import('./pages/Health/HealthPage'));
 const ProductsPage = React.lazy(() => import('./pages/Products/ProductsPage'));
 const OrdersPage = React.lazy(() => import('./pages/Orders/OrdersPage'));
 const UsersPage = React.lazy(() => import('./pages/Users/UsersPage'));
+const PaymentsPage = React.lazy(() => import('./pages/Payments/PaymentsPage'));
 const AggregatorPage = React.lazy(() => import('./pages/Aggregator/AggregatorPage'));
 const NotificationsPage = React.lazy(() => import('./pages/Notifications/NotificationsPage'));
 const SettingsPage = React.lazy(() => import('./pages/Settings/SettingsPage'));
@@ -90,6 +91,13 @@ function AppRoutes() {
           <ProtectedRoute>
             <ErrorBoundary>
               <Layout><UsersPage/></Layout>
+            </ErrorBoundary>
+          </ProtectedRoute>
+        }/>
+        <Route path="/payments" element={
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <Layout><PaymentsPage/></Layout>
             </ErrorBoundary>
           </ProtectedRoute>
         }/>

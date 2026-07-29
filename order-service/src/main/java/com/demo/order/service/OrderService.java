@@ -151,6 +151,44 @@ public class OrderService {
 	public OrderResponse cancelOrder(Long id) {
 		return updateOrderStatus(id, OrderStatus.CANCELLED);
 	}
+	
+	@Transactional
+	@CacheEvict(value = ORDER_CACHE, key = "#id")
+	public OrderResponse refundOrder(Long id, com.demo.order.dto.RefundRequest request) {
+		Order order = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id.toString()));
+		
+		// Proactive refund validation: usually allowed only when DELIVERED
+		if (order.getStatus() != OrderStatus.DELIVERED) {
+			throw new InvalidOrderStateException("Order must be DELIVERED before it can be refunded. Current status: " + order.getStatus());
+		}
+		
+		order.setStatus(OrderStatus.REFUNDED);
+		order.setOrderNotes(order.getOrderNotes() != null 
+			? order.getOrderNotes() + " | Refunded: " + request.reason() 
+			: "Refunded: " + request.reason());
+			
+		order = orderRepository.save(order);
+		log.info("Order {} refunded. Reason: {}", id, request.reason());
+
+		// Outbox Pattern for Refund Event
+		try {
+			com.demo.order.event.OrderRefundEvent event = com.demo.order.event.OrderRefundEvent.refunded(
+					order.getId(), order.getUserId(), request.reason(), request.refundAmount(), request.refundDestination());
+			
+			OutboxEvent outboxEvent = OutboxEvent.builder()
+					.aggregateId(order.getId().toString())
+					.aggregateType("Order")
+					.eventType(event.eventType())
+					.payload(objectMapper.writeValueAsString(event))
+					.build();
+			outboxEventRepository.save(outboxEvent);
+		} catch (Exception e) {
+			log.error("Failed to serialize OrderRefundEvent", e);
+			throw new RuntimeException("Failed to serialize OrderRefundEvent", e);
+		}
+
+		return orderMapper.toResponse(order);
+	}
 
 	// ── Helpers ─────────────────────────────────────────────
 

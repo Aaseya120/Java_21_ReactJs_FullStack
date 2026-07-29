@@ -613,13 +613,13 @@ tr:hover td { background: rgba(56, 189, 248, 0.05); }
   </div>
 
   <div class="card" style="margin-top:1.5rem">
-    <div class="card-title">Technology Stack Review Guide: How We Used Each Technology <span class="badge badge-config">Reference Guide</span></div>
+    <div class="card-title">How Each Technology Is Used <span class="badge badge-config">Reference Guide</span></div>
     <div style="overflow-x:auto;margin-top:10px">
       <table>
         <thead>
           <tr>
             <th style="width:30%">Technology / Pattern</th>
-            <th style="width:70%">How It Is Implemented & Achieved in Codebase</th>
+            <th style="width:70%">Where It's Used</th>
           </tr>
         </thead>
         <tbody>
@@ -671,7 +671,7 @@ tr:hover td { background: rgba(56, 189, 248, 0.05); }
     <div class="section-icon" style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3)">🗺️</div>
     <div>
       <div class="section-num">SECTION 02</div>
-      <div class="section-title">End-to-End Visual Architecture & Sequence Diagrams (System Design Blueprint)</div>
+      <div class="section-title">Visual Architecture & Sequence Diagrams</div>
     </div>
   </div>
 
@@ -776,10 +776,10 @@ tr:hover td { background: rgba(56, 189, 248, 0.05); }
   </style>
 
   <div class="card">
-    <div class="card-title">1. Full Stack Microservices System Design Visual Architecture Blueprint <span class="badge badge-code">Visual Architecture</span></div>
+    <div class="card-title">1. System Design Blueprint <span class="badge badge-code">Visual Architecture</span></div>
     
     <!-- End-to-End System Design Visual Blueprint Image (100% Interactive Pan/Zoom/Fullscreen) -->
-    <div class="card-title" style="margin-top:10px; font-size: 0.92rem; color: #38bdf8;">Visual System Design Blueprint (End-to-End Architecture Image)</div>
+    <div class="card-title" style="margin-top:10px; font-size: 0.92rem; color: #38bdf8;">System Design Blueprint Image</div>
     <div class="zoom-toolbar" style="margin-top:10px;">
       <span class="zoom-toolbar-label">💡 Interactive Image Controls (Click & Drag to Pan, Mouse Wheel to Zoom, or Use Buttons)</span>
       <button onclick="zoomMermaid(this, 1.25)" class="zoom-btn">➕ Zoom In</button>
@@ -796,7 +796,7 @@ tr:hover td { background: rgba(56, 189, 248, 0.05); }
 
   <!-- ══ Card 2: Sequence Diagram 1 (Secure Order Creation & Saga Outbox Flow) ══ -->
   <div class="card" style="margin-top:1.5rem">
-    <div class="card-title">2. Sequence Diagram 1: Secure Order Creation & Saga Choreography Flow <span class="badge badge-config">Sequence Flow</span></div>
+    <div class="card-title">2. Order Creation & Saga Flow <span class="badge badge-config">Sequence Flow</span></div>
     
     <div class="zoom-toolbar" style="margin-top:15px;">
       <span class="zoom-toolbar-label">💡 Interactive Chart Controls (Click & Drag to Pan, Mouse Wheel to Zoom, or Use Buttons)</span>
@@ -854,7 +854,7 @@ sequenceDiagram
 
   <!-- ══ Card 3: Sequence Diagram 2 (PCI-DSS RSA-2048 Secure Payment Flow) ══ -->
   <div class="card" style="margin-top:1.5rem">
-    <div class="card-title">3. Sequence Diagram 2: PCI-DSS RSA-2048 Secure Payment & Idempotency Execution Flow <span class="badge badge-warn">PCI-DSS Flow</span></div>
+    <div class="card-title">3. Payment Flow (PCI-DSS, RSA-2048) <span class="badge badge-warn">PCI-DSS Flow</span></div>
     
     <div class="zoom-toolbar" style="margin-top:15px;">
       <span class="zoom-toolbar-label">💡 Interactive Chart Controls (Click & Drag to Pan, Mouse Wheel to Zoom, or Use Buttons)</span>
@@ -904,36 +904,36 @@ sequenceDiagram
   </div>
 
   <div class="card" style="margin-top:1.5rem">
-    <div class="card-title">4. System Design Justifications & Architectural Trade-off Review <span class="badge badge-install">System Design</span></div>
+    <div class="card-title">4. Design Trade-offs <span class="badge badge-install">System Design</span></div>
     <div style="overflow-x:auto;margin-top:10px">
       <table>
         <thead>
           <tr>
-            <th style="width:25%">Architectural Decision</th>
-            <th style="width:35%">Why Chosen in This Project (The Benefit)</th>
-            <th style="width:40%">Alternative Rejected & Why (Interview Trade-off)</th>
+            <th style="width:25%">Decision</th>
+            <th style="width:35%">Why We Chose It</th>
+            <th style="width:40%">Alternative We Rejected</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Eventual Consistency via Sagas vs. 2PC</strong></td>
-            <td>Guarantees high system availability and low latency across microservices without holding database locks across network calls.</td>
-            <td><strong>Rejected: 2-Phase Commit (2PC) / XA Transactions.</strong> 2PC introduces strict blocking locks and a single coordinator point of failure, severely degrading scalability.</td>
+            <td><strong>Sagas over 2PC</strong></td>
+            <td>Keeps services available and fast — no database locks held across network calls.</td>
+            <td><strong>2-Phase Commit (XA).</strong> Blocking locks and a single coordinator hurt scalability.</td>
           </tr>
           <tr>
-            <td><strong>Transactional Outbox vs. Direct Kafka Publish</strong></td>
-            <td>Guarantees <em>exactly-once</em> event production by committing database changes and outbox rows in a single ACID PostgreSQL transaction.</td>
-            <td><strong>Rejected: Direct Kafka Producer after SQL Commit.</strong> If the app crashes after SQL commit but before Kafka send, downstream services never get notified, breaking data integrity.</td>
+            <td><strong>Outbox pattern over direct Kafka publish</strong></td>
+            <td>Commits the DB change and the outbox row in one transaction, so events are published <em>exactly once</em>.</td>
+            <td><strong>Publish to Kafka right after the SQL commit.</strong> A crash in between means downstream services never find out.</td>
           </tr>
           <tr>
-            <td><strong>Redis Distributed Locks vs. DB Row Locks</strong></td>
-            <td>Redisson locks (<code>RLock</code>) run in-memory with sub-millisecond TTL leases, protecting inventory without locking PostgreSQL tables.</td>
-            <td><strong>Rejected: SQL <code>SELECT ... FOR UPDATE</code>.</strong> Database row-level locking under high concurrent checkout spikes leads to connection pool exhaustion and SQL deadlocks.</td>
+            <td><strong>Redis locks over DB row locks</strong></td>
+            <td>Redisson's <code>RLock</code> runs in memory with sub-millisecond leases, so PostgreSQL tables never get locked.</td>
+            <td><strong><code>SELECT ... FOR UPDATE</code>.</strong> Row locks under checkout spikes cause pool exhaustion and deadlocks.</td>
           </tr>
           <tr>
-            <td><strong>Java 21 Virtual Threads vs. Reactive WebFlux</strong></td>
-            <td>Virtual Threads (Loom) allow writing clean, sequential imperative code while scaling to millions of concurrent I/O tasks.</td>
-            <td><strong>Rejected: Spring WebFlux / RxJava.</strong> Reactive programming requires non-blocking JDBC drivers (R2DBC), complex stack traces, and steeper developer learning curves.</td>
+            <td><strong>Virtual Threads over WebFlux</strong></td>
+            <td>Loom lets us write plain sequential code while still scaling to huge numbers of concurrent I/O calls.</td>
+            <td><strong>WebFlux / RxJava.</strong> Reactive code needs non-blocking drivers (R2DBC) and has a steeper learning curve.</td>
           </tr>
         </tbody>
       </table>
@@ -946,7 +946,7 @@ sequenceDiagram
     <div class="section-icon" style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3)">📁</div>
     <div>
       <div class="section-num">SECTION 03</div>
-      <div class="section-title">End-to-End Full Stack Project Structure</div>
+      <div class="section-title">Project Structure</div>
     </div>
   </div>
 
@@ -1486,7 +1486,7 @@ docker compose version    <span class="com"># Docker Compose version v2.x</span>
     <div class="section-icon" style="background:rgba(192,132,252,0.1);border:1px solid rgba(192,132,252,0.3)">📨</div>
     <div>
       <div class="section-num">SECTION 08</div>
-      <div class="section-title">Apache Kafka 3.7 Messaging & Event-Driven Architecture</div>
+      <div class="section-title">Apache Kafka 3.7 Messaging</div>
     </div>
   </div>
 
@@ -1696,7 +1696,7 @@ docker compose version    <span class="com"># Docker Compose version v2.x</span>
   </div>
 
   <div class="card">
-    <div class="card-title">RSA-2048 Asymmetric Security & Java 21 Sealed Interfaces <span class="badge badge-code">Full Code</span></div>
+    <div class="card-title">RSA-2048 Security & Sealed Interfaces <span class="badge badge-code">Full Code</span></div>
     <div class="code-wrap">
       <div class="code-header"><span class="code-lang">JAVA</span><span class="code-file">PaymentCryptographyService.java</span><button class="copy-btn" onclick="copyCode(this)">COPY</button></div>
       <pre><span class="ann">@Service</span>
@@ -1790,7 +1790,7 @@ docker compose version    <span class="com"># Docker Compose version v2.x</span>
     <div class="section-icon" style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.3)">☸️</div>
     <div>
       <div class="section-num">SECTION 14</div>
-      <div class="section-title">Kubernetes 1.30 Orchestration & Deployment</div>
+      <div class="section-title">Kubernetes 1.30 Deployment</div>
     </div>
   </div>
 
@@ -1876,7 +1876,7 @@ docker compose version    <span class="com"># Docker Compose version v2.x</span>
     <div class="section-icon" style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3)">☁️</div>
     <div>
       <div class="section-num">SECTION 15</div>
-      <div class="section-title">AWS EKS, ECR & Cloud Infrastructure Setup</div>
+      <div class="section-title">AWS EKS & Cloud Infrastructure</div>
     </div>
   </div>
 
@@ -1954,40 +1954,40 @@ kubectl get nodes -o wide</pre>
     <div class="section-icon" style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3)">🎯</div>
     <div>
       <div class="section-num">SECTION 17</div>
-      <div class="section-title">Full Stack Microservices Interview Master Cheat Sheet</div>
+      <div class="section-title">Interview Cheat Sheet</div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">1. Java Language Evolution in Practice (Java 8 vs Java 17 vs Java 21) <span class="badge badge-config">JDK Comparison</span></div>
+    <div class="card-title">1. Java 8 vs 17 vs 21 <span class="badge badge-config">JDK Comparison</span></div>
     <div style="overflow-x:auto;margin-top:10px">
       <table>
         <thead>
           <tr>
-            <th style="width:15%">JDK Version</th>
-            <th style="width:25%">Key Features Used</th>
-            <th style="width:30%">Where Used in Codebase (Exact Class)</th>
-            <th style="width:30%">How It Is Achieved & Why It Matters</th>
+            <th style="width:15%">JDK</th>
+            <th style="width:25%">Key Features</th>
+            <th style="width:30%">Used In</th>
+            <th style="width:30%">Why It Matters</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td><strong>Java 8</strong></td>
-            <td>Streams API, Optional, Functional Interfaces, Lambda Expressions</td>
-            <td>All <code>*Service.java</code> and <code>*Controller.java</code> classes across 7 modules</td>
-            <td>Used for declarative collection filtering, mapping, and null-safe data transformations without verbose imperative loops.</td>
+            <td>Streams, Optional, functional interfaces, lambdas</td>
+            <td>All <code>*Service.java</code> / <code>*Controller.java</code> classes, all 7 modules</td>
+            <td>Declarative filtering, mapping, and null-safe transforms instead of manual loops.</td>
           </tr>
           <tr>
             <td><strong>Java 17</strong></td>
-            <td>Records, Sealed Classes/Interfaces, Text Blocks, Pattern Matching for <code>instanceof</code></td>
+            <td>Records, sealed classes/interfaces, text blocks, <code>instanceof</code> pattern matching</td>
             <td><code>PaymentRequest</code>, <code>OrderEvent</code>, <code>PaymentInstrument</code>, custom SQL queries</td>
-            <td><strong>Records</strong> replace boilerplate DTOs with immutable data carriers. <strong>Sealed interfaces</strong> define closed domain hierarchies.</td>
+            <td>Records replace boilerplate DTOs; sealed interfaces define a closed set of domain types.</td>
           </tr>
           <tr>
             <td><strong>Java 21</strong></td>
-            <td>Virtual Threads (Project Loom), Pattern Matching for <code>switch</code>, Sequenced Collections</td>
+            <td>Virtual Threads, <code>switch</code> pattern matching, Sequenced Collections</td>
             <td><code>PaymentService.java</code>, <code>PaymentOutboxRelayScheduler.java</code>, <code>application.yml</code></td>
-            <td><strong>Virtual Threads</strong> (<code>spring.threads.virtual.enabled=true</code>) eliminate OS thread starvation during high-concurrency DB/Kafka calls. <strong>Pattern matching switch</strong> unpacks sealed payment instruments safely.</td>
+            <td>Virtual Threads avoid thread starvation under heavy DB/Kafka load; pattern matching safely unpacks sealed payment types.</td>
           </tr>
         </tbody>
       </table>
@@ -1995,47 +1995,47 @@ kubectl get nodes -o wide</pre>
   </div>
 
   <div class="card" style="margin-top:1.5rem">
-    <div class="card-title">2. Distributed Microservices Architecture & Design Patterns <span class="badge badge-code">Patterns</span></div>
+    <div class="card-title">2. Design Patterns <span class="badge badge-code">Patterns</span></div>
     <div style="overflow-x:auto;margin-top:10px">
       <table>
         <thead>
           <tr>
-            <th style="width:20%">Design Pattern</th>
-            <th style="width:25%">Where Used in Codebase</th>
-            <th style="width:28%">How It Is Achieved in Code</th>
-            <th style="width:27%">Why We Chose It (Interview Justification)</th>
+            <th style="width:20%">Pattern</th>
+            <th style="width:25%">Where Used</th>
+            <th style="width:28%">How It Works</th>
+            <th style="width:27%">Why We Chose It</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Saga Pattern (Choreography)</strong></td>
+            <td><strong>Saga (choreography)</strong></td>
             <td><code>order-service</code> ➔ <code>product-service</code> ➔ <code>payment-service</code> ➔ <code>notification-service</code></td>
-            <td>Kafka topics: <code>order-events</code>, <code>payment-events</code>. Order state transitions: <code>PENDING</code> ➔ <code>CONFIRMED</code> / <code>CANCELLED</code> / <code>REFUNDED</code>.</td>
-            <td>Maintains eventual consistency across distributed microservices without distributed two-phase commit (2PC) locks. Includes compensating transactions on failure.</td>
+            <td>Kafka topics <code>order-events</code>, <code>payment-events</code> drive order state: <code>PENDING</code> ➔ <code>CONFIRMED</code> / <code>CANCELLED</code> / <code>REFUNDED</code>.</td>
+            <td>Keeps services eventually consistent without 2PC locks; failures trigger compensating transactions.</td>
           </tr>
           <tr>
-            <td><strong>Transactional Outbox Pattern</strong></td>
-            <td><code>order-service</code> (<code>outbox_events</code>), <code>payment-service</code> (<code>outbox_events</code>)</td>
-            <td>Domain entity and JSON outbox row commit in a single ACID Postgres transaction. <code>PaymentOutboxRelayScheduler</code> polls and publishes to Kafka.</td>
-            <td>Solves the distributed dual-write problem between SQL database writes and Kafka event publishing, guaranteeing <em>exactly-once</em> delivery.</td>
+            <td><strong>Transactional Outbox</strong></td>
+            <td><code>order-service</code> and <code>payment-service</code> (<code>outbox_events</code>)</td>
+            <td>Entity + outbox row commit in one Postgres transaction; <code>PaymentOutboxRelayScheduler</code> polls and publishes to Kafka.</td>
+            <td>Avoids the dual-write problem between the DB and Kafka — guarantees exactly-once delivery.</td>
           </tr>
           <tr>
-            <td><strong>API Gateway Pattern</strong></td>
+            <td><strong>API Gateway</strong></td>
             <td><code>api-gateway</code> (<code>:8080</code>)</td>
-            <td>Spring Cloud Gateway configured in <code>application.yml</code> with route predicates, filters, and JWT authentication.</td>
-            <td>Single entry point for all frontend traffic. Simplifies client communication and centralizes cross-cutting security, SSL, and rate limiting.</td>
+            <td>Spring Cloud Gateway routes, filters, and validates JWTs in <code>application.yml</code>.</td>
+            <td>One entry point for all traffic; centralizes security, SSL, and rate limiting.</td>
           </tr>
           <tr>
-            <td><strong>Aggregator / BFF Pattern</strong></td>
+            <td><strong>Aggregator / BFF</strong></td>
             <td><code>order-service</code> (<code>OrderAggregatorService.java</code>)</td>
-            <td>Fetches user details from `:8081`, order details from Postgres, and product catalog from `:8083` via concurrent REST calls.</td>
-            <td>Reduces round-trips for the React frontend by consolidating multi-service data into a single unified JSON payload.</td>
+            <td>Concurrent REST calls pull user data (`:8081`), order data (Postgres), and product data (`:8083`).</td>
+            <td>One combined JSON payload means fewer round-trips for the React frontend.</td>
           </tr>
           <tr>
-            <td><strong>CQRS & Idempotency Pattern</strong></td>
+            <td><strong>Idempotency</strong></td>
             <td><code>payment-service</code> (<code>payment_transactions.idempotency_key</code>)</td>
-            <td>Unique database constraint + programmatic lookup in <code>PaymentService.java</code> returning cached result on duplicate keys.</td>
-            <td>Prevents double billing when network timeouts cause clients or Kafka consumers to retry identical POST requests.</td>
+            <td>A unique DB constraint plus a lookup in <code>PaymentService.java</code> returns the cached result for duplicate keys.</td>
+            <td>Stops double billing when a client or Kafka consumer retries the same request.</td>
           </tr>
         </tbody>
       </table>
@@ -2043,34 +2043,34 @@ kubectl get nodes -o wide</pre>
   </div>
 
   <div class="card" style="margin-top:1.5rem">
-    <div class="card-title">3. Security, Authentication & PCI-DSS Cryptography <span class="badge badge-warn">Security</span></div>
+    <div class="card-title">3. Security & PCI-DSS Cryptography <span class="badge badge-warn">Security</span></div>
     <div style="overflow-x:auto;margin-top:10px">
       <table>
         <thead>
           <tr>
-            <th style="width:22%">Security Feature</th>
-            <th style="width:25%">Where Used in Codebase</th>
-            <th style="width:28%">How Achieved (Technical Implementation)</th>
-            <th style="width:25%">Interview Purpose & Rationale</th>
+            <th style="width:22%">Feature</th>
+            <th style="width:25%">Where Used</th>
+            <th style="width:28%">Implementation</th>
+            <th style="width:25%">Why</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Stateless JWT & Role Auth</strong></td>
+            <td><strong>Stateless JWT & role auth</strong></td>
             <td><code>api-gateway</code> (<code>JwtAuthenticationFilter</code>), <code>user-service</code> (<code>JwtTokenProvider</code>)</td>
-            <td>RS256 / HMAC-SHA256 signed access tokens (15m TTL) & refresh tokens (7d TTL). Roles: <code>ROLE_ADMIN</code>, <code>ROLE_USER</code>.</td>
-            <td>Eliminates server-side session state, enabling horizontal pod scaling across Kubernetes without sticky sessions.</td>
+            <td>RS256/HMAC-SHA256 access tokens (15m TTL), refresh tokens (7d TTL). Roles: <code>ROLE_ADMIN</code>, <code>ROLE_USER</code>.</td>
+            <td>No server-side session state, so pods scale horizontally without sticky sessions.</td>
           </tr>
           <tr>
-            <td><strong>OAuth2 / Keycloak Readiness</strong></td>
+            <td><strong>OAuth2 / Keycloak ready</strong></td>
             <td><code>api-gateway</code> & <code>user-service</code> security config</td>
-            <td>Standard OpenID Connect (OIDC) JWT claims parsing (<code>sub</code>, <code>roles</code>, <code>exp</code>) compatible with Keycloak or Okta.</td>
-            <td>Allows seamless migration from local JWT issuance to enterprise identity providers without changing downstream microservices.</td>
+            <td>Standard OIDC JWT claims (<code>sub</code>, <code>roles</code>, <code>exp</code>), compatible with Keycloak or Okta.</td>
+            <td>Can move from local JWT issuance to an enterprise identity provider with no downstream changes.</td>
           </tr>
           <tr>
-            <td><strong>PCI-DSS RSA-2048 Cryptography</strong></td>
+            <td><strong>PCI-DSS RSA-2048</strong></td>
             <td><code>payment-service</code> (<code>PaymentCryptographyService</code>), React <code>PaymentModal.jsx</code></td>
-            <td><code>KeyPairGenerator("RSA", 2048)</code> generates public/private keys. Client encrypts card tokens (<code>ENC:RSA2048_...</code>); backend signs webhooks (<code>SHA256withRSA</code>).</td>
+            <td><code>KeyPairGenerator("RSA", 2048)</code> for key pairs. Client encrypts card tokens (<code>ENC:RSA2048_...</code>); backend signs webhooks with <code>SHA256withRSA</code>.</td>
           </tr>
         </tbody>
       </table>
@@ -2078,35 +2078,35 @@ kubectl get nodes -o wide</pre>
   </div>
 
   <div class="card" style="margin-top:1.5rem">
-    <div class="card-title">4. Resilience4j & Fault Tolerance (Circuit Breaker, Retry, Rate Limit) <span class="badge badge-req">Resilience</span></div>
+    <div class="card-title">4. Resilience4j & Fault Tolerance <span class="badge badge-req">Resilience</span></div>
     <div style="overflow-x:auto;margin-top:10px">
       <table>
         <thead>
           <tr>
-            <th style="width:20%">Resilience Mechanism</th>
-            <th style="width:25%">Where Used in Codebase</th>
-            <th style="width:28%">How Achieved (Configuration & Code)</th>
-            <th style="width:27%">Why We Chose It (System Design)</th>
+            <th style="width:20%">Mechanism</th>
+            <th style="width:25%">Where Used</th>
+            <th style="width:28%">Configuration</th>
+            <th style="width:27%">Why</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Circuit Breaker & Fallback</strong></td>
-            <td><code>api-gateway</code> (<code>application.yml</code> via Resilience4j)</td>
-            <td>Trips open when failure rate reaches 50% over a sliding window of 10 calls. Routes to a fast JSON fallback endpoint.</td>
-            <td>Prevents cascading failures across the microservices mesh when a downstream database or service becomes unresponsive.</td>
+            <td><strong>Circuit breaker & fallback</strong></td>
+            <td><code>api-gateway</code> (Resilience4j in <code>application.yml</code>)</td>
+            <td>Trips open at 50% failure rate over a 10-call window; routes to a fast JSON fallback.</td>
+            <td>Stops cascading failures when a downstream service or database goes unresponsive.</td>
           </tr>
           <tr>
-            <td><strong>Retry & Exponential Backoff</strong></td>
-            <td>Kafka consumer listeners & Gateway routing filters</td>
-            <td>Configured with 3 retry attempts and exponential backoff jitter (200ms ➔ 400ms ➔ 800ms) before sending to Dead Letter Queue (DLQ).</td>
-            <td>Absorbs temporary network blips or database lock contention without failing user transactions.</td>
+            <td><strong>Retry & backoff</strong></td>
+            <td>Kafka consumer listeners and gateway routing filters</td>
+            <td>3 retries with exponential backoff (200ms ➔ 400ms ➔ 800ms), then to the Dead Letter Queue.</td>
+            <td>Rides out brief network blips or DB lock contention without failing the transaction.</td>
           </tr>
           <tr>
-            <td><strong>Redis Token Bucket Rate Limit</strong></td>
-            <td><code>api-gateway</code> (<code>RequestRateLimiter</code> Gateway filter)</td>
-            <td>Uses Redis <code>replenishRate: 10</code> (tokens/sec) and <code>burstCapacity: 20</code> keyed by client IP address.</td>
-            <td>Protects downstream microservices from DDoS attacks, brute-force login attempts, and runaway scraper scripts.</td>
+            <td><strong>Redis rate limiting</strong></td>
+            <td><code>api-gateway</code> (<code>RequestRateLimiter</code> filter)</td>
+            <td>Token bucket: <code>replenishRate: 10</code>/sec, <code>burstCapacity: 20</code>, keyed by client IP.</td>
+            <td>Blocks DDoS, brute-force logins, and scraper abuse before they reach a service.</td>
           </tr>
         </tbody>
       </table>
@@ -2114,39 +2114,39 @@ kubectl get nodes -o wide</pre>
   </div>
 
   <div class="card" style="margin-top:1.5rem">
-    <div class="card-title">5. Database Consistency, ACID, Isolation, Schema Versioning & SOLID <span class="badge badge-install">DB & OOP</span></div>
+    <div class="card-title">5. ACID, Schema Versioning & SOLID <span class="badge badge-install">DB & OOP</span></div>
     <div style="overflow-x:auto;margin-top:10px">
       <table>
         <thead>
           <tr>
-            <th style="width:20%">Concept / Principle</th>
-            <th style="width:25%">Where Used in Codebase</th>
-            <th style="width:28%">How Achieved in Code</th>
-            <th style="width:27%">Interview Explanation & Importance</th>
+            <th style="width:20%">Concept</th>
+            <th style="width:25%">Where Used</th>
+            <th style="width:28%">How</th>
+            <th style="width:27%">Why It Matters</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>ACID & DB Isolation Levels</strong></td>
+            <td><strong>ACID & isolation levels</strong></td>
             <td>All Spring Data JPA transactional services</td>
-            <td><code>@Transactional(isolation = Isolation.READ_COMMITTED)</code> ensures atomicity of domain state and outbox events.</td>
-            <td>Prevents dirty reads while maintaining high concurrency throughput across PostgreSQL 16 connection pools.</td>
+            <td><code>@Transactional(isolation = Isolation.READ_COMMITTED)</code> keeps domain state and outbox events atomic.</td>
+            <td>Avoids dirty reads while keeping PostgreSQL connection pools performant under load.</td>
           </tr>
           <tr>
-            <td><strong>Schema Versioning (DDL Evolution)</strong></td>
-            <td>PostgreSQL database tables across services</td>
-            <td>Structured schema initialization scripts (<code>V1__init_schema.sql</code>) creating indexed tables and unique idempotency constraints.</td>
-            <td>Ensures reproducible zero-downtime database migrations across development, staging, and production Kubernetes clusters.</td>
+            <td><strong>Schema versioning</strong></td>
+            <td>PostgreSQL tables across all services</td>
+            <td>Versioned scripts (<code>V1__init_schema.sql</code>) create indexed tables and unique idempotency constraints.</td>
+            <td>Gives repeatable, zero-downtime migrations across dev, staging, and production.</td>
           </tr>
           <tr>
-            <td><strong>SOLID Principles</strong></td>
-            <td>All 7 Java 21 microservices modules</td>
+            <td><strong>SOLID</strong></td>
+            <td>All 7 microservice modules</td>
             <td>
-              • <strong>S</strong>: Distinct Service/Repo/Controller layers.<br>
-              • <strong>O</strong>: Sealed interfaces open for extension, closed for modification.<br>
-              • <strong>L/I/D</strong>: Interface-driven clients with Spring constructor injection.
+              • <strong>S</strong>: separate Service/Repo/Controller layers.<br>
+              • <strong>O</strong>: sealed interfaces open for extension, closed for modification.<br>
+              • <strong>L/I/D</strong>: interface-driven clients, constructor injection.
             </td>
-            <td>Ensures high testability, loose coupling, and maintainability across a multi-developer enterprise codebase.</td>
+            <td>Keeps the codebase testable, loosely coupled, and maintainable across a multi-developer team.</td>
           </tr>
         </tbody>
       </table>
@@ -2154,35 +2154,35 @@ kubectl get nodes -o wide</pre>
   </div>
 
   <div class="card" style="margin-top:1.5rem">
-    <div class="card-title">6. Messaging, Caching & Distributed Locking (Kafka, Redis, Redisson) <span class="badge badge-code">Distributed Infra</span></div>
+    <div class="card-title">6. Messaging, Caching & Locking <span class="badge badge-code">Distributed Infra</span></div>
     <div style="overflow-x:auto;margin-top:10px">
       <table>
         <thead>
           <tr>
-            <th style="width:20%">Infra Component</th>
-            <th style="width:25%">Where Used in Codebase</th>
-            <th style="width:28%">How Achieved (Technical Specs)</th>
-            <th style="width:27%">Why We Chose It (Architectural Benefit)</th>
+            <th style="width:20%">Component</th>
+            <th style="width:25%">Where Used</th>
+            <th style="width:28%">Specs</th>
+            <th style="width:27%">Why</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Redis 7.2 Distributed Cache</strong></td>
+            <td><strong>Redis 7.2 cache</strong></td>
             <td><code>product-service</code> (<code>ProductService.java</code>)</td>
-            <td>Spring Cache annotation (<code>@Cacheable("products")</code>) and Redis template serialization storing catalog JSON items.</td>
-            <td>Delivers sub-millisecond read latency for product catalogs, offloading 90%+ of read traffic from PostgreSQL.</td>
+            <td><code>@Cacheable("products")</code> with Redis template JSON serialization for catalog items.</td>
+            <td>Sub-millisecond reads; offloads 90%+ of catalog read traffic from PostgreSQL.</td>
           </tr>
           <tr>
-            <td><strong>Redisson Distributed Locking</strong></td>
+            <td><strong>Redisson locking</strong></td>
             <td><code>product-service</code> inventory deduction</td>
-            <td><code>RLock lock = redissonClient.getLock("lock:product:" + sku)</code> with explicit tryLock lease expiration.</td>
-            <td>Prevents race conditions and overselling when thousands of concurrent shoppers attempt to purchase the last remaining stock.</td>
+            <td><code>RLock lock = redissonClient.getLock("lock:product:" + sku)</code> with an explicit tryLock lease.</td>
+            <td>Stops overselling when many shoppers race for the last item in stock.</td>
           </tr>
           <tr>
-            <td><strong>Apache Kafka 3.8 Event Streaming</strong></td>
-            <td>All event-driven microservices</td>
-            <td><code>enable.idempotence=true</code>, <code>acks=all</code>, JSON serializer with custom MDC correlation ID propagation headers.</td>
-            <td>Decouples producer services from consumer services, enabling asynchronous order processing and horizontal consumer scaling.</td>
+            <td><strong>Kafka 3.8 event streaming</strong></td>
+            <td>All event-driven services</td>
+            <td><code>enable.idempotence=true</code>, <code>acks=all</code>, JSON serializer with correlation ID headers.</td>
+            <td>Decouples producers from consumers; enables async processing and horizontal scaling.</td>
           </tr>
         </tbody>
       </table>
@@ -2190,41 +2190,41 @@ kubectl get nodes -o wide</pre>
   </div>
 
   <div class="card" style="margin-top:1.5rem">
-    <div class="card-title">7. Cloud-Native DevOps, Kubernetes, CI/CD & Observability <span class="badge badge-config">DevOps & SRE</span></div>
+    <div class="card-title">7. DevOps, Kubernetes & Observability <span class="badge badge-config">DevOps & SRE</span></div>
     <div style="overflow-x:auto;margin-top:10px">
       <table>
         <thead>
           <tr>
-            <th style="width:20%">DevOps / SRE Tool</th>
-            <th style="width:25%">Where Used in Codebase</th>
-            <th style="width:28%">How Achieved (Configuration)</th>
-            <th style="width:27%">Why We Chose It (Production Readiness)</th>
+            <th style="width:20%">Tool</th>
+            <th style="width:25%">Where Used</th>
+            <th style="width:28%">Configuration</th>
+            <th style="width:27%">Why</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td><strong>Kubernetes (EKS / Ingress / HPA)</strong></td>
-            <td><code>k8s/</code> manifests directory</td>
-            <td>Deployments, NodePort/ClusterIP Services, NGINX Ingress controller, and Horizontal Pod Autoscalers (scaling on CPU > 70%).</td>
-            <td>Provides automated self-healing, rolling zero-downtime deployments, and elastic auto-scaling under traffic spikes.</td>
+            <td><code>k8s/</code> manifests</td>
+            <td>Deployments, NodePort/ClusterIP Services, NGINX Ingress, Horizontal Pod Autoscaler (scales above 70% CPU).</td>
+            <td>Self-healing, rolling zero-downtime deploys, and elastic scaling under traffic spikes.</td>
           </tr>
           <tr>
-            <td><strong>Docker & Compose Orchestration</strong></td>
+            <td><strong>Docker & Compose</strong></td>
             <td><code>docker-compose-infra.yml</code> & Dockerfiles</td>
-            <td>Multi-stage Alpine Docker builds for minimal container size; infrastructure compose stack for local development.</td>
-            <td>Guarantees identical environment execution from a developer's laptop to AWS Kubernetes production clusters.</td>
+            <td>Multi-stage Alpine builds for small images; a compose stack for local infrastructure.</td>
+            <td>Same environment from a laptop through to production Kubernetes.</td>
           </tr>
           <tr>
-            <td><strong>GitHub Actions CI/CD Pipeline</strong></td>
+            <td><strong>GitHub Actions CI/CD</strong></td>
             <td><code>.github/workflows/deploy.yml</code></td>
-            <td>Automated JDK 21 Maven tests, Docker image building/pushing to AWS ECR, and <code>kubectl apply</code> rolling EKS updates.</td>
-            <td>Enables continuous integration and automated deployment with built-in rollback safeguards on unit test failure.</td>
+            <td>Automated JDK 21 Maven tests, Docker build/push to ECR, then <code>kubectl apply</code> to roll out to EKS.</td>
+            <td>Continuous integration and deployment, with rollback if tests fail.</td>
           </tr>
           <tr>
-            <td><strong>Observability (Jaeger, Prometheus, Grafana)</strong></td>
-            <td>All Spring Boot 3.3.2 microservices</td>
-            <td>Micrometer Tracing bridge + OpenTelemetry exporting W3C trace IDs to Jaeger (<code>:16686</code>) and Prometheus metrics to Grafana.</td>
-            <td>Provides end-to-end distributed tracing across HTTP and Kafka hops, enabling rapid root-cause analysis for latency bottlenecks.</td>
+            <td><strong>Jaeger / Prometheus / Grafana</strong></td>
+            <td>All Spring Boot 3.3.2 services</td>
+            <td>Micrometer + OpenTelemetry export trace IDs to Jaeger (<code>:16686</code>) and metrics to Prometheus/Grafana.</td>
+            <td>End-to-end tracing across HTTP and Kafka hops for fast root-cause analysis.</td>
           </tr>
         </tbody>
       </table>

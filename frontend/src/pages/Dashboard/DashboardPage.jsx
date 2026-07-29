@@ -9,6 +9,7 @@ const SERVICE_META = {
   user:         { label: 'User Service',          port: '8081', icon: '👤', color: 'var(--info)' },
   order:        { label: 'Order Service',         port: '8082', icon: '📋', color: 'var(--warning)' },
   product:      { label: 'Product Service',       port: '8083', icon: '📦', color: 'var(--success)' },
+  payment:      { label: 'Payment Service',       port: '8085', icon: '💳', color: '#f43f5e' },
   notification: { label: 'Notification Service',  port: '8084', icon: '🔔', color: '#a78bfa' },
 };
 

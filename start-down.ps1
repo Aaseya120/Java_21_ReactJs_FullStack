@@ -3,6 +3,7 @@ $services = @(
     @{ Name = "product-service"; Port = 8083 },
     @{ Name = "order-service"; Port = 8082 },
     @{ Name = "notification-service"; Port = 8084 },
+    @{ Name = "payment-service"; Port = 8085 },
     @{ Name = "api-gateway"; Port = 8080 }
 )
 

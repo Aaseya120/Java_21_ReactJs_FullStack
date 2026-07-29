@@ -10,5 +10,5 @@ import com.demo.payment.entity.PaymentAuditLog;
 @Repository
 public interface PaymentAuditLogRepository extends JpaRepository<PaymentAuditLog, Long> {
 
-	List<PaymentAuditLog> findByPaymentIdOrderByCreatedAtDesc(Long paymentId);
+	List<PaymentAuditLog> findByPaymentIdOrderByCreatedAtDesc(String paymentId);
 }

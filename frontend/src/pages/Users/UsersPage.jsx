@@ -167,7 +167,8 @@ export default function UsersPage() {
           )}
         </div>
 
-        {/* User Lookup */}
+        {/* User Lookup (ADMIN ONLY) */}
+        {user?.role === 'ADMIN' && (
         <div className="card">
           <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: 20 }}>🔍 Look Up User</h2>
           <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
@@ -224,6 +225,7 @@ export default function UsersPage() {
             );
           })() : null}
         </div>
+        )}
 
       </div>
     </div>

@@ -11,6 +11,7 @@ const SERVICE_FIELDS = [
   { key: 'userServiceUrl',        label: 'User Service',          icon: '👤', port: '8081' },
   { key: 'orderServiceUrl',       label: 'Order Service',         icon: '📋', port: '8082' },
   { key: 'productServiceUrl',     label: 'Product Service',       icon: '📦', port: '8083' },
+  { key: 'paymentServiceUrl',     label: 'Payment Service',       icon: '💳', port: '8085' },
   { key: 'notificationServiceUrl',label: 'Notification Service',  icon: '🔔', port: '8084' },
 ];
 
@@ -48,14 +49,14 @@ export default function SettingsPage() {
     const results = await healthApi.checkAll();
     const mapped = Object.fromEntries(
       SERVICE_FIELDS.map((f, i) => {
-        const serviceKey = ['gateway', 'user', 'order', 'product', 'notification'][i];
+        const serviceKey = ['gateway', 'user', 'order', 'product', 'payment', 'notification'][i];
         return [f.key, results[serviceKey]];
       })
     );
     setTestResults(mapped);
     setTesting({});
     const upCount = Object.values(results).filter(v => v.status === 'UP').length;
-    toast[upCount === 5 ? 'success' : 'warning'](`${upCount}/5 services reachable`);
+    toast[upCount === 6 ? 'success' : 'warning'](`${upCount}/6 services reachable`);
   };
 
   const token = getAccessToken();

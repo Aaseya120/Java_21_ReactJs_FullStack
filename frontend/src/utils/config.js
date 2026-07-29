@@ -6,6 +6,7 @@ const DEFAULTS = {
   userServiceUrl: 'http://localhost:8081',
   orderServiceUrl: 'http://localhost:8082',
   productServiceUrl: 'http://localhost:8083',
+  paymentServiceUrl: 'http://localhost:8085',
   notificationServiceUrl: 'http://localhost:8084',
 };
 

@@ -24,6 +24,7 @@ export function PaymentModal({ order, onClose, onSuccess }) {
   const [publicKeyPem, setPublicKeyPem] = useState(null);
 
   // Card form state
+  const [cardName, setCardName] = useState('John Doe');
   const [cardNumber, setCardNumber] = useState('4532000000004242');
   const [cardExpiry, setCardExpiry] = useState('12/28');
   const [cardCvv, setCardCvv] = useState('123');
@@ -138,7 +139,7 @@ export function PaymentModal({ order, onClose, onSuccess }) {
                 <div><strong>Payment ID:</strong> #{txResult.paymentId}</div>
                 <div><strong>Auth Message:</strong> {txResult.message || '3D-Secure Verified'}</div>
               </div>
-              <button className="btn btn-primary btn-full" onClick={onClose}>
+              <button className="btn btn--primary" style={{ width: '100%' }} onClick={onClose}>
                 Done & Close
               </button>
             </div>
@@ -184,11 +185,22 @@ export function PaymentModal({ order, onClose, onSuccess }) {
               {/* Dynamic Instrument Forms */}
               {activeMethod === 'CREDIT_CARD' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <div className="form-group">
-                    <label className="form-label">Card Number</label>
+                  <div className="input-group">
+                    <label>Cardholder Name</label>
                     <input
                       type="text"
-                      className="form-input"
+                      className="input"
+                      value={cardName}
+                      onChange={e => setCardName(e.target.value)}
+                      placeholder="JOHN DOE"
+                      required
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label>Card Number</label>
+                    <input
+                      type="text"
+                      className="input"
                       value={cardNumber}
                       onChange={e => setCardNumber(e.target.value)}
                       placeholder="4532 •••• •••• 4242"
@@ -196,31 +208,31 @@ export function PaymentModal({ order, onClose, onSuccess }) {
                     />
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                    <div className="form-group">
-                      <label className="form-label">Expiry</label>
+                    <div className="input-group">
+                      <label>Expiry</label>
                       <input
                         type="text"
-                        className="form-input"
+                        className="input"
                         value={cardExpiry}
                         onChange={e => setCardExpiry(e.target.value)}
                         placeholder="MM/YY"
                         required
                       />
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">CVV</label>
+                    <div className="input-group">
+                      <label>CVV</label>
                       <input
                         type="password"
-                        className="form-input"
+                        className="input"
                         value={cardCvv}
                         onChange={e => setCardCvv(e.target.value)}
                         placeholder="•••"
                         required
                       />
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">Network</label>
-                      <select className="form-input" value={cardBrand} onChange={e => setCardBrand(e.target.value)}>
+                    <div className="input-group">
+                      <label>Network</label>
+                      <select className="input" value={cardBrand} onChange={e => setCardBrand(e.target.value)}>
                         <option value="VISA">VISA</option>
                         <option value="MASTERCARD">Mastercard</option>
                         <option value="AMEX">Amex</option>
@@ -232,11 +244,11 @@ export function PaymentModal({ order, onClose, onSuccess }) {
               )}
 
               {activeMethod === 'UPI' && (
-                <div className="form-group">
-                  <label className="form-label">UPI Virtual Payment Address (VPA)</label>
+                <div className="input-group">
+                  <label>UPI Virtual Payment Address (VPA)</label>
                   <input
                     type="text"
-                    className="form-input"
+                    className="input"
                     value={upiVpa}
                     onChange={e => setUpiVpa(e.target.value)}
                     placeholder="user@okicici or user@sbi"
@@ -249,9 +261,9 @@ export function PaymentModal({ order, onClose, onSuccess }) {
               )}
 
               {activeMethod === 'NET_BANKING' && (
-                <div className="form-group">
-                  <label className="form-label">Select Bank</label>
-                  <select className="form-input" value={bankCode} onChange={e => setBankCode(e.target.value)}>
+                <div className="input-group">
+                  <label>Select Bank</label>
+                  <select className="input" value={bankCode} onChange={e => setBankCode(e.target.value)}>
                     <option value="HDFC_BANK">HDFC Bank</option>
                     <option value="ICICI_BANK">ICICI Bank</option>
                     <option value="SBI_BANK">State Bank of India (SBI)</option>
@@ -262,9 +274,9 @@ export function PaymentModal({ order, onClose, onSuccess }) {
               )}
 
               {activeMethod === 'WALLET' && (
-                <div className="form-group">
-                  <label className="form-label">Select Digital Wallet Provider</label>
-                  <select className="form-input" value={walletProvider} onChange={e => setWalletProvider(e.target.value)}>
+                <div className="input-group">
+                  <label>Select Digital Wallet Provider</label>
+                  <select className="input" value={walletProvider} onChange={e => setWalletProvider(e.target.value)}>
                     <option value="PAYTM_WALLET">Paytm Wallet</option>
                     <option value="APPLE_PAY">Apple Pay (Contactless)</option>
                     <option value="GOOGLE_PAY">Google Pay</option>
@@ -274,9 +286,9 @@ export function PaymentModal({ order, onClose, onSuccess }) {
               )}
 
               {(activeMethod === 'BNPL' || activeMethod === 'EMI') && (
-                <div className="form-group">
-                  <label className="form-label">Select Installment / Tenure</label>
-                  <select className="form-input" value={emiMonths} onChange={e => setEmiMonths(e.target.value)}>
+                <div className="input-group">
+                  <label>Select Installment / Tenure</label>
+                  <select className="input" value={emiMonths} onChange={e => setEmiMonths(e.target.value)}>
                     <option value={3}>3 Months (@ ${(order.totalPrice / 3).toFixed(2)}/mo)</option>
                     <option value={6}>6 Months (@ ${(order.totalPrice / 6).toFixed(2)}/mo)</option>
                     <option value={12}>12 Months (@ ${(order.totalPrice / 12).toFixed(2)}/mo)</option>
@@ -287,7 +299,7 @@ export function PaymentModal({ order, onClose, onSuccess }) {
               <div style={{ marginTop: '24px', display: 'flex', gap: '10px' }}>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn--secondary"
                   onClick={onClose}
                   style={{ flex: 1 }}
                 >
@@ -295,7 +307,7 @@ export function PaymentModal({ order, onClose, onSuccess }) {
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary"
+                  className="btn btn--primary"
                   disabled={payMutation.isPending}
                   style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 >

@@ -12,6 +12,7 @@ const NAV = [
     { to: '/products',    icon: '📦', label: 'Products' },
     { to: '/orders',      icon: '📋', label: 'Orders' },
     { to: '/users',       icon: '👤', label: 'Users' },
+    { to: '/payments',    icon: '💳', label: 'Payments' },
     { to: '/aggregator',  icon: '🔗', label: 'Aggregator' },
     { to: '/notifications',icon:'🔔', label: 'Notifications' },
   ]},

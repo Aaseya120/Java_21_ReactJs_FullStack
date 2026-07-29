@@ -70,7 +70,7 @@ class PaymentServiceTest {
 		);
 
 		Payment existingPayment = Payment.builder()
-				.id(1L)
+				.id("1")
 				.orderId(100L)
 				.userId(200L)
 				.amount(BigDecimal.valueOf(99.99))
@@ -80,7 +80,7 @@ class PaymentServiceTest {
 				.build();
 
 		PaymentResponse responseDto = new PaymentResponse(
-				1L, 100L, 200L, BigDecimal.valueOf(99.99), "USD",
+				"1", 100L, 200L, BigDecimal.valueOf(99.99), "USD",
 				PaymentStatus.SUCCESS, "Payment completed successfully", PaymentMethod.CARD,
 				"TX-123", "IDEM-12345", null, null, null
 		);
@@ -107,7 +107,7 @@ class PaymentServiceTest {
 		when(paymentRepository.findByIdempotencyKey("IDEM-CC-001")).thenReturn(Optional.empty());
 
 		Payment savedPending = Payment.builder()
-				.id(1L)
+				.id("1")
 				.orderId(100L)
 				.userId(200L)
 				.amount(BigDecimal.valueOf(99.99))
@@ -120,7 +120,7 @@ class PaymentServiceTest {
 				.build();
 
 		Payment savedSuccess = Payment.builder()
-				.id(1L)
+				.id("1")
 				.orderId(100L)
 				.userId(200L)
 				.amount(BigDecimal.valueOf(99.99))
@@ -138,7 +138,7 @@ class PaymentServiceTest {
 		when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
 		PaymentResponse responseDto = new PaymentResponse(
-				1L, 100L, 200L, BigDecimal.valueOf(99.99), "USD",
+				"1", 100L, 200L, BigDecimal.valueOf(99.99), "USD",
 				PaymentStatus.SUCCESS, "Payment completed successfully", PaymentMethod.CREDIT_CARD,
 				"CARD-TX-123456", "IDEM-CC-001", null, "4242", "VISA", null, null, null, "STRIPE_SIMULATOR", null, null
 		);
@@ -166,7 +166,7 @@ class PaymentServiceTest {
 		when(paymentRepository.findByIdempotencyKey("IDEM-UPI-001")).thenReturn(Optional.empty());
 
 		Payment savedPending = Payment.builder()
-				.id(2L)
+				.id("2")
 				.orderId(101L)
 				.userId(201L)
 				.amount(BigDecimal.valueOf(150.00))
@@ -178,7 +178,7 @@ class PaymentServiceTest {
 				.build();
 
 		Payment savedSuccess = Payment.builder()
-				.id(2L)
+				.id("2")
 				.orderId(101L)
 				.userId(201L)
 				.amount(BigDecimal.valueOf(150.00))
@@ -195,7 +195,7 @@ class PaymentServiceTest {
 		when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
 		PaymentResponse responseDto = new PaymentResponse(
-				2L, 101L, 201L, BigDecimal.valueOf(150.00), "INR",
+				"2", 101L, 201L, BigDecimal.valueOf(150.00), "INR",
 				PaymentStatus.SUCCESS, "Payment completed successfully", PaymentMethod.UPI,
 				"UPI-UTR-987654321", "IDEM-UPI-001", null, null, null, "customer@okicici", null, null, "RAZORPAY_SIMULATOR", null, null
 		);
@@ -220,7 +220,7 @@ class PaymentServiceTest {
 		when(paymentRepository.findByIdempotencyKey("IDEM-NB-001")).thenReturn(Optional.empty());
 
 		Payment savedPending = Payment.builder()
-				.id(3L)
+				.id("3")
 				.orderId(102L)
 				.userId(202L)
 				.amount(BigDecimal.valueOf(500.00))
@@ -232,7 +232,7 @@ class PaymentServiceTest {
 				.build();
 
 		Payment savedSuccess = Payment.builder()
-				.id(3L)
+				.id("3")
 				.orderId(102L)
 				.userId(202L)
 				.amount(BigDecimal.valueOf(500.00))
@@ -249,7 +249,7 @@ class PaymentServiceTest {
 		when(objectMapper.writeValueAsString(any())).thenReturn("{}");
 
 		PaymentResponse responseDto = new PaymentResponse(
-				3L, 102L, 202L, BigDecimal.valueOf(500.00), "INR",
+				"3", 102L, 202L, BigDecimal.valueOf(500.00), "INR",
 				PaymentStatus.SUCCESS, "Payment completed successfully", PaymentMethod.NET_BANKING,
 				"NB-REF-55667788", "IDEM-NB-001", null, null, null, null, "HDFC_BANK", null, "BILLDESK_SIMULATOR", null, null
 		);
@@ -266,14 +266,14 @@ class PaymentServiceTest {
 	@Test
 	void testRefundPayment_NonSuccessPayment_ThrowsException() {
 		Payment pendingPayment = Payment.builder()
-				.id(1L)
+				.id("1")
 				.status(PaymentStatus.PENDING)
 				.build();
 
-		when(paymentRepository.findById(1L)).thenReturn(Optional.of(pendingPayment));
+		when(paymentRepository.findById("1")).thenReturn(Optional.of(pendingPayment));
 
 		RefundRequest request = new RefundRequest("Customer requested", BigDecimal.valueOf(50.00));
 
-		assertThrows(IllegalStateException.class, () -> paymentService.refundPayment(1L, request));
+		assertThrows(IllegalStateException.class, () -> paymentService.refundPayment("1", request));
 	}
 }

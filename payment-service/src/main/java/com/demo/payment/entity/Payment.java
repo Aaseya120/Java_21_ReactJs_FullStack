@@ -45,9 +45,9 @@ public class Payment {
 
 	@EqualsAndHashCode.Include
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(updatable = false, nullable = false)
-	private Long id;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	@Column(updatable = false, nullable = false, length = 36)
+	private String id;
 
 	@Column(name = "order_id", nullable = false)
 	private Long orderId;

@@ -52,7 +52,7 @@ public class PaymentController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentById(@PathVariable Long id) {
+	public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentById(@PathVariable String id) {
 		log.info("REST request to get payment ID: {}", id);
 		PaymentResponse response = paymentService.getPaymentById(id);
 		return ResponseEntity.ok(ApiResponse.success(response));
@@ -74,7 +74,7 @@ public class PaymentController {
 
 	@PostMapping("/{id}/refund")
 	public ResponseEntity<ApiResponse<PaymentResponse>> refundPayment(
-			@PathVariable Long id,
+			@PathVariable String id,
 			@Valid @RequestBody RefundRequest request) {
 		log.info("REST request to refund payment ID: {}", id);
 		PaymentResponse response = paymentService.refundPayment(id, request);

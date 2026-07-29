@@ -250,35 +250,41 @@ export default function LoginPage() {
             </div>
             
             {/* Vertical drops to services */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '85%', margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '90%', margin: '0 auto' }}>
               <div className="arch-line-v" style={{ height: 12 }}><div className="packet-down" style={{ animationDelay: '0.2s' }}/></div>
               <div className="arch-line-v" style={{ height: 12 }}><div className="packet-down" style={{ animationDelay: '0.4s' }}/></div>
               <div className="arch-line-v" style={{ height: 12 }}><div className="packet-down" style={{ animationDelay: '0.6s' }}/></div>
               <div className="arch-line-v" style={{ height: 12 }}><div className="packet-down" style={{ animationDelay: '0.8s' }}/></div>
+              <div className="arch-line-v" style={{ height: 12 }}><div className="packet-down" style={{ animationDelay: '1.0s' }}/></div>
             </div>
 
             {/* Microservices */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 6 }}>
-              <div className="arch-node" style={{ flex: 1, padding: '10px 2px' }}>
-                <div className="arch-title" style={{ fontSize: '0.65rem' }}>👤 User SVC</div>
-                <div className="arch-sub" style={{ fontSize: '0.55rem' }}>8081 • JWT</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 4 }}>
+              <div className="arch-node" style={{ flex: 1, padding: '8px 2px' }}>
+                <div className="arch-title" style={{ fontSize: '0.6rem' }}>👤 User</div>
+                <div className="arch-sub" style={{ fontSize: '0.5rem' }}>8081</div>
               </div>
-              <div className="arch-node" style={{ flex: 1, padding: '10px 2px' }}>
-                <div className="arch-title" style={{ fontSize: '0.65rem' }}>📦 Prod SVC</div>
-                <div className="arch-sub" style={{ fontSize: '0.55rem' }}>8082 • SQL</div>
+              <div className="arch-node" style={{ flex: 1, padding: '8px 2px' }}>
+                <div className="arch-title" style={{ fontSize: '0.6rem' }}>🛒 Order</div>
+                <div className="arch-sub" style={{ fontSize: '0.5rem' }}>8082</div>
               </div>
-              <div className="arch-node" style={{ flex: 1, padding: '10px 2px' }}>
-                <div className="arch-title" style={{ fontSize: '0.65rem' }}>🛒 Order SVC</div>
-                <div className="arch-sub" style={{ fontSize: '0.55rem' }}>8083 • SQL</div>
+              <div className="arch-node" style={{ flex: 1, padding: '8px 2px' }}>
+                <div className="arch-title" style={{ fontSize: '0.6rem' }}>📦 Prod</div>
+                <div className="arch-sub" style={{ fontSize: '0.5rem' }}>8083</div>
               </div>
-              <div className="arch-node" style={{ flex: 1, padding: '10px 2px' }}>
-                <div className="arch-title" style={{ fontSize: '0.65rem' }}>🔔 Notif SVC</div>
-                <div className="arch-sub" style={{ fontSize: '0.55rem' }}>8084 • Kafka</div>
+              <div className="arch-node" style={{ flex: 1, padding: '8px 2px' }}>
+                <div className="arch-title" style={{ fontSize: '0.6rem' }}>🔔 Notif</div>
+                <div className="arch-sub" style={{ fontSize: '0.5rem' }}>8084</div>
+              </div>
+              <div className="arch-node" style={{ flex: 1, padding: '8px 2px' }}>
+                <div className="arch-title" style={{ fontSize: '0.6rem' }}>💳 Pay</div>
+                <div className="arch-sub" style={{ fontSize: '0.5rem' }}>8085</div>
               </div>
             </div>
 
             {/* Connection to Infra */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '85%', margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '90%', margin: '0 auto' }}>
+              <div className="arch-line-v" style={{ height: 6 }} />
               <div className="arch-line-v" style={{ height: 6 }} />
               <div className="arch-line-v" style={{ height: 6 }} />
               <div className="arch-line-v" style={{ height: 6 }} />

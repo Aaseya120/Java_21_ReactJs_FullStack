@@ -39,7 +39,7 @@ public class PaymentAuditLog {
 	private Long id;
 
 	@Column(name = "payment_id", nullable = false)
-	private Long paymentId;
+	private String paymentId;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "previous_status", length = 50)

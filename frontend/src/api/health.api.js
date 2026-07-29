@@ -14,11 +14,12 @@ async function checkHealth(url) {
 export const healthApi = {
   checkAll: async () => {
     const cfg = getConfig();
-    const [gateway, user, order, product, notification] = await Promise.allSettled([
+    const [gateway, user, order, product, payment, notification] = await Promise.allSettled([
       checkHealth(cfg.gatewayUrl),
       checkHealth(cfg.userServiceUrl),
       checkHealth(cfg.orderServiceUrl),
       checkHealth(cfg.productServiceUrl),
+      checkHealth(cfg.paymentServiceUrl),
       checkHealth(cfg.notificationServiceUrl),
     ]);
     return {
@@ -26,6 +27,7 @@ export const healthApi = {
       user: user.value || { status: 'DOWN' },
       order: order.value || { status: 'DOWN' },
       product: product.value || { status: 'DOWN' },
+      payment: payment.value || { status: 'DOWN' },
       notification: notification.value || { status: 'DOWN' },
     };
   },

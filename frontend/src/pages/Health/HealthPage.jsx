@@ -8,6 +8,7 @@ const SERVICE_META = {
   user:         { label: 'User Service',           icon: '👤', desc: 'Auth, registration, user profiles' },
   order:        { label: 'Order Service',          icon: '📋', desc: 'Order lifecycle, state machine, Saga' },
   product:      { label: 'Product Service',        icon: '📦', desc: 'Product catalog, stock management, CQRS' },
+  payment:      { label: 'Payment Service',        icon: '💳', desc: 'Payment processing, transactions' },
   notification: { label: 'Notification Service',   icon: '🔔', desc: 'SSE streams, Kafka consumer' },
 };
 
@@ -68,6 +69,7 @@ export default function HealthPage() {
     user: config.userServiceUrl,
     order: config.orderServiceUrl,
     product: config.productServiceUrl,
+    payment: config.paymentServiceUrl,
     notification: config.notificationServiceUrl,
   };
 

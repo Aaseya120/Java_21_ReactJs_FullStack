@@ -32,6 +32,7 @@ public class UserController {
 	 * Redis via {@link UserService#getUserById}.
 	 */
 	@GetMapping(ApiConstants.UserApi.ID)
+	@PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
 	public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable Long id) {
 		return ResponseEntity.ok(ApiResponse.success(userService.getUserById(id)));
 	}

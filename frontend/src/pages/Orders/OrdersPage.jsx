@@ -12,6 +12,61 @@ import { getServiceErrorMessage } from '../../utils/errorHelper';
 import { TableSkeleton } from '../../components/common/Skeleton';
 import { PaymentModal } from '../../components/common/PaymentModal';
 
+const refundOrderSchema = z.object({
+  reason: z.string().trim().min(5, 'Reason must be at least 5 characters'),
+  refundDestination: z.enum(['ORIGINAL_PAYMENT_METHOD', 'STORE_CREDIT']),
+  refundAmount: z.coerce.number().optional().nullable(),
+});
+
+function RefundOrderModal({ order, onClose, onSubmit }) {
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    resolver: zodResolver(refundOrderSchema),
+    defaultValues: { reason: '', refundDestination: 'ORIGINAL_PAYMENT_METHOD' },
+  });
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal animate-up" role="dialog">
+        <div className="modal-header">
+          <h2>💸 Issue Refund</h2>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <form onSubmit={handleSubmit(d => onSubmit(d))} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="input-group">
+            <label>Order Number</label>
+            <input className="input" value={order.orderNumber || order.id} disabled />
+          </div>
+          <div className="input-group">
+            <label>Reason for Refund *</label>
+            <textarea className={`input ${errors.reason ? 'input--error' : ''}`} rows="3"
+              placeholder="e.g. Damaged in transit, customer requested..."
+              {...register('reason')} />
+            {errors.reason && <span className="field-error">{errors.reason.message}</span>}
+          </div>
+          <div className="input-group">
+            <label>Refund Destination *</label>
+            <select className="input" {...register('refundDestination')}>
+              <option value="ORIGINAL_PAYMENT_METHOD">Original Payment Method</option>
+              <option value="STORE_CREDIT">Store Credit / Wallet</option>
+            </select>
+          </div>
+          <div className="input-group">
+            <label>Partial Refund Amount (Optional)</label>
+            <input type="number" step="0.01" className="input" placeholder="Leave empty for full refund"
+              {...register('refundAmount')} />
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn--ghost" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn btn--danger" disabled={isSubmitting}>
+              {isSubmitting ? <span className="spinner"/> : 'Submit Refund'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 const createOrderSchema = z.object({
   userId: z.coerce.string().trim().min(1, 'User ID is required'),
   productId: z.string().trim().min(1, 'Please select a product'),
@@ -180,10 +235,11 @@ function CreateOrderModal({ onClose, onSave }) {
   );
 }
 
-function OrderDetailModal({ order, onClose, onStatusChange }) {
+function OrderDetailModal({ order, onClose, onStatusChange, onRefundSubmit }) {
   const { user } = useAuth();
   const [nextStatus, setNextStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false);
 
   const handleStatusChange = async (targetStatus) => {
     const statusToApply = targetStatus || nextStatus;
@@ -202,8 +258,25 @@ function OrderDetailModal({ order, onClose, onStatusChange }) {
   const canChange = !['DELIVERED', 'CANCELLED', 'REFUNDED'].includes(order.status);
   const isAdmin = user?.role === 'ADMIN';
 
+  // Customer Grace Period (7 days from updatedAt or createdAt)
+  const isCustomer = user?.role !== 'ADMIN';
+  const deliveredDate = new Date(order.updatedAt || order.createdAt);
+  const gracePeriodActive = (Date.now() - deliveredDate.getTime()) <= 7 * 24 * 60 * 60 * 1000;
+  const showCustomerRefund = isCustomer && order.status === 'DELIVERED' && gracePeriodActive;
+
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      {showRefundModal ? (
+        <RefundOrderModal 
+          order={order} 
+          onClose={() => setShowRefundModal(false)}
+          onSubmit={async (data) => {
+            await onRefundSubmit(order.id, data);
+            setShowRefundModal(false);
+            onClose();
+          }}
+        />
+      ) : (
       <div className="modal animate-up modal--lg">
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -292,9 +365,9 @@ function OrderDetailModal({ order, onClose, onStatusChange }) {
                     ❌ Reject / Cancel Order
                   </button>
                 )}
-                {order.status !== 'REFUNDED' && (
+                {order.status === 'DELIVERED' && (
                   <button type="button" className="btn btn--secondary btn--sm"
-                    onClick={() => handleStatusChange('REFUNDED')} disabled={loading}>
+                    onClick={() => setShowRefundModal(true)} disabled={loading}>
                     💸 Refund Order
                   </button>
                 )}
@@ -316,17 +389,17 @@ function OrderDetailModal({ order, onClose, onStatusChange }) {
               </div>
             </div>
           ) : (
-            canChange && (
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-                <div style={{ fontWeight: 600, marginBottom: 12 }}>Update Status</div>
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <select className="input" value={nextStatus} onChange={e => setNextStatus(e.target.value)} style={{ flex: 1 }}>
-                    <option value="">— Select next status —</option>
-                    {STATUS_FLOW.slice(currentIdx + 1).map(s => <option key={s} value={s}>{s}</option>)}
-                    <option value="CANCELLED">CANCELLED</option>
-                  </select>
-                  <button className="btn btn--primary" onClick={() => handleStatusChange()} disabled={!nextStatus || loading}>
-                    {loading ? <span className="spinner"/> : 'Update'}
+            showCustomerRefund && (
+              <div className="card" style={{ padding: 20, borderLeft: '4px solid var(--primary)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <strong style={{ display: 'block', color: 'var(--text-primary)' }}>Need to return this item?</strong>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      You are within the 7-day grace period to request a return or refund.
+                    </span>
+                  </div>
+                  <button className="btn btn--secondary btn--sm" onClick={() => setShowRefundModal(true)}>
+                    Request Return/Refund
                   </button>
                 </div>
               </div>
@@ -334,6 +407,7 @@ function OrderDetailModal({ order, onClose, onStatusChange }) {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
@@ -419,6 +493,12 @@ export default function OrdersPage() {
     mutationFn: ordersApi.cancel,
     onSuccess: () => { toast.success('Order cancelled'); qc.invalidateQueries(['orders']); },
     onError: (err) => toast.error(getServiceErrorMessage(err, 'Cancel failed')),
+  });
+
+  const refundMutation = useMutation({
+    mutationFn: ({ id, data }) => ordersApi.refund(id, data),
+    onSuccess: () => { toast.success('Refund processed successfully!'); qc.invalidateQueries(['orders']); },
+    onError: (err) => toast.error(getServiceErrorMessage(err, 'Refund failed')),
   });
 
   return (
@@ -598,7 +678,7 @@ export default function OrdersPage() {
                       <button className="btn btn--secondary btn--sm" onClick={() => setSelectedOrder(o)}>
                         {user?.role === 'ADMIN' ? '⚙️ Manage' : 'View'}
                       </button>
-                      {o.status === 'PENDING' && (
+                      {user?.role !== 'ADMIN' && o.status === 'PENDING' && (
                         <button
                           type="button"
                           className="btn btn--sm"
@@ -629,13 +709,21 @@ export default function OrdersPage() {
                           ⚡ Process
                         </button>
                       )}
-                      {!['DELIVERED', 'CANCELLED', 'REFUNDED'].includes(o.status) && (
-                        <button className="btn btn--danger btn--sm"
-                          title="Cancel Order"
-                          onClick={() => { if (window.confirm('Cancel this order?')) cancelMutation.mutate(o.id); }}>
-                          ✕
-                        </button>
-                      )}
+                      {
+                        // Cancel logic:
+                        // ADMIN can cancel anything that isn't DELIVERED, CANCELLED, or REFUNDED.
+                        // Standard USER can only cancel early stages: PENDING, CONFIRMED, PROCESSING.
+                        (
+                          (user?.role === 'ADMIN' && !['DELIVERED', 'CANCELLED', 'REFUNDED'].includes(o.status)) ||
+                          (user?.role !== 'ADMIN' && ['PENDING', 'CONFIRMED', 'PROCESSING'].includes(o.status))
+                        ) && (
+                          <button className="btn btn--danger btn--sm"
+                            title="Cancel Order"
+                            onClick={() => { if (window.confirm('Cancel this order?')) cancelMutation.mutate(o.id); }}>
+                            ✕
+                          </button>
+                        )
+                      }
                     </div>
                   </td>
                 </tr>
@@ -666,6 +754,7 @@ export default function OrdersPage() {
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
           onStatusChange={(id, status) => statusMutation.mutateAsync({ id, status })}
+          onRefundSubmit={(id, data) => refundMutation.mutateAsync({ id, data })}
         />
       )}
       {payingOrder && (

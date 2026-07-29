@@ -50,5 +50,29 @@ public class SagaOrderListener {
 			throw new RuntimeException("Unexpected error processing inventory event", e);
 		}
 	}
+
+	@KafkaListener(topics = KafkaConstants.TOPIC_PAYMENT_EVENTS, groupId = "order-saga-group")
+	public void onPaymentEvent(String payload) {
+		try {
+			JsonNode event = objectMapper.readTree(payload);
+			Long orderId = event.get("orderId").asLong();
+			String status = event.get("status").asText();
+
+			log.info("SAGA: Received payment response for order {}: {}", orderId, status);
+
+			if ("SUCCESS".equals(status)) {
+				// Assuming order service considers it CONFIRMED (or PROCESSING) once paid
+				orderService.updateOrderStatus(orderId, OrderStatus.CONFIRMED);
+				log.info("SAGA: Order {} confirmed via successful payment.", orderId);
+			} else if ("FAILED".equals(status)) {
+				// Payment failed, we could optionally cancel the order if it wasn't COD
+				log.warn("SAGA: Payment failed for order {}. Manual intervention may be needed.", orderId);
+			}
+
+		} catch (Exception e) {
+			log.error("Error processing payment event in saga: {}", e.getMessage());
+			throw new RuntimeException("Unexpected error processing payment event", e);
+		}
+	}
 }
 

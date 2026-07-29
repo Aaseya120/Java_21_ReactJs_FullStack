@@ -83,11 +83,13 @@ public class OrderEventConsumer {
 
 		// Java 21 pattern matching switch — routes by event type string
 		NotificationMessage notification = switch (eventType) {
-		case "ORDER_CREATED" -> NotificationMessage.of(userId, userId + "@demo.com", "Order Confirmed! 🎉",
+		case "ORDER_CREATED" -> NotificationMessage.of(userId, "venkat.j2se@gmail.com", "Order Confirmed! 🎉",
 				notificationService.buildOrderEmailBody(eventType, orderId, status), NotificationType.EMAIL);
-		case "ORDER_STATUS_CHANGED" -> NotificationMessage.of(userId, userId + "@demo.com", "Order Update: " + status,
-				notificationService.buildOrderEmailBody(eventType, orderId, status), NotificationType.IN_APP);
-		case "ORDER_CANCELLED" -> NotificationMessage.of(userId, userId + "@demo.com", "Order Cancelled",
+		case "ORDER_STATUS_CHANGED" -> NotificationMessage.of(userId, "venkat.j2se@gmail.com", "Order Update: " + status,
+				notificationService.buildOrderEmailBody(eventType, orderId, status), NotificationType.EMAIL);
+		case "ORDER_CANCELLED" -> NotificationMessage.of(userId, "venkat.j2se@gmail.com", "Order Cancelled",
+				notificationService.buildOrderEmailBody(eventType, orderId, status), NotificationType.EMAIL);
+		case "ORDER_REFUNDED" -> NotificationMessage.of(userId, "venkat.j2se@gmail.com", "Order Refunded",
 				notificationService.buildOrderEmailBody(eventType, orderId, status), NotificationType.EMAIL);
 		default -> {
 			log.warn("Unknown order event type: {}", eventType);
