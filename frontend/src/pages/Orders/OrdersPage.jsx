@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ordersApi } from '../../api/orders.api';
 import { productsApi } from '../../api/products.api';
+import { paymentApi } from '../../api/payment.api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { getServiceErrorMessage } from '../../utils/errorHelper';
@@ -15,20 +16,30 @@ import { PaymentModal } from '../../components/common/PaymentModal';
 const refundOrderSchema = z.object({
   reason: z.string().trim().min(5, 'Reason must be at least 5 characters'),
   refundDestination: z.enum(['ORIGINAL_PAYMENT_METHOD', 'STORE_CREDIT']),
-  refundAmount: z.coerce.number().optional().nullable(),
+  refundAmount: z.union([z.string(), z.number()]).optional().nullable().transform(val => {
+    if (val === '' || val === null || val === undefined) return null;
+    const num = Number(val);
+    return isNaN(num) ? null : num;
+  }),
 });
 
-function RefundOrderModal({ order, onClose, onSubmit }) {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+function RefundOrderModal({ order, onClose, onSubmit, isAdmin, actionType = 'REQUEST' }) {
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(refundOrderSchema),
     defaultValues: { reason: '', refundDestination: 'ORIGINAL_PAYMENT_METHOD' },
   });
+
+  useEffect(() => {
+    if (!isAdmin) {
+      setValue('refundAmount', order.totalPrice);
+    }
+  }, [isAdmin, order.totalPrice, setValue]);
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal animate-up" role="dialog">
         <div className="modal-header">
-          <h2>💸 Issue Refund</h2>
+          <h2>{actionType === 'REJECT' ? '❌ Reject Refund' : '💸 Issue Refund'}</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <form onSubmit={handleSubmit(d => onSubmit(d))} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -37,28 +48,36 @@ function RefundOrderModal({ order, onClose, onSubmit }) {
             <input className="input" value={order.orderNumber || order.id} disabled />
           </div>
           <div className="input-group">
-            <label>Reason for Refund *</label>
+            <label>{actionType === 'REJECT' ? 'Reason for Rejection *' : 'Reason for Refund *'}</label>
             <textarea className={`input ${errors.reason ? 'input--error' : ''}`} rows="3"
-              placeholder="e.g. Damaged in transit, customer requested..."
+              placeholder={actionType === 'REJECT' ? "Reason why refund is denied..." : "e.g. Damaged in transit, customer requested..."}
               {...register('reason')} />
             {errors.reason && <span className="field-error">{errors.reason.message}</span>}
           </div>
-          <div className="input-group">
-            <label>Refund Destination *</label>
-            <select className="input" {...register('refundDestination')}>
-              <option value="ORIGINAL_PAYMENT_METHOD">Original Payment Method</option>
-              <option value="STORE_CREDIT">Store Credit / Wallet</option>
-            </select>
-          </div>
-          <div className="input-group">
-            <label>Partial Refund Amount (Optional)</label>
-            <input type="number" step="0.01" className="input" placeholder="Leave empty for full refund"
-              {...register('refundAmount')} />
-          </div>
+          {actionType !== 'REJECT' && (
+            <>
+              <div className="input-group">
+                <label>Refund Destination *</label>
+                <select className="input" {...register('refundDestination')}>
+                  <option value="ORIGINAL_PAYMENT_METHOD">Original Payment Method</option>
+                  <option value="STORE_CREDIT">Store Credit / Wallet</option>
+                </select>
+              </div>
+              <div className="input-group">
+                <label>Partial Refund Amount (Optional)</label>
+                <input type="number" step="0.01" className="input" placeholder="Leave empty for full refund"
+                  {...register('refundAmount')} 
+                  readOnly={!isAdmin} 
+                  style={!isAdmin ? { background: 'var(--bg-elevated)', cursor: 'not-allowed' } : {}}
+                  />
+                {!isAdmin && <span className="field-error" style={{color: 'var(--primary)', marginTop: 4}}>Refund amount is locked to full purchase amount for customer requests.</span>}
+              </div>
+            </>
+          )}
           <div className="modal-footer">
             <button type="button" className="btn btn--ghost" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn btn--danger" disabled={isSubmitting}>
-              {isSubmitting ? <span className="spinner"/> : 'Submit Refund'}
+              {isSubmitting ? <span className="spinner"/> : (actionType === 'REJECT' ? 'Submit Rejection' : 'Submit Refund')}
             </button>
           </div>
         </form>
@@ -74,7 +93,7 @@ const createOrderSchema = z.object({
   notes: z.string().optional(),
 });
 
-const ORDER_STATUSES = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'];
+const ORDER_STATUSES = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUND_REQUESTED', 'REFUND_REJECTED', 'REFUNDED'];
 const STATUS_FLOW = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
 
 const STATUS_COLOR = {
@@ -84,6 +103,8 @@ const STATUS_COLOR = {
   SHIPPED:    'info',
   DELIVERED:  'success',
   CANCELLED:  'danger',
+  REFUND_REQUESTED: 'warning',
+  REFUND_REJECTED: 'danger',
   REFUNDED:   'muted',
 };
 
@@ -235,11 +256,19 @@ function CreateOrderModal({ onClose, onSave }) {
   );
 }
 
-function OrderDetailModal({ order, onClose, onStatusChange, onRefundSubmit }) {
+function OrderDetailModal({ order, onClose, onStatusChange, onRefundSubmit, onApproveRefundSubmit, onRejectRefundSubmit }) {
   const { user } = useAuth();
   const [nextStatus, setNextStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
+  const [refundActionType, setRefundActionType] = useState('REQUEST');
+
+  const { data: paymentsData } = useQuery({
+    queryKey: ['order-payments', order.id],
+    queryFn: () => paymentApi.getByOrderId(order.id),
+    enabled: !!order,
+  });
+  const payments = paymentsData?.data?.data || [];
 
   const handleStatusChange = async (targetStatus) => {
     const statusToApply = targetStatus || nextStatus;
@@ -262,16 +291,24 @@ function OrderDetailModal({ order, onClose, onStatusChange, onRefundSubmit }) {
   const isCustomer = user?.role !== 'ADMIN';
   const deliveredDate = new Date(order.updatedAt || order.createdAt);
   const gracePeriodActive = (Date.now() - deliveredDate.getTime()) <= 7 * 24 * 60 * 60 * 1000;
-  const showCustomerRefund = isCustomer && order.status === 'DELIVERED' && gracePeriodActive;
+  const showCustomerRefund = isCustomer && (order.status === 'DELIVERED' || order.status === 'CANCELLED') && gracePeriodActive;
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       {showRefundModal ? (
         <RefundOrderModal 
           order={order} 
+          isAdmin={isAdmin}
+          actionType={refundActionType}
           onClose={() => setShowRefundModal(false)}
           onSubmit={async (data) => {
-            await onRefundSubmit(order.id, data);
+            if (refundActionType === 'REJECT') {
+              await onRejectRefundSubmit(order.id, data);
+            } else if (isAdmin && order.status === 'REFUND_REQUESTED') {
+              await onApproveRefundSubmit(order.id, data);
+            } else {
+              await onRefundSubmit(order.id, data);
+            }
             setShowRefundModal(false);
             onClose();
           }}
@@ -309,6 +346,84 @@ function OrderDetailModal({ order, onClose, onStatusChange, onRefundSubmit }) {
               </div>
             ))}
           </div>
+
+          {/* Refund Progress Stepper */}
+          {['REFUND_REQUESTED', 'REFUND_REJECTED', 'REFUNDED'].includes(order.status) ? (
+            <div className="card" style={{ padding: 20 }}>
+              <div style={{ marginBottom: 12, fontWeight: 600 }}>Refund Progress</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* 1. Initiated */}
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.7rem', marginTop: 2, flexShrink: 0 }}>✓</div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Refund Initiated</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Customer requested a refund.</div>
+                  </div>
+                </div>
+                
+                {/* 2. Admin Approval */}
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: order.status === 'REFUND_REQUESTED' ? 'var(--warning)' : (order.status === 'REFUND_REJECTED' ? 'var(--danger)' : 'var(--success)'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.7rem', marginTop: 2, flexShrink: 0 }}>
+                    {order.status === 'REFUND_REQUESTED' ? '⏳' : (order.status === 'REFUND_REJECTED' ? '✕' : '✓')}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                      {order.status === 'REFUND_REQUESTED' ? 'Pending Approval' : (order.status === 'REFUND_REJECTED' ? 'Refund Rejected' : 'Refund Approved')}
+                    </div>
+                    {order.status === 'REFUND_REJECTED' && (
+                      <div style={{ fontSize: '0.75rem', color: 'var(--danger)', marginTop: 4, padding: 8, background: 'rgba(239,68,68,0.1)', borderRadius: 4, borderLeft: '3px solid var(--danger)' }}>
+                        <strong>Reason: </strong>{order.notes?.split('| Refund Rejected:').pop() || 'Denied by Admin'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. Refund Success */}
+                {(order.status === 'REFUND_REQUESTED' || order.status === 'REFUNDED') && (
+                  <div style={{ display: 'flex', gap: 12, opacity: order.status === 'REFUNDED' ? 1 : 0.4 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: order.status === 'REFUNDED' ? 'var(--success)' : 'var(--bg-elevated)', border: order.status !== 'REFUNDED' ? '2px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.7rem', marginTop: 2, flexShrink: 0 }}>
+                      {order.status === 'REFUNDED' ? '✓' : ''}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Refund Processed</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Payment gateway processing complete.</div>
+                      {order.status === 'REFUNDED' && payments.length > 0 && payments.filter(p => p.status === 'REFUNDED').map(p => (
+                         <div key={p.id} style={{ fontSize: '0.75rem', color: 'var(--success)', marginTop: 4 }}>
+                           Amount: ${Number(p.amount).toFixed(2)} ({p.paymentMethod})
+                         </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            payments.length > 0 && (
+              <div className="card" style={{ padding: 20 }}>
+                <div style={{ marginBottom: 12, fontWeight: 600 }}>💳 Payment Details</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {payments.map(p => (
+                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)' }}>
+                      <div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: 2 }}>METHOD</div>
+                        <strong style={{ fontSize: '0.85rem' }}>{p.paymentMethod}</strong>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: 2 }}>STATUS</div>
+                        <span className={`badge badge--${p.status === 'SUCCESS' ? 'success' : p.status === 'REFUNDED' ? 'warning' : 'primary'}`} style={{ fontSize: '0.75rem' }}>
+                          {p.status}
+                        </span>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: 2 }}>AMOUNT</div>
+                        <strong style={{ fontSize: '0.85rem' }}>${Number(p.amount).toFixed(2)}</strong>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          )}
 
           {/* Status Stepper */}
           <div className="card" style={{ padding: 20 }}>
@@ -367,9 +482,21 @@ function OrderDetailModal({ order, onClose, onStatusChange, onRefundSubmit }) {
                 )}
                 {order.status === 'DELIVERED' && (
                   <button type="button" className="btn btn--secondary btn--sm"
-                    onClick={() => setShowRefundModal(true)} disabled={loading}>
-                    💸 Refund Order
+                    onClick={() => { setRefundActionType('REQUEST'); setShowRefundModal(true); }} disabled={loading}>
+                    💸 Request Refund on Behalf
                   </button>
+                )}
+                {order.status === 'REFUND_REQUESTED' && (
+                  <>
+                    <button type="button" className="btn btn--success btn--sm"
+                      onClick={() => { setRefundActionType('REQUEST'); setShowRefundModal(true); }} disabled={loading}>
+                      ✅ Approve Refund
+                    </button>
+                    <button type="button" className="btn btn--danger btn--sm"
+                      onClick={() => { setRefundActionType('REJECT'); setShowRefundModal(true); }} disabled={loading}>
+                      ❌ Reject Refund
+                    </button>
+                  </>
                 )}
               </div>
 
@@ -398,7 +525,7 @@ function OrderDetailModal({ order, onClose, onStatusChange, onRefundSubmit }) {
                       You are within the 7-day grace period to request a return or refund.
                     </span>
                   </div>
-                  <button className="btn btn--secondary btn--sm" onClick={() => setShowRefundModal(true)}>
+                  <button className="btn btn--secondary btn--sm" onClick={() => { setRefundActionType('REQUEST'); setShowRefundModal(true); }}>
                     Request Return/Refund
                   </button>
                 </div>
@@ -497,8 +624,20 @@ export default function OrdersPage() {
 
   const refundMutation = useMutation({
     mutationFn: ({ id, data }) => ordersApi.refund(id, data),
-    onSuccess: () => { toast.success('Refund processed successfully!'); qc.invalidateQueries(['orders']); },
-    onError: (err) => toast.error(getServiceErrorMessage(err, 'Refund failed')),
+    onSuccess: () => { toast.success('Refund requested successfully!'); qc.invalidateQueries(['orders']); },
+    onError: (err) => toast.error(getServiceErrorMessage(err, 'Refund request failed')),
+  });
+
+  const approveRefundMutation = useMutation({
+    mutationFn: ({ id, data }) => ordersApi.approveRefund(id, data),
+    onSuccess: () => { toast.success('Refund approved successfully!'); qc.invalidateQueries(['orders']); },
+    onError: (err) => toast.error(getServiceErrorMessage(err, 'Refund approval failed')),
+  });
+
+  const rejectRefundMutation = useMutation({
+    mutationFn: ({ id, data }) => ordersApi.rejectRefund(id, data),
+    onSuccess: () => { toast.success('Refund rejected successfully!'); qc.invalidateQueries(['orders']); },
+    onError: (err) => toast.error(getServiceErrorMessage(err, 'Refund rejection failed')),
   });
 
   return (
@@ -755,6 +894,8 @@ export default function OrdersPage() {
           onClose={() => setSelectedOrder(null)}
           onStatusChange={(id, status) => statusMutation.mutateAsync({ id, status })}
           onRefundSubmit={(id, data) => refundMutation.mutateAsync({ id, data })}
+          onApproveRefundSubmit={(id, data) => approveRefundMutation.mutateAsync({ id, data })}
+          onRejectRefundSubmit={(id, data) => rejectRefundMutation.mutateAsync({ id, data })}
         />
       )}
       {payingOrder && (

@@ -154,21 +154,41 @@ public class OrderService {
 	
 	@Transactional
 	@CacheEvict(value = ORDER_CACHE, key = "#id")
-	public OrderResponse refundOrder(Long id, com.demo.order.dto.RefundRequest request) {
+	public OrderResponse requestRefund(Long id, com.demo.order.dto.RefundRequest request) {
 		Order order = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id.toString()));
 		
-		// Proactive refund validation: usually allowed only when DELIVERED
-		if (order.getStatus() != OrderStatus.DELIVERED) {
-			throw new InvalidOrderStateException("Order must be DELIVERED before it can be refunded. Current status: " + order.getStatus());
+		// Proactive refund validation: usually allowed only when DELIVERED or CANCELLED
+		if (order.getStatus() != OrderStatus.DELIVERED && order.getStatus() != OrderStatus.CANCELLED) {
+			throw new InvalidOrderStateException("Order must be DELIVERED or CANCELLED before requesting a refund. Current status: " + order.getStatus());
+		}
+		
+		order.setStatus(OrderStatus.REFUND_REQUESTED);
+		order.setOrderNotes(order.getOrderNotes() != null 
+			? order.getOrderNotes() + " | Refund Requested: " + request.reason() 
+			: "Refund Requested: " + request.reason());
+			
+		order = orderRepository.save(order);
+		log.info("Order {} refund requested. Reason: {}", id, request.reason());
+
+		return orderMapper.toResponse(order);
+	}
+
+	@Transactional
+	@CacheEvict(value = ORDER_CACHE, key = "#id")
+	public OrderResponse approveRefund(Long id, com.demo.order.dto.RefundRequest request) {
+		Order order = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id.toString()));
+		
+		if (order.getStatus() != OrderStatus.REFUND_REQUESTED && order.getStatus() != OrderStatus.DELIVERED) {
+			throw new InvalidOrderStateException("Order must be REFUND_REQUESTED or DELIVERED to approve a refund.");
 		}
 		
 		order.setStatus(OrderStatus.REFUNDED);
 		order.setOrderNotes(order.getOrderNotes() != null 
-			? order.getOrderNotes() + " | Refunded: " + request.reason() 
-			: "Refunded: " + request.reason());
+			? order.getOrderNotes() + " | Refund Approved: " + request.reason() 
+			: "Refund Approved: " + request.reason());
 			
 		order = orderRepository.save(order);
-		log.info("Order {} refunded. Reason: {}", id, request.reason());
+		log.info("Order {} refund approved. Reason: {}", id, request.reason());
 
 		// Outbox Pattern for Refund Event
 		try {
@@ -186,6 +206,26 @@ public class OrderService {
 			log.error("Failed to serialize OrderRefundEvent", e);
 			throw new RuntimeException("Failed to serialize OrderRefundEvent", e);
 		}
+
+		return orderMapper.toResponse(order);
+	}
+
+	@Transactional
+	@CacheEvict(value = ORDER_CACHE, key = "#id")
+	public OrderResponse rejectRefund(Long id, com.demo.order.dto.RefundRequest request) {
+		Order order = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id.toString()));
+		
+		if (order.getStatus() != OrderStatus.REFUND_REQUESTED) {
+			throw new InvalidOrderStateException("Order must be REFUND_REQUESTED to reject a refund.");
+		}
+		
+		order.setStatus(OrderStatus.REFUND_REJECTED);
+		order.setOrderNotes(order.getOrderNotes() != null 
+			? order.getOrderNotes() + " | Refund Rejected: " + request.reason() 
+			: "Refund Rejected: " + request.reason());
+			
+		order = orderRepository.save(order);
+		log.info("Order {} refund rejected. Reason: {}", id, request.reason());
 
 		return orderMapper.toResponse(order);
 	}
@@ -211,8 +251,10 @@ public class OrderService {
 		case CONFIRMED -> target == OrderStatus.PROCESSING || target == OrderStatus.CANCELLED;
 		case PROCESSING -> target == OrderStatus.SHIPPED;
 		case SHIPPED -> target == OrderStatus.DELIVERED;
-		case DELIVERED -> target == OrderStatus.REFUNDED;
-		case CANCELLED, REFUNDED -> false;
+		case DELIVERED -> target == OrderStatus.REFUND_REQUESTED || target == OrderStatus.REFUNDED;
+		case REFUND_REQUESTED -> target == OrderStatus.REFUNDED || target == OrderStatus.CANCELLED || target == OrderStatus.REFUND_REJECTED;
+		case CANCELLED -> target == OrderStatus.REFUND_REQUESTED;
+		case REFUND_REJECTED, REFUNDED -> false;
 		};
 		if (!allowed) {
 			throw new InvalidOrderStateException("Cannot transition from %s to %s".formatted(current, target));

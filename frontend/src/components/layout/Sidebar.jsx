@@ -13,7 +13,7 @@ const NAV = [
     { to: '/orders',      icon: '📋', label: 'Orders' },
     { to: '/users',       icon: '👤', label: 'Users' },
     { to: '/payments',    icon: '💳', label: 'Payments' },
-    { to: '/aggregator',  icon: '🔗', label: 'Aggregator' },
+    { to: '/aggregator',  icon: '🔗', label: 'Aggregator', adminOnly: true },
     { to: '/notifications',icon:'🔔', label: 'Notifications' },
   ]},
   { section: 'System', items: [
@@ -57,17 +57,20 @@ export default function Sidebar() {
         {NAV.map(group => (
           <div key={group.section}>
             <div className="sidebar-section">{group.section}</div>
-            {group.items.map(item => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/'}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-              >
-                <span className="nav-item__icon">{item.icon}</span>
-                {item.label}
-              </NavLink>
-            ))}
+            {group.items.map(item => {
+              if (item.adminOnly && user?.role !== 'ADMIN') return null;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === '/'}
+                  className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                >
+                  <span className="nav-item__icon">{item.icon}</span>
+                  {item.label}
+                </NavLink>
+              );
+            })}
           </div>
         ))}
       </nav>

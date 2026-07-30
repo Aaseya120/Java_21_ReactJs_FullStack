@@ -14,4 +14,6 @@ export const ordersApi = {
     gatewayClient.put(`/api/v1/orders/${id}/status`, null, { params: { status } }),
   cancel: (id) => gatewayClient.delete(`/api/v1/orders/${id}`),
   refund: (id, data) => gatewayClient.post(`/api/v1/orders/${id}/refund`, data),
+  approveRefund: (id, data) => gatewayClient.post(`/api/v1/orders/${id}/refund/approve`, data),
+  rejectRefund: (id, data) => gatewayClient.post(`/api/v1/orders/${id}/refund/reject`, data),
 };

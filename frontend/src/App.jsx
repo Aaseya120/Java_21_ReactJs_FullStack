@@ -50,6 +50,13 @@ function ProtectedRoute({ children }) {
   return isAuthenticated ? children : <Navigate to="/login" replace/>;
 }
 
+function AdminRoute({ children }) {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace/>;
+  if (user?.role !== 'ADMIN') return <Navigate to="/" replace/>;
+  return children;
+}
+
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
 
@@ -102,11 +109,11 @@ function AppRoutes() {
           </ProtectedRoute>
         }/>
         <Route path="/aggregator" element={
-          <ProtectedRoute>
+          <AdminRoute>
             <ErrorBoundary>
               <Layout><AggregatorPage/></Layout>
             </ErrorBoundary>
-          </ProtectedRoute>
+          </AdminRoute>
         }/>
         <Route path="/notifications" element={
           <ProtectedRoute>

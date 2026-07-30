@@ -43,7 +43,7 @@ export default function DashboardPage() {
     { label: 'Create Product', icon: '📦', path: '/products', color: 'var(--success)' },
     { label: 'Place Order',    icon: '📋', path: '/orders',   color: 'var(--warning)' },
     { label: 'View Users',     icon: '👤', path: '/users',    color: 'var(--info)' },
-    { label: 'Aggregator',     icon: '🔗', path: '/aggregator', color: 'var(--primary)' },
+    { label: 'Aggregator',     icon: '🔗', path: '/aggregator', color: 'var(--primary)', adminOnly: true },
   ];
 
   const greeting = () => {
@@ -162,7 +162,7 @@ export default function DashboardPage() {
         QUICK ACTIONS
       </h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
-        {quickActions.map(a => (
+        {quickActions.filter(a => !a.adminOnly || user?.role === 'ADMIN').map(a => (
           <button key={a.label} className="card" onClick={() => navigate(a.path)}
             style={{
               border: 'none', cursor: 'pointer', textAlign: 'left',

@@ -29,7 +29,7 @@ foreach ($svc in $services) {
         Write-Host "[ALREADY RUNNING] $name (port $port) is healthy." -ForegroundColor Green
     } else {
         Write-Host "[STARTING] $name is down. Starting it on port $port..." -ForegroundColor Yellow
-        Start-Process powershell -ArgumentList "-NoExit", "-Command", "`$host.UI.RawUI.WindowTitle = '$name'; cd $name; mvn spring-boot:run"
+        Start-Process powershell -ArgumentList "-NoExit", "-Command", "`$host.UI.RawUI.WindowTitle = '$name'; cd $name; mvn clean compile spring-boot:run"
         $startedServices += $svc
     }
 }

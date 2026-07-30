@@ -182,7 +182,7 @@ public class OrderController {
 	}
 
 	/**
-	 * POST /api/orders/{id}/refund — Issue a refund for a delivered order.
+	 * POST /api/orders/{id}/refund — Request a refund for a delivered order.
 	 */
 	@PostMapping("/{id}/refund")
 	public ResponseEntity<ApiResponse<OrderResponse>> refundOrder(@PathVariable Long id,
@@ -213,8 +213,42 @@ public class OrderController {
 			}
 		}
 
-		OrderResponse refundedOrder = orderService.refundOrder(id, request);
+		OrderResponse refundedOrder = orderService.requestRefund(id, request);
 		return ResponseEntity.ok(ApiResponse.success(refundedOrder));
+	}
+
+	/**
+	 * POST /api/orders/{id}/refund/approve — Approve a requested refund (Admin only).
+	 */
+	@PostMapping("/{id}/refund/approve")
+	public ResponseEntity<ApiResponse<OrderResponse>> approveRefund(@PathVariable Long id,
+			@Valid @RequestBody com.demo.order.dto.RefundRequest request,
+			@RequestHeader(value = "X-Auth-Role", required = false) String authRole) {
+		
+		if (!"ADMIN".equalsIgnoreCase(authRole)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN)
+					.body(ApiResponse.error("FORBIDDEN", "Only Administrators can approve refunds"));
+		}
+
+		OrderResponse refundedOrder = orderService.approveRefund(id, request);
+		return ResponseEntity.ok(ApiResponse.success(refundedOrder));
+	}
+
+	/**
+	 * POST /api/orders/{id}/refund/reject — Reject a requested refund (Admin only).
+	 */
+	@PostMapping("/{id}/refund/reject")
+	public ResponseEntity<ApiResponse<OrderResponse>> rejectRefund(@PathVariable Long id,
+			@Valid @RequestBody com.demo.order.dto.RefundRequest request,
+			@RequestHeader(value = "X-Auth-Role", required = false) String authRole) {
+		
+		if (!"ADMIN".equalsIgnoreCase(authRole)) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN)
+					.body(ApiResponse.error("FORBIDDEN", "Only Administrators can reject refunds"));
+		}
+
+		OrderResponse rejectedOrder = orderService.rejectRefund(id, request);
+		return ResponseEntity.ok(ApiResponse.success(rejectedOrder));
 	}
 }
 

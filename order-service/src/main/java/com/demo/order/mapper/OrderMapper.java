@@ -25,6 +25,8 @@ public interface OrderMapper {
 		case SHIPPED -> "Order has been dispatched";
 		case DELIVERED -> "Order successfully delivered";
 		case CANCELLED -> "Order was cancelled";
+		case REFUND_REQUESTED -> "Refund requested by customer, awaiting admin approval";
+		case REFUND_REJECTED -> "Refund request was rejected by admin";
 		case REFUNDED -> "Order has been refunded";
 		};
 	}
