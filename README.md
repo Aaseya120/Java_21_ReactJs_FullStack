@@ -68,6 +68,16 @@ Each stateful microservice owns its own database schema. This keeps services loo
 
 ---
 
+## ✨ Recent Enhancements
+
+- **End-to-End Refund Processing:** Complete lifecycle support for processing refunds. Customers can request refunds on cancelled orders, transitioning them to `REFUND_REQUESTED`.
+- **Admin Refund Workflow:** Dedicated Admin UI and backend endpoints to approve or reject refunds. Rejected refunds dynamically store and display the rejection reason.
+- **Interactive Refund Stepper:** The frontend features a beautiful, dynamic timeline stepper allowing customers to track their refund from initiation, through approval/rejection, and final processing.
+- **RBAC UI Security:** The `Aggregator` route and menu items are strictly protected behind an `<AdminRoute>`, ensuring only `ADMIN` roles can view cross-service data aggregations.
+- **Improved Build Scripts:** `start-down.ps1` and developer scripts have been optimized to fully enforce the Maven `compile` phase before `spring-boot:run`, completely eliminating MapStruct generated-source caching issues across modules.
+
+---
+
 ## 🏗️ Architecture & Sequence Diagrams
 
 ### System Design Blueprint
